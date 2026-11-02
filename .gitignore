@@ -1,0 +1,14 @@
+# 실제 키·비밀 파일은 커밋 금지
+.env
+*.env
+!.env.example
+*.keystore
+*.jks
+key.properties
+google-services.json
+client_secret*.json
+
+# 빌드 결과물
+app/build/
+app/.dart_tool/
+.DS_Store
