@@ -69,7 +69,12 @@ class TestKit {
     inMemoryDb: true,
     mockYouTube: mockYt,
     aiProviders: aiProviders,
+    pickFile: (_) async => pickResult,
+    pickDirectory: () async => null,
   );
+
+  /// 파일 고르기 창에서 고른 것처럼 돌려줄 경로.
+  String? pickResult;
 
   Future<UserContext> user([String name = '테스트']) async {
     final u = env.accounts.create(name, '1234');

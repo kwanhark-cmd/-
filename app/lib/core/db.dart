@@ -237,6 +237,42 @@ const userDataMigrations = <Migration>[
       used INTEGER NOT NULL DEFAULT 0
     )''',
   ]),
+  // v2: 2단계(콘텐츠 제작·업로드, 제작 도구)
+  Migration(2, [
+    '''CREATE TABLE productions(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      channel_id TEXT NOT NULL,
+      format TEXT NOT NULL,
+      topic TEXT NOT NULL DEFAULT '',
+      title TEXT NOT NULL,
+      description TEXT NOT NULL DEFAULT '',
+      tags_json TEXT NOT NULL DEFAULT '[]',
+      thumbnail_text TEXT NOT NULL DEFAULT '',
+      script TEXT NOT NULL DEFAULT '',
+      memo_id INTEGER,
+      corner_id INTEGER,
+      fingerprint TEXT NOT NULL DEFAULT '',
+      status TEXT NOT NULL,
+      video_path TEXT NOT NULL DEFAULT '',
+      video_source TEXT NOT NULL DEFAULT '',
+      ai_label_method TEXT NOT NULL DEFAULT '',
+      uploaded_video_id TEXT NOT NULL DEFAULT '',
+      upload_day TEXT NOT NULL DEFAULT '',
+      extra_json TEXT NOT NULL DEFAULT '{}',
+      day TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )''',
+    'CREATE INDEX idx_prod_channel ON productions(channel_id, id DESC)',
+    'CREATE INDEX idx_prod_status ON productions(status)',
+    '''CREATE TABLE tool_status(
+      tool TEXT PRIMARY KEY,
+      connected_at TEXT,
+      expires_at TEXT,
+      status TEXT NOT NULL DEFAULT 'none',
+      info_json TEXT NOT NULL DEFAULT '{}'
+    )''',
+  ]),
 ];
 
 /// 오늘 날짜 문자열 (yyyy-MM-dd, 기기 시간 기준).

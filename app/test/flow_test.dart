@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:channel_biseo/app/app.dart';
 import 'package:channel_biseo/core/db.dart';
 import 'package:channel_biseo/features/edits/edit_service.dart';
@@ -25,7 +27,10 @@ void main() {
   Future<void> tap(WidgetTester t, String key) async {
     final f = find.byKey(Key(key));
     if (f.evaluate().isEmpty) {
-      await t.scrollUntilVisible(f, 200, scrollable: find.byType(Scrollable).last);
+      // 화면에 보이는 것 중 가장 큰 스크롤 영역(본문 목록)을 내린다
+      final all = find.byType(Scrollable).hitTestable().evaluate().toList()
+        ..sort((a, b) => (b.size!.width * b.size!.height).compareTo(a.size!.width * a.size!.height));
+      await t.scrollUntilVisible(f, 200, scrollable: find.byElementPredicate((e) => e == all.first));
     }
     await t.ensureVisible(f);
     await t.pumpAndSettle();
@@ -129,6 +134,39 @@ void main() {
     await tapText(t, '닫기');
 
     // 화면 그리기 오류가 하나도 없어야 한다
+    expect(t.takeException(), isNull);
+    await t.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('2단계 흐름: 만들기 → 영상 넣기 → 비공개 업로드 확인 → 확인 대기 목록', (t) async {
+    await setPhone(t);
+    final k = TestKit();
+    final state = AppState(k.env);
+    await state.login(k.env.accounts.create('제작', '1234'));
+    final u = state.user!;
+    u.settings.onboardingDone = true;
+    await u.youtube.connectGoogle();
+    await t.pumpWidget(ChannelBiseoApp(state: state));
+    await t.pumpAndSettle();
+    await t.tap(find.byIcon(Icons.movie_creation).last);
+    await t.pumpAndSettle();
+    await tap(t, 'produce-new');
+    await tap(t, 'format-long');
+    await enter(t, 'produce-topic', '전주 비빔밥');
+    await tap(t, 'produce-make');
+    expect(find.textContaining('전주 비빔밥'), findsWidgets);
+    k.pickResult = (File('${Directory.systemTemp.createTempSync('v').path}/a.mp4')..writeAsBytesSync([1])).path;
+    await tap(t, 'attach-video');
+    expect(find.textContaining('준비됨'), findsOneWidget);
+    await tap(t, 'upload');
+    expect(find.text('AI 콘텐츠 표시를 확인해 주세요'), findsOneWidget);
+    expect(k.speaker.spoken.last, contains('비공개'));
+    await tap(t, 'upload-confirm');
+    expect(k.mockYt.uploadCalls, 1);
+    expect(find.text('유튜브에서 확인하기'), findsOneWidget);
+    await back(t);
+    await tap(t, 'open-review');
+    expect(find.byKey(const Key('review-1')), findsOneWidget);
     expect(t.takeException(), isNull);
     await t.pumpWidget(const SizedBox());
   });
