@@ -336,13 +336,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             value: s.runnerEnabled,
             onChanged: u.env.isDesktop ? (v) => setState(() => s.runnerEnabled = v) : null,
           ),
-          Row(
-            children: [
-              Expanded(child: _hourPicker(S.settingsRunnerFrom, s.runnerFromHour, (v) => s.runnerFromHour = v)),
-              const SizedBox(width: 12),
-              Expanded(child: _hourPicker(S.settingsRunnerTo, s.runnerToHour, (v) => s.runnerToHour = v)),
-            ],
-          ),
+          _hourPicker(S.settingsRunnerFrom, s.runnerFromHour, (v) => s.runnerFromHour = v),
+          const SizedBox(height: 12),
+          _hourPicker(S.settingsRunnerTo, s.runnerToHour, (v) => s.runnerToHour = v),
           const SizedBox(height: 12),
           ButtonWrap(
             children: [
@@ -367,6 +363,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _hourPicker(String label, int value, void Function(int) set) => DropdownButtonFormField<int>(
+    isExpanded: true,
     initialValue: value.clamp(0, 23),
     decoration: InputDecoration(labelText: label),
     items: [for (var h = 0; h < 24; h++) DropdownMenuItem(value: h, child: Text('$h시'))],

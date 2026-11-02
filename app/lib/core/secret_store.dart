@@ -29,7 +29,11 @@ class MemorySecretStore implements SecretStore {
 }
 
 class OsSecretStore implements SecretStore {
-  OsSecretStore() : _s = const FlutterSecureStorage();
+  OsSecretStore()
+    : _s = const FlutterSecureStorage(
+        // 맥: 개발자 서명 없이도 동작하도록 기본 키체인 사용
+        mOptions: MacOsOptions(usesDataProtectionKeychain: false),
+      );
 
   final FlutterSecureStorage _s;
 

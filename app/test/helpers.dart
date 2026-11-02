@@ -21,8 +21,8 @@ class TestClock {
 
 /// 실제 인터넷에 절대 나가지 않는 HTTP. 호출되면 테스트가 실패한다.
 http.Client noNetwork() => MockClient((req) async {
-      throw StateError('테스트 중 실제 네트워크 호출 시도: ${req.url.host}');
-    });
+  throw StateError('테스트 중 실제 네트워크 호출 시도: ${req.url.host}');
+});
 
 class TestKit {
   TestKit({
@@ -32,14 +32,14 @@ class TestKit {
     this.aiProviders,
     List<String> speech = const [],
     MockYouTubeApi? yt,
-  })  : clock = TestClock(start),
-        secrets = MemorySecretStore(),
-        speaker = FakeSpeaker(),
-        notifier = MemoryNotifier(),
-        speechIn = FakeSpeechInput(speech),
-        mockYt = yt ?? MockYouTubeApi(),
-        logger = AppLogger(),
-        httpClient = client ?? noNetwork();
+  }) : clock = TestClock(start),
+       secrets = MemorySecretStore(),
+       speaker = FakeSpeaker(),
+       notifier = MemoryNotifier(),
+       speechIn = FakeSpeechInput(speech),
+       mockYt = yt ?? MockYouTubeApi(),
+       logger = AppLogger(),
+       httpClient = client ?? noNetwork();
 
   final bool isDesktop;
   final TestClock clock;

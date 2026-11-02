@@ -15,7 +15,8 @@ import 'package:path/path.dart' as p;
 void main() {
   group('민감정보 가리기', () {
     test('토큰·키·비밀번호가 지워진다', () {
-      const raw = 'Authorization: Bearer ya29.abcDEF123 key=sk-ant-api03-XYZ '
+      const raw =
+          'Authorization: Bearer ya29.abcDEF123 key=sk-ant-api03-XYZ '
           '{"refresh_token":"1//0gabcdefghijkl","password":"hello"} client_secret=GOCSPX-abc '
           'AIzaSyA1234567890123456789012 user@example.com';
       final r = redact(raw);
@@ -76,8 +77,11 @@ void main() {
 
     test('시간 제한을 넘으면 timeout', () async {
       await expectLater(
-        withRetry(() => Future<int>.delayed(const Duration(seconds: 1), () => 1),
-            timeout: const Duration(milliseconds: 10), maxAttempts: 1),
+        withRetry(
+          () => Future<int>.delayed(const Duration(seconds: 1), () => 1),
+          timeout: const Duration(milliseconds: 10),
+          maxAttempts: 1,
+        ),
         throwsA(isA<AppFailure>().having((e) => e.kind, 'kind', FailureKind.timeout)),
       );
     });
@@ -123,7 +127,10 @@ void main() {
       expect(a.version, 1);
       a.close();
 
-      const v2 = [...v1, Migration(2, ['ALTER TABLE t ADD COLUMN b INTEGER DEFAULT 5'])];
+      const v2 = [
+        ...v1,
+        Migration(2, ['ALTER TABLE t ADD COLUMN b INTEGER DEFAULT 5']),
+      ];
       final b = AppDatabase.open(path, v2);
       expect(b.version, 2);
       expect(b.select('SELECT a, b FROM t').first['a'], '보존');
@@ -137,9 +144,14 @@ void main() {
     test('변환이 실패하면 되돌리고 버전은 그대로', () {
       final dir = Directory.systemTemp.createTempSync('mig2');
       final path = p.join(dir.path, 'd.sqlite');
-      const v1 = [Migration(1, ['CREATE TABLE settings(key TEXT PRIMARY KEY, value TEXT NOT NULL)'])];
+      const v1 = [
+        Migration(1, ['CREATE TABLE settings(key TEXT PRIMARY KEY, value TEXT NOT NULL)']),
+      ];
       AppDatabase.open(path, v1).close();
-      const bad = [...v1, Migration(2, ['CREATE TABLE x(a)', 'THIS IS NOT SQL'])];
+      const bad = [
+        ...v1,
+        Migration(2, ['CREATE TABLE x(a)', 'THIS IS NOT SQL']),
+      ];
       expect(() => AppDatabase.open(path, bad), throwsA(anything));
       final c = AppDatabase.open(path, v1);
       expect(c.version, 1);

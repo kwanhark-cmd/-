@@ -164,7 +164,9 @@ class YouTubeService {
       db.execute('UPDATE accounts SET label = ? WHERE id = ?', [label, accountId]);
       // 다시 연결한 경우: 채널이 하나도 안 남은 예전 계정 정리
       final orphans = db
-          .select('SELECT id FROM accounts WHERE id != ? AND id NOT IN (SELECT DISTINCT account_id FROM channels)', [accountId])
+          .select('SELECT id FROM accounts WHERE id != ? AND id NOT IN (SELECT DISTINCT account_id FROM channels)', [
+            accountId,
+          ])
           .map((r) => r['id'] as int)
           .toList();
       for (final o in orphans) {
