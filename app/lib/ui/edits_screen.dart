@@ -77,7 +77,11 @@ Future<void> runEditsFlow(BuildContext context, UserContext u) async {
       r.failed > 0 ? ' 실패 ${r.failed}개.' : '',
       r.deferred > 0 ? ' ${S.runnerQuotaDefer}' : '',
     );
-    toast(context, msg);
+    if (r.applied > 0) {
+      celebrate(context, msg);
+    } else {
+      toast(context, msg);
+    }
     if (u.settings.ttsEnabled) await u.env.speaker.speak(msg);
   } catch (e) {
     if (context.mounted) await showFailure(context, e, onRetry: () => runEditsFlow(context, u));
@@ -105,16 +109,33 @@ class _EditsScreenState extends State<EditsScreen> {
       appBar: pageBar(context, S.editsTitle),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(
+            AppTokens.pagePad,
+            AppTokens.gapS,
+            AppTokens.pagePad,
+            AppTokens.bottomSpace,
+          ),
           children: [
+            TipBanner(
+              text: S.editsTip,
+              seen: u.settings.tipSeen('edits'),
+              onSeen: () => u.settings.markTipSeen('edits'),
+            ),
             SectionCard(
               title: S.dailyReportTitle,
-              icon: Icons.summarize,
+              icon3d: 'undo',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(u.edits.dailySummary(today), key: const Key('daily-summary')),
-                  const SizedBox(height: 12),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Mascot(todayApplied > 0 ? MascotMood.done : MascotMood.hello, size: 64),
+                      const SizedBox(width: AppTokens.gapM),
+                      Expanded(child: Text(u.edits.dailySummary(today), key: const Key('daily-summary'))),
+                    ],
+                  ),
+                  const SizedBox(height: AppTokens.gapM),
                   ButtonWrap(
                     children: [
                       BigButton(
@@ -136,8 +157,8 @@ class _EditsScreenState extends State<EditsScreen> {
                 ],
               ),
             ),
-            if (list.isEmpty) const EmptyHint(S.editsNone),
-            for (final e in list) _tile(e),
+            if (list.isEmpty) const EmptyState(icon: 'undo', message: S.editsEmptyHow),
+            for (var i = 0; i < list.length; i++) Appear(index: i, child: _tile(list[i])),
           ],
         ),
       ),
@@ -145,34 +166,49 @@ class _EditsScreenState extends State<EditsScreen> {
   }
 
   Widget _tile(EditRecord e) {
-    final status = switch (e.status) {
-      EditStatus.applied => S.editStatusApplied,
-      EditStatus.reverted => S.editStatusReverted,
-      EditStatus.failed => S.editStatusFailed,
+    final t = context.tokens;
+    final (Status? st, String label) = switch (e.status) {
+      EditStatus.applied => (Status.done, S.editStatusApplied),
+      EditStatus.reverted => (null, S.editStatusReverted),
+      EditStatus.failed => (Status.problem, S.editStatusFailed),
     };
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('${e.day} · $status · ${S.editViews(e.viewsBefore, e.viewsAfter)}'),
-            const SizedBox(height: 4),
-            Text('${S.editBefore}: ${e.before.title}', style: const TextStyle(color: Colors.grey)),
-            Text('${S.editAfter}: ${e.after.title}', style: const TextStyle(fontWeight: FontWeight.bold)),
-            if (e.status == EditStatus.failed && e.reason.isNotEmpty) Text(e.reason),
-            if (e.status == EditStatus.applied) ...[
-              const SizedBox(height: 8),
-              BigButton(
-                key: Key('revert-${e.id}'),
-                label: S.editRevert,
-                icon: Icons.undo,
-                primary: false,
-                onPressed: () => busy.run(() => _revert(e)),
+    return StripeCard(
+      status: st,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: AppTokens.gapS,
+            runSpacing: AppTokens.gapS,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              if (st == null) InfoChip(Icons.undo, label) else StatusBadge(st, label),
+              InfoChip(Icons.calendar_today, e.day),
+              InfoChip(Icons.visibility, S.editViews(e.viewsBefore, e.viewsAfter)),
+            ],
+          ),
+          const SizedBox(height: AppTokens.gapS),
+          Text('${S.editBefore}: ${e.before.title}', style: TextStyle(color: t.textSoft)),
+          Row(
+            children: [
+              Icon(Icons.arrow_downward, size: 18, color: t.primary),
+              const SizedBox(width: AppTokens.gapXs),
+              Expanded(
+                child: Text('${S.editAfter}: ${e.after.title}', style: const TextStyle(fontWeight: FontWeight.w800)),
               ),
             ],
+          ),
+          if (e.status == EditStatus.failed && e.reason.isNotEmpty) Text(e.reason),
+          if (e.status == EditStatus.applied) ...[
+            const SizedBox(height: AppTokens.gapS),
+            BigButton(
+              key: Key('revert-${e.id}'),
+              label: S.editRevert,
+              icon: Icons.undo,
+              onPressed: () => busy.run(() => _revert(e)),
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -183,7 +219,7 @@ class _EditsScreenState extends State<EditsScreen> {
     switch (r.outcome) {
       case RevertOutcome.reverted:
       case RevertOutcome.alreadyReverted:
-        toast(context, S.editReverted);
+        celebrate(context, S.editReverted);
       case RevertOutcome.newerEditExists:
         toast(context, S.editRevertNewerFirst);
       case RevertOutcome.conflict:
@@ -198,7 +234,7 @@ class _EditsScreenState extends State<EditsScreen> {
   }
 
   Future<void> _revertDay(String day) async {
-    if (!await confirm(context, '${S.editRevertAll}?', yes: S.editRevert)) return;
+    if (!await confirmDanger(context, S.editsRevertAllAsk, yes: S.editRevertAll)) return;
     final r = await u.edits.revertDay(day);
     if (!mounted) return;
     toast(context, S.edits5(r.reverted, r.conflicts > 0 ? ' 유튜브에서 직접 바뀐 ${r.conflicts}개는 하나씩 확인해 주세요.' : ''));

@@ -424,6 +424,10 @@ class S {
   static const chanEmptyHow = '"채널 등록"을 누르고 구글 계정으로 연결하면 내 채널이 모두 나타나요. 계정이 없어도 연습 계정으로 미리 써 볼 수 있어요.';
   static const chanConnected = '연결됨';
   static const chanNoVideos = '"새로 불러오기"를 누르면 유튜브에서 영상 목록을 가져와요.';
+  // 수정·되돌리기
+  static const editsTip = '앱이 고친 제목·설명·키워드가 모두 여기에 남아요. 마음에 안 들면 "되돌리기"를 누르면 바로 원래대로 돌아가요.';
+  static const editsEmptyHow = '홈에서 "지금 수정 실행하기"를 누르면 앱이 영상 제목·설명·키워드를 다듬어요. 고친 내용은 여기서 언제든 되돌릴 수 있어요.';
+  static const editsRevertAllAsk = '오늘 고친 영상을 모두 원래대로 되돌릴까요?';
   static const uiDangerSecond = '정말 할까요? 한 번 더 확인할게요.';
   static const thumbTitle = '썸네일 그림';
   static const thumbNone = '아직 썸네일 그림이 없어요. 문구로 만들거나 직접 만든 그림을 넣어 주세요.';
