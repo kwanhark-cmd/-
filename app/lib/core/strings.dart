@@ -74,7 +74,7 @@ class S {
   static const wizardFinish = '시작하기';
 
   // ---- 메뉴 ----
-  static const navHome = '현황';
+  static const navHome = '홈';
   static const navChannels = '채널';
   static const navProduce = '제작';
   static const navBlog = '블로그';
@@ -391,6 +391,34 @@ class S {
   static const uiEmptyTitle = '아직 없어요';
   static const uiTipOk = '알겠어요';
   static const uiHome = '처음 화면으로';
+  // 홈
+  static const dashTodayTitle = '오늘 할 일';
+  static const dashTodo = '해야 할 일이 있어요';
+  static const dashAllDone = '모두 끝났어요';
+  static const dashAllDoneSub = '지금은 급한 일이 없어요. 편히 쉬셔도 돼요.';
+  static String dash2(String a) => '$a 연결이 끊어졌어요.';
+  static String dash3(String a) => '$a 연결이 곧 끊어져요. 미리 다시 연결해 주세요.';
+  static String dash4(int n) => '$n개 연결됨';
+  static String dash5(int n) => '$n개 확인 필요';
+  static String dash6(String name) => '$name 님, 반가워요!';
+  static const dashHelloSub = '오늘도 채널 관리를 도와 드릴게요.';
+  static const dashBroken = '연결 끊김';
+  static const dashNoChannel = '채널 없음';
+  static const dashNothingWaiting = '기다리는 것 없음';
+  static const dashTileChannels = '채널 현황';
+  static const dashTileChannelsSub = '내 채널과 영상 한눈에 보기';
+  static const dashTileProduce = '콘텐츠 만들기';
+  static const dashTileProduceSub = '쇼츠·롱폼·사진 게시물 만들기';
+  static const dashTileReview = '확인 대기';
+  static const dashTileReviewSub = '비공개로 올린 영상 확인하기';
+  static const dashTileBlog = '블로그';
+  static const dashTileBlogSub = '구글 블로그·티스토리 글 관리';
+  static const dashTileCorner = '내 코너';
+  static const dashTileCornerSub = '내 이야기로 콘텐츠 만들기';
+  static const dashTileSettings = '설정';
+  static const dashTileSettingsSub = '글씨 크기·연결·자동 작업';
+  static String dash7(int n) => '비공개로 올린 영상 $n개가 확인을 기다려요. 보고 괜찮으면 유튜브에서 공개해 주세요.';
+  static const dashReviewNow = '지금 확인하기';
   static const uiDangerSecond = '정말 할까요? 한 번 더 확인할게요.';
   static const thumbTitle = '썸네일 그림';
   static const thumbNone = '아직 썸네일 그림이 없어요. 문구로 만들거나 직접 만든 그림을 넣어 주세요.';

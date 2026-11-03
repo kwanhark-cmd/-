@@ -68,10 +68,25 @@ class HomeShellState extends State<HomeShell> {
   }
 
   List<AppTab> get tabs => [
-    AppTab(S.navHome, Icons.dashboard, (k) => DashboardScreen(key: k, user: u, shell: this)),
-    AppTab(S.navChannels, Icons.video_library, (k) => ChannelsScreen(key: k, user: u)),
+    AppTab(
+      S.navHome,
+      Icons.dashboard,
+      (k) => DashboardScreen(key: k, user: u, shell: this),
+      id: 'home',
+    ),
+    AppTab(
+      S.navChannels,
+      Icons.video_library,
+      (k) => ChannelsScreen(key: k, user: u),
+      id: 'channels',
+    ),
     ...TabsRegistry.extraTabs(u, this),
-    AppTab(S.navSettings, Icons.settings, (k) => SettingsScreen(key: k, state: widget.state, user: u)),
+    AppTab(
+      S.navSettings,
+      Icons.settings,
+      (k) => SettingsScreen(key: k, state: widget.state, user: u),
+      id: 'settings',
+    ),
   ];
 
   void goTo(String target) {
@@ -96,6 +111,8 @@ class HomeShellState extends State<HomeShell> {
   }
 
   void refreshAll() => setState(() => _refresh++);
+
+  bool hasTab(String id) => tabs.any((t) => t.id == id);
 
   Future<void> openVoice() async {
     final r = await showVoiceSheet(context, u);
@@ -125,11 +142,18 @@ class HomeShellState extends State<HomeShell> {
         Expanded(child: list[index].builder(ValueKey('${list[index].id}-$_refresh'))),
       ],
     );
-    final mic = FloatingActionButton.large(
-      key: const Key('mic'),
-      tooltip: S.voiceListen,
-      onPressed: openVoice,
-      child: const Icon(Icons.mic, size: 40),
+    final tk = context.tokens;
+    final mic = Tooltip(
+      message: S.voiceListen,
+      child: Press3D(
+        key: const Key('mic'),
+        color: tk.accent,
+        radius: 44,
+        depth: 6,
+        semanticLabel: S.voiceListen,
+        onTap: openVoice,
+        child: SizedBox(width: 84, height: 84, child: Icon(Icons.mic, size: 44, color: tk.onAccent)),
+      ),
     );
     if (wide) {
       return Scaffold(

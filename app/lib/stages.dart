@@ -87,30 +87,16 @@ void _stage2() {
     Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => ReviewScreen(user: u)));
   });
 
-  DashboardScreen.extraCards.add((u, shell) {
+  DashboardScreen.tileCounts['review'] = (u) => productionOf(u).reviewList().length;
+  DashboardScreen.todaySources.add((u, shell) {
     final n = productionOf(u).reviewList().length;
-    return SectionCard(
-      title: S.homeReviewWaiting,
-      icon: Icons.fact_check,
-      child: ButtonWrap(
-        children: [
-          BigButton(
-            label: '${S.produceReviewList} ($n)',
-            icon: Icons.list,
-            primary: false,
-            onPressed: () => shell.goTo('review'),
-          ),
-          BigButton(
-            label: S.produceNew,
-            icon: Icons.add,
-            primary: false,
-            onPressed: () async {
-              await newProductionFlow(shell.context, u);
-              shell.refreshAll();
-            },
-          ),
-        ],
-      ),
+    if (n == 0) return null;
+    return TodayTask(
+      status: Status.check,
+      icon3d: 'review',
+      title: S.dash7(n),
+      action: S.dashReviewNow,
+      onTap: () => shell.goTo('review'),
     );
   });
 
