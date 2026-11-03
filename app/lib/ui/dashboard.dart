@@ -107,7 +107,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final broken = u.youtube.brokenAccounts().isNotEmpty;
     final chans = u.youtube.channels().length;
     var i = 0;
-    Widget ap(Widget w) => Appear(index: i++, child: w);
+    Widget ap(Widget w) => i < 3 ? Appear(index: i++, child: w) : w;
 
     final tiles = <Widget>[
       if (shell.hasTab('channels'))
@@ -176,157 +176,160 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     ];
 
-    // 홈은 길지 않아 한 번에 모두 그린다 (스크롤은 됨).
-    return SingleChildScrollView(
+    // 화면에 보이는 것만 그리는 목록 (빠르게 열리도록).
+    final wide = MediaQuery.sizeOf(context).width >= 700;
+    return ListView(
       padding: const EdgeInsets.fromLTRB(AppTokens.pagePad, AppTokens.gapS, AppTokens.pagePad, AppTokens.bottomSpace),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ap(
-            Row(
-              children: [
-                const Mascot(MascotMood.hello, size: 88),
-                const SizedBox(width: AppTokens.gapM),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(S.dash6(u.user.name), style: Theme.of(context).textTheme.headlineSmall),
-                      Text(
-                        S.dashHelloSub,
-                        style: TextStyle(color: t.textSoft, fontSize: AppTokens.fontBody),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppTokens.gapM),
-          ap(_todayCard(todo)),
-          const SizedBox(height: AppTokens.gapL),
-          ap(
-            LayoutBuilder(
-              builder: (context, c) {
-                final cols = c.maxWidth >= 640 ? 2 : 1;
-                final w = (c.maxWidth - AppTokens.gapM * (cols - 1)) / cols;
-                return Wrap(
-                  spacing: AppTokens.gapM,
-                  runSpacing: AppTokens.gapM,
-                  children: [for (final tile in tiles) SizedBox(width: w, child: tile)],
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: AppTokens.gapL),
-          ap(
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(AppTokens.gapL),
-                child: Wrap(
-                  alignment: WrapAlignment.spaceEvenly,
-                  spacing: AppTokens.gapXl,
-                  runSpacing: AppTokens.gapL,
+      children: [
+        ap(
+          Row(
+            children: [
+              const Mascot(MascotMood.hello, size: 88),
+              const SizedBox(width: AppTokens.gapM),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    RingGauge(
-                      value: quotaRatio,
-                      label: S.homeQuota,
-                      center: '${S.num(quotaLeft)}\n/ ${S.num(quotaLimit)}',
-                      status: gaugeStatus(quotaRatio),
-                    ),
-                    RingGauge(
-                      value: costLeft,
-                      label: S.homeCost,
-                      center: '${S.dollars(cost)}\n/ ${S.dollars(limit, 0)}',
-                      status: gaugeStatus(costLeft),
+                    Text(S.dash6(u.user.name), style: Theme.of(context).textTheme.headlineSmall),
+                    Text(
+                      S.dashHelloSub,
+                      style: TextStyle(color: t.textSoft, fontSize: AppTokens.fontBody),
                     ),
                   ],
                 ),
               ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppTokens.gapM),
+        ap(_todayCard(todo)),
+        const SizedBox(height: AppTokens.gapL),
+        ap(
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(AppTokens.gapL),
+              child: Wrap(
+                alignment: WrapAlignment.spaceEvenly,
+                spacing: AppTokens.gapXl,
+                runSpacing: AppTokens.gapL,
+                children: [
+                  RingGauge(
+                    value: quotaRatio,
+                    label: S.homeQuota,
+                    center: '${S.num(quotaLeft)}\n/ ${S.num(quotaLimit)}',
+                    status: gaugeStatus(quotaRatio),
+                  ),
+                  RingGauge(
+                    value: costLeft,
+                    label: S.homeCost,
+                    center: '${S.dollars(cost)}\n/ ${S.dollars(limit, 0)}',
+                    status: gaugeStatus(costLeft),
+                  ),
+                ],
+              ),
             ),
           ),
-          ap(
-            Wrap(
-              spacing: AppTokens.gapS,
-              runSpacing: AppTokens.gapS,
+        ),
+        const SizedBox(height: AppTokens.gapS),
+        ap(
+          Wrap(
+            spacing: AppTokens.gapS,
+            runSpacing: AppTokens.gapS,
+            children: [
+              StatusBadge(edits > 0 ? Status.done : Status.progress, '${S.homeTodayEdits} ${S.home1(edits)}'),
+              StatusBadge(
+                s.runnerEnabled ? Status.progress : Status.check,
+                s.runnerEnabled ? S.homeRunnerOn(s.runnerFromHour, s.runnerToHour) : S.homeRunnerOff,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppTokens.gapL),
+        if (wide)
+          LayoutBuilder(
+            builder: (context, c) {
+              final w = (c.maxWidth - AppTokens.gapM) / 2;
+              return Wrap(
+                spacing: AppTokens.gapM,
+                runSpacing: AppTokens.gapM,
+                children: [for (final tile in tiles) SizedBox(width: w, child: tile)],
+              );
+            },
+          )
+        else
+          for (final tile in tiles)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppTokens.gapM),
+              child: tile,
+            ),
+        const SizedBox(height: AppTokens.gapS),
+        for (final card in DashboardScreen.extraCards) ap(card(u, shell)),
+        ap(
+          SectionCard(
+            title: S.briefingTitle,
+            icon3d: 'hello',
+            child: ButtonWrap(
               children: [
-                StatusBadge(edits > 0 ? Status.done : Status.progress, '${S.homeTodayEdits} ${S.home1(edits)}'),
-                StatusBadge(
-                  s.runnerEnabled ? Status.progress : Status.check,
-                  s.runnerEnabled ? S.homeRunnerOn(s.runnerFromHour, s.runnerToHour) : S.homeRunnerOff,
+                BigButton(
+                  key: const Key('briefing'),
+                  label: S.homeBriefing,
+                  icon: Icons.record_voice_over,
+                  onPressed: () => busy.run(() async {
+                    final b = u.briefing.compose();
+                    u.briefing.markDone();
+                    await _showText(S.briefingTitle, b.spoken, mascot: MascotMood.hello);
+                  }),
+                ),
+                BigButton(
+                  label: S.homeVoiceSummary,
+                  icon: Icons.volume_up,
+                  primary: false,
+                  onPressed: () => busy.run(() async {
+                    final t = u.voice.channelSummary();
+                    await _showText(S.homeVoiceSummary, t);
+                  }),
                 ),
               ],
             ),
           ),
-          for (final card in DashboardScreen.extraCards) ap(card(u, shell)),
-          ap(
-            SectionCard(
-              title: S.briefingTitle,
-              icon3d: 'hello',
-              child: ButtonWrap(
-                children: [
-                  BigButton(
-                    key: const Key('briefing'),
-                    label: S.homeBriefing,
-                    icon: Icons.record_voice_over,
-                    onPressed: () => busy.run(() async {
-                      final b = u.briefing.compose();
-                      u.briefing.markDone();
-                      await _showText(S.briefingTitle, b.spoken, mascot: MascotMood.hello);
-                    }),
-                  ),
-                  BigButton(
-                    label: S.homeVoiceSummary,
-                    icon: Icons.volume_up,
-                    primary: false,
-                    onPressed: () => busy.run(() async {
-                      final t = u.voice.channelSummary();
-                      await _showText(S.homeVoiceSummary, t);
-                    }),
-                  ),
-                ],
-              ),
+        ),
+        ap(
+          SectionCard(
+            title: S.dailyReportTitle,
+            icon3d: 'undo',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(u.edits.dailySummary(today)),
+                const SizedBox(height: AppTokens.gapM),
+                ButtonWrap(
+                  children: [
+                    BigButton(
+                      key: const Key('open-edits'),
+                      label: S.homeDailyReport,
+                      icon: Icons.list,
+                      primary: false,
+                      onPressed: () async {
+                        await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => EditsScreen(user: u)));
+                        if (mounted) setState(() {});
+                      },
+                    ),
+                    BigButton(
+                      key: const Key('run-edits'),
+                      label: S.homeRunEdits,
+                      icon: Icons.auto_fix_high,
+                      onPressed: () async {
+                        await runEditsFlow(context, u);
+                        if (mounted) setState(() {});
+                      },
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          ap(
-            SectionCard(
-              title: S.dailyReportTitle,
-              icon3d: 'undo',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(u.edits.dailySummary(today)),
-                  const SizedBox(height: AppTokens.gapM),
-                  ButtonWrap(
-                    children: [
-                      BigButton(
-                        key: const Key('open-edits'),
-                        label: S.homeDailyReport,
-                        icon: Icons.list,
-                        primary: false,
-                        onPressed: () async {
-                          await Navigator.of(context)
-                              .push(MaterialPageRoute<void>(builder: (_) => EditsScreen(user: u)));
-                          if (mounted) setState(() {});
-                        },
-                      ),
-                      BigButton(
-                        key: const Key('run-edits'),
-                        label: S.homeRunEdits,
-                        icon: Icons.auto_fix_high,
-                        onPressed: () async {
-                          await runEditsFlow(context, u);
-                          if (mounted) setState(() {});
-                        },
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

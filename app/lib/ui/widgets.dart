@@ -289,7 +289,7 @@ class RingGauge extends StatelessWidget {
             height: 120,
             child: TweenAnimationBuilder<double>(
               tween: Tween(begin: 0, end: v),
-              duration: t.slow,
+              duration: t.normal,
               curve: Curves.easeOutCubic,
               builder: (_, x, _) => CustomPaint(
                 painter: _RingPainter(x, t.statusColor(status), t.tonal),
@@ -548,8 +548,9 @@ class Appear extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
-    if (t.reduceMotion) return child;
-    final i = index.clamp(0, 8);
+    // 처음 몇 개만 움직인다 (긴 목록은 바로 그려서 가볍게).
+    if (t.reduceMotion || index > 5) return child;
+    final i = index;
     final total = t.normal + t.stagger * i;
     final start = i == 0 ? 0.0 : (t.stagger * i).inMilliseconds / total.inMilliseconds;
     return TweenAnimationBuilder<double>(
@@ -576,7 +577,7 @@ class ShakeOnce extends StatelessWidget {
     if (t.reduceMotion) return child;
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
-      duration: t.slow + t.normal,
+      duration: t.slow,
       builder: (_, v, c) => Transform.rotate(angle: math.sin(v * math.pi * 6) * (1 - v) * 0.12, child: c),
       child: child,
     );
