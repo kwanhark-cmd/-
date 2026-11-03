@@ -152,7 +152,6 @@ void main() {
         if (!_on) return;
         await _loadFonts();
         debugDisableShadows = false; // 실제 기기처럼 그림자 그리기
-        addTearDown(() => debugDisableShadows = true);
         t.view.physicalSize = const Size(390 * 3, 844 * 3);
         t.view.devicePixelRatio = 3;
         addTearDown(t.view.reset);
@@ -168,6 +167,7 @@ void main() {
         await shot.open(t, s, k);
         await _capture(t, '$_out/${shot.name}-${dark ? '어두움' : '밝음'}.png');
         await t.pumpWidget(const SizedBox());
+        debugDisableShadows = true;
       });
     }
   }

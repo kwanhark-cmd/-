@@ -126,7 +126,7 @@ class S {
   static const styleEmpty = '아직 스타일 카드가 없어요. 분석 버튼을 눌러 만들어 보세요.';
 
   // ---- 자동 수정 ----
-  static const editsTitle = '영상 제목·설명·키워드 수정';
+  static const editsTitle = '수정 내역';
   static const editRevert = '되돌리기';
   static const editRevertAll = '오늘 수정 모두 되돌리기';
   static const editReverted = '원래대로 되돌렸어요.';
