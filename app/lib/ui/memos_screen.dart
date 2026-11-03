@@ -72,12 +72,14 @@ class _MemosScreenState extends State<MemosScreen> {
               Card(
                 child: ListTile(
                   title: Text(m.text),
-                  subtitle: Text('${m.createdAt.toLocal().toString().substring(0, 16)}${m.used ? ' · 제작에 사용함' : ''}'),
+                  subtitle: Text(
+                    S.join2(m.createdAt.toLocal().toString().substring(0, 16), m.used ? ' · 제작에 사용함' : ''),
+                  ),
                   trailing: IconButton(
                     tooltip: S.delete,
                     icon: const Icon(Icons.delete_outline),
                     onPressed: () async {
-                      if (await confirm(context, '이 메모를 지울까요?', yes: S.delete, danger: true)) {
+                      if (await confirm(context, S.memo1, yes: S.delete, danger: true)) {
                         u.memos.delete(m.id);
                         if (mounted) setState(() {});
                       }

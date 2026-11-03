@@ -63,7 +63,7 @@ class HomeShellState extends State<HomeShell> {
       await u.runner.tick();
       if (mounted) setState(() => _refresh++);
     } catch (e, st) {
-      u.env.logger.error('주기 확인 오류', e, st);
+      u.env.logger.error(S.shell1, e, st);
     }
   }
 

@@ -64,7 +64,7 @@ void _stage2() {
       );
       try {
         final pr = await ps.create(channelId: ch.channelId, format: format, topic: topic);
-        return '${ch.title}에 ${formatLabel(format)} "${pr.title}"을(를) 만들었어요. 제작 화면에서 확인해 주세요.';
+        return S.stage1(ch.title, formatLabel(format), pr.title);
       } on ProductionBlocked catch (e) {
         return e.message;
       }
@@ -117,7 +117,7 @@ void _stage2() {
   SettingsScreen.extraSections.add((context, u, refresh) {
     final s = u.settings;
     return SectionCard(
-      title: '콘텐츠 제작',
+      title: S.stage2,
       icon: Icons.movie_creation,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

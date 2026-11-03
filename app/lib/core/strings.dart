@@ -381,4 +381,123 @@ class S {
   }
 
   static String num(int n) => _num(n);
+
+  // ---- 화면별 문구 ----
+  static String join2(Object? a, Object? b) => '$a$b';
+  static const prodPracticeCredits = '\n(지금은 연습 모드라 실제 크레딧은 쓰지 않아요)';
+  static String videoLine(int views, String privacy, int tagCount) =>
+      '${S.views(views)}${privacy == 'public' ? '' : (privacy == 'private' ? ' · 비공개' : ' · 일부 공개')}'
+      '${tagCount == 0 ? ' · 키워드 없음' : ' · 키워드 $tagCount개'}';
+  // blog_screen.dart
+  static String blog1(Object? p0) => '블로그 $p0개를 등록했어요.';
+  static const blog2 = '티스토리 · 복사해서 올리기';
+  static String blog3(Object? p0) => '구글 블로그 · 글 $p0개';
+  static const blog4 = '블로그 스타일 카드';
+  static const blog5 = '새 글';
+  static String blog6(Object? p0) => '$p0 (제목·라벨)';
+  static const blog7 = '복사해서 티스토리에 올려 주세요';
+  static const blog8 = '구글 블로그에 초안(비공개)으로 올림 · 확인 후 공개해 주세요';
+  static const blog9 = '확인 완료';
+  static const blog10 = '구글 블로그에서 열기';
+  static const blog11 = '올렸어요';
+  static const blog12 = '확인하고 공개했어요';
+  static String blog13(Object? p0) => '글 $p0개를 다듬었어요. 마음에 안 들면 되돌릴 수 있어요.';
+  static String blog14(Object? p0) => '"$p0" 블로그를 앱에서 뺄까요? (블로그의 글은 그대로예요)';
+  // channels_screen.dart
+  static String chan1(Object? p0) => '$p0 영상 불러오는 중';
+  static String chan2(Object? p0) => '첫 불러오기 실패: $p0';
+  static const chan5 = '설명';
+  static const chan6 = '(없음)';
+  static const chan7 = '키워드';
+  static String chan8(Object? p0) => '$p0 (쉼표로 구분)';
+  // corner_screen.dart
+  static String corner1(Object? p0) => '$p0 (예: 사장님의 하루)';
+  static const corner2 = '내 이야기를 콘텐츠로 만들어요. 직접 찍은 영상과 음성 메모를 넣으면 자막·제목·설명·키워드·썸네일을 여러 형식으로 만들어 드려요.';
+  static String corner3(Object? p0, Object? p1) => '$p0 · 소재 $p1개';
+  static const corner4 = '직접 찍음';
+  static const corner5 = '사용 허락 받음';
+  static const corner6 = '사용하기로 함';
+  static const corner7 = '뺌';
+  static const corner8 = '저작권 확인 필요';
+  static const corner9 = '이야기 글로 쓰기';
+  static String corner10(Object? p0) => '소재 ($p0)';
+  static const corner11 = '저장된 음성 메모가 없어요. 마이크 버튼을 눌러 "메모, ..." 라고 말해 보세요.';
+  static const corner12 = '이야기';
+  static const corner13 = '들려주고 싶은 이야기';
+  static String corner14(Object? p0, Object? p1) => '소재 $p0개를 가져왔어요.$p1';
+  static String corner15(Object? p0) => '$p0가지 형식으로 만들었어요. "제작" 메뉴에서 확인하고 올릴 수 있어요.';
+  // dashboard.dart
+  static String home1(Object? p0) => '$p0개';
+  // edits_screen.dart
+  static String edits1(Object? p0) => '$p0 살펴보는 중';
+  static String edits2(Object? p0) => '키워드: $p0';
+  static const edits3 = '설명도 다듬어요';
+  static String edits4(Object? p0, Object? p1, Object? p2) => '$p0$p1$p2';
+  static String edits5(Object? p0, Object? p1) => '$p0개를 되돌렸어요.$p1';
+  // home_shell.dart
+  static const shell1 = '주기 확인 오류';
+  // memos_screen.dart
+  static const memo1 = '이 메모를 지울까요?';
+  // onboarding.dart
+  static const wiz1 = '가나다라 ABC 123 — 이 글씨 크기로 보여요.';
+  static String wiz2(Object? p0) => '지금 연결된 채널: $p0개';
+  // produce_screen.dart
+  static const prod1 = '사용 안 함';
+  static String prod2(Object? p0, Object? p1) => '오늘 만든 개수: $p0 / $p1';
+  static const prod3 = '만듦 (아직 안 올림)';
+  static const prod4 = '내일 올리기 준비됨';
+  static const prod5 = '비공개로 올림 · 확인 기다림';
+  static const prod6 = '제목';
+  static const prod7 = '영상 파일';
+  static String prod8(Object? p0) => '준비됨 ($p0)';
+  static const prod9 = '아직 없어요';
+  static const prod10 = '구글 비즈·브루 연결은 준비 중이에요. 지금은 직접 만든 영상을 넣거나 힉스필드로 만들 수 있어요.';
+  static const prod11 = '사진·이미지 게시물은 유튜브 스튜디오의 "커뮤니티 게시물"에 위 글을 복사해 직접 올려 주세요.';
+  static const prod12 = '이 콘텐츠를 앱에서 지울까요? (이미 유튜브에 올린 영상은 그대로예요)';
+  static const prod13 = '키워드 (쉼표로 구분)';
+  static const prod14 = '만들기';
+  static const prod15 = '채널 소개에 "AI의 도움을 받아 만든 콘텐츠가 있어요" 문구가 있는지 확인해 주세요.';
+  static const prod16 = '비공개로 올리기';
+  static const prod17 = '비공개로 올린 영상이에요. "유튜브에서 확인하기"를 눌러 내용을 보고, 괜찮으면 유튜브에서 직접 공개해 주세요.';
+  // settings_screen.dart
+  static String set1(Object? p0, Object? p1) => '$p0시 $p1분';
+  static const set2 = '유튜브';
+  static String set3(Object? p0, Object? p1) => '$p0 ($p1)';
+  static const set4 = '자료 관리';
+  static String set5(Object? p0) => '지금은 $p0예요. 아래에 키를 넣으면 실제 AI가 켜져요.';
+  static const set6 = '다른 제공자 (준비 중)';
+  static const set7 = '저장된 키가 있어요 (보안을 위해 내용은 보여 주지 않아요)';
+  static const set8 = '키가 없어요';
+  static String set9(Object? p0) => '예: 영상 제목 다듬기 1번 ≈ \$$p0';
+  static const set10 = '구글 앱이 아직 "테스트" 상태예요';
+  static const set11 = '테스트 상태에서는 연결이 7일마다 만료돼요. 만료 전에 알려 드려요.';
+  static const set12 = '저장했어요.';
+  static const set13 = '켜면 정한 시간대에 하루 한 번: 채널 새로 불러오기 → 영상 다듬기. 시작과 끝에 알려 드려요. 업로드·삭제·공개는 하지 않아요.';
+  static const set14 = '지금 한 번 실행';
+  static const set15 = '작업 기록 보기';
+  static String set16(Object? p0) => '$p0시';
+  static const set17 = '작업 기록';
+  static const set18 = '지금 자료를 이 백업으로 바꿀까요? (지금 자료도 자동으로 따로 보관해 둬요)';
+  static const set19 = '내용 복사';
+  // tools_screen.dart
+  static String tool1(Object? p0) => '$p0: 피그마';
+  static const tool2 = '영상 생성 순서 바꾸기';
+  static const tool3 = '나레이션 순서 바꾸기';
+  static const tool4 = '도구 비밀번호는 이 앱에 저장하지 않아요.';
+  static const tool5 = '구글 비즈';
+  static const tool6 = '힉스필드';
+  static const tool7 = '내가 만든 영상';
+  static const tool8 = '브루';
+  static String tool9(Object? p0) => '힉스필드 $p0';
+  static const tool10 = '피그마 연결';
+  static const tool11 = '피그마 개발자 설정에서 만든 앱 정보를 넣고 "연결하기"를 누르면 피그마 로그인 창이 열려요.';
+  static const tool12 = '클라이언트 ID';
+  static const tool13 = '클라이언트 보안 비밀';
+  // voice_sheet.dart
+  static const voice1 = '잘 듣지 못했어요. 다시 눌러 말씀해 주세요.';
+  static const voice2 = '취소했어요.';
+  static String voice3(Object? p0) => '들은 말: "$p0"';
+  // stages.dart
+  static String stage1(Object? p0, Object? p1, Object? p2) => '$p0에 $p1 "$p2"을(를) 만들었어요. 제작 화면에서 확인해 주세요.';
+  static const stage2 = '콘텐츠 제작';
 }

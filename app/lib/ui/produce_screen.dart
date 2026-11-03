@@ -72,7 +72,7 @@ Future<Production?> newProductionFlow(
                   isExpanded: true,
                   decoration: const InputDecoration(labelText: S.produceUseMemo),
                   items: [
-                    const DropdownMenuItem<int?>(value: null, child: Text('사용 안 함')),
+                    const DropdownMenuItem<int?>(value: null, child: Text(S.prod1)),
                     for (final m in memos)
                       DropdownMenuItem<int?>(
                         value: m.id,
@@ -83,7 +83,7 @@ Future<Production?> newProductionFlow(
                 ),
               ],
               const SizedBox(height: 12),
-              Text('오늘 만든 개수: ${productionOf(u).madeToday()} / ${u.settings.produceDailyLimit}'),
+              Text(S.prod2(productionOf(u).madeToday(), u.settings.produceDailyLimit)),
             ],
           ),
         ),
@@ -114,10 +114,10 @@ Future<Production?> newProductionFlow(
 }
 
 String statusLabel(ProductionStatus s) => switch (s) {
-  ProductionStatus.draft => '만듦 (아직 안 올림)',
-  ProductionStatus.uploadTomorrow => '내일 올리기 준비됨',
-  ProductionStatus.uploadedPrivate => '비공개로 올림 · 확인 기다림',
-  ProductionStatus.doneByUser => '확인 완료',
+  ProductionStatus.draft => S.prod3,
+  ProductionStatus.uploadTomorrow => S.prod4,
+  ProductionStatus.uploadedPrivate => S.prod5,
+  ProductionStatus.doneByUser => S.blog9,
 };
 
 class ProduceScreen extends StatefulWidget {
@@ -218,7 +218,7 @@ class _ProductionDetailScreenState extends State<ProductionDetailScreen> {
     Widget block(String label, String text) => SectionCard(
       title: label,
       trailing: IconButton(tooltip: S.copy, icon: const Icon(Icons.copy), onPressed: () => copyText(context, text)),
-      child: SelectableText(text.isEmpty ? '(없음)' : text),
+      child: SelectableText(text.isEmpty ? S.chan6 : text),
     );
     return Scaffold(
       appBar: AppBar(title: Text(formatLabel(p.format))),
@@ -228,9 +228,9 @@ class _ProductionDetailScreenState extends State<ProductionDetailScreen> {
           children: [
             Text(statusLabel(p.status), style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
-            block('제목', p.title),
-            block('설명', p.description),
-            block('키워드', p.tags.join(', ')),
+            block(S.prod6, p.title),
+            block(S.chan5, p.description),
+            block(S.chan7, p.tags.join(', ')),
             block(S.produceThumbnail, p.thumbnailText),
             block(S.produceScript, p.script),
             ButtonWrap(
@@ -238,14 +238,14 @@ class _ProductionDetailScreenState extends State<ProductionDetailScreen> {
             ),
             if (p.isUploadable) ...[
               SectionCard(
-                title: '영상 파일',
+                title: S.prod7,
                 icon: Icons.movie,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(p.hasVideo ? '준비됨 (${p.videoSource == 'own' ? '내가 만든 영상' : '힉스필드'})' : '아직 없어요'),
+                    Text(p.hasVideo ? S.prod8(p.videoSource == 'own' ? '내가 만든 영상' : '힉스필드') : S.prod9),
                     const SizedBox(height: 8),
-                    const Text('구글 비즈·브루 연결은 준비 중이에요. 지금은 직접 만든 영상을 넣거나 힉스필드로 만들 수 있어요.'),
+                    const Text(S.prod10),
                     const SizedBox(height: 8),
                     ButtonWrap(
                       children: [
@@ -294,14 +294,14 @@ class _ProductionDetailScreenState extends State<ProductionDetailScreen> {
                 ),
               ],
             ] else
-              const Text('사진·이미지 게시물은 유튜브 스튜디오의 "커뮤니티 게시물"에 위 글을 복사해 직접 올려 주세요.'),
+              const Text(S.prod11),
             const SizedBox(height: 12),
             BigButton(
               label: S.delete,
               icon: Icons.delete_outline,
               danger: true,
               onPressed: () async {
-                if (await confirm(context, '이 콘텐츠를 앱에서 지울까요? (이미 유튜브에 올린 영상은 그대로예요)', yes: S.delete, danger: true)) {
+                if (await confirm(context, S.prod12, yes: S.delete, danger: true)) {
                   ps.delete(p.id);
                   if (context.mounted) Navigator.pop(context);
                 }
@@ -328,18 +328,18 @@ class _ProductionDetailScreenState extends State<ProductionDetailScreen> {
             children: [
               TextField(
                 controller: t,
-                decoration: const InputDecoration(labelText: '제목'),
+                decoration: const InputDecoration(labelText: S.prod6),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: d,
                 maxLines: 6,
-                decoration: const InputDecoration(labelText: '설명'),
+                decoration: const InputDecoration(labelText: S.chan5),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: k,
-                decoration: const InputDecoration(labelText: '키워드 (쉼표로 구분)'),
+                decoration: const InputDecoration(labelText: S.prod13),
               ),
               const SizedBox(height: 12),
               TextField(
@@ -382,9 +382,8 @@ class _ProductionDetailScreenState extends State<ProductionDetailScreen> {
       final q = await ps.higgsfieldQuote(p.id);
       if (!mounted) return;
       final msg =
-          '${S.produceHiggsfieldConfirm(q.estimate, q.left)}'
-          '${await u.tools.higgsConnected ? '' : '\n(지금은 연습 모드라 실제 크레딧은 쓰지 않아요)'}';
-      if (!mounted || !await confirm(context, msg, yes: '만들기')) return;
+          S.produceHiggsfieldConfirm(q.estimate, q.left) + (await u.tools.higgsConnected ? '' : S.prodPracticeCredits);
+      if (!mounted || !await confirm(context, msg, yes: S.prod14)) return;
       if (!mounted) return;
       await runWithProgress(
         context,
@@ -432,7 +431,7 @@ class _ProductionDetailScreenState extends State<ProductionDetailScreen> {
                     ],
                   ),
                 ),
-                if (method == 'channel') const Text('채널 소개에 "AI의 도움을 받아 만든 콘텐츠가 있어요" 문구가 있는지 확인해 주세요.'),
+                if (method == 'channel') const Text(S.prod15),
               ],
             ),
           ),
@@ -441,7 +440,7 @@ class _ProductionDetailScreenState extends State<ProductionDetailScreen> {
             FilledButton(
               key: const Key('upload-confirm'),
               onPressed: () => Navigator.pop(c, true),
-              child: const Text('비공개로 올리기'),
+              child: const Text(S.prod16),
             ),
           ],
         ),
@@ -485,7 +484,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            const Text('비공개로 올린 영상이에요. "유튜브에서 확인하기"를 눌러 내용을 보고, 괜찮으면 유튜브에서 직접 공개해 주세요.'),
+            const Text(S.prod17),
             const SizedBox(height: 12),
             if (list.isEmpty) const EmptyHint(S.empty),
             for (final p in list)

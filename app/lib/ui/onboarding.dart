@@ -94,7 +94,7 @@ class _OnboardingWizardState extends State<OnboardingWizard> {
             const SizedBox(height: 8),
             FontScalePicker(state: widget.state),
             const SizedBox(height: 16),
-            const Text('가나다라 ABC 123 — 이 글씨 크기로 보여요.'),
+            const Text(S.wiz1),
           ],
         );
       case 1:
@@ -135,7 +135,7 @@ class _OnboardingWizardState extends State<OnboardingWizard> {
               },
             ),
             const SizedBox(height: 12),
-            Text('지금 연결된 채널: ${u.youtube.channels().length}개'),
+            Text(S.wiz2(u.youtube.channels().length)),
             const SizedBox(height: 12),
             BigButton(label: S.skip, primary: false, onPressed: () => setState(() => step++)),
           ],

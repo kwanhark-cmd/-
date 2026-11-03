@@ -111,10 +111,10 @@ class _ToolsScreenState extends State<ToolsScreen> {
                 children: [
                   Text('${S.toolVideoGen}: ${s.videoToolPriority.map(_toolName).join(' → ')}'),
                   Text('${S.toolNarration}: ${s.narrationToolPriority.map(_toolName).join(' → ')}'),
-                  const Text('${S.toolMotion}: 피그마'),
+                  Text(S.tool1(S.toolMotion)),
                   const SizedBox(height: 8),
                   BigButton(
-                    label: '영상 생성 순서 바꾸기',
+                    label: S.tool2,
                     primary: false,
                     onPressed: () => setState(() {
                       final l = [...s.videoToolPriority];
@@ -124,7 +124,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
                   ),
                   const SizedBox(height: 8),
                   BigButton(
-                    label: '나레이션 순서 바꾸기',
+                    label: S.tool3,
                     primary: false,
                     onPressed: () => setState(() {
                       final l = [...s.narrationToolPriority];
@@ -138,7 +138,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
             const ListTile(
               leading: Icon(Icons.lock),
               title: Text(S.toolVault),
-              subtitle: Text('도구 비밀번호는 이 앱에 저장하지 않아요.'),
+              subtitle: Text(S.tool4),
               enabled: false,
             ),
           ],
@@ -148,10 +148,10 @@ class _ToolsScreenState extends State<ToolsScreen> {
   }
 
   static String _toolName(String id) => switch (id) {
-    'googleVids' => '구글 비즈',
-    'higgsfield' => '힉스필드',
-    'ownFile' => '내가 만든 영상',
-    'vrew' => '브루',
+    'googleVids' => S.tool5,
+    'higgsfield' => S.tool6,
+    'ownFile' => S.tool7,
+    'vrew' => S.tool8,
     _ => id,
   };
 
@@ -162,7 +162,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
         final key = await showDialog<String>(
           context: context,
           builder: (d) => AlertDialog(
-            title: const Text('힉스필드 ${S.toolApiKey}'),
+            title: Text(S.tool9(S.toolApiKey)),
             content: TextField(
               key: const Key('higgs-key'),
               controller: c,
@@ -183,21 +183,21 @@ class _ToolsScreenState extends State<ToolsScreen> {
         final ok = await showDialog<bool>(
           context: context,
           builder: (d) => AlertDialog(
-            title: const Text('피그마 연결'),
+            title: const Text(S.tool10),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('피그마 개발자 설정에서 만든 앱 정보를 넣고 "연결하기"를 누르면 피그마 로그인 창이 열려요.'),
+                const Text(S.tool11),
                 const SizedBox(height: 12),
                 TextField(
                   controller: cid,
-                  decoration: const InputDecoration(labelText: '클라이언트 ID'),
+                  decoration: const InputDecoration(labelText: S.tool12),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: sec,
                   obscureText: true,
-                  decoration: const InputDecoration(labelText: '클라이언트 보안 비밀'),
+                  decoration: const InputDecoration(labelText: S.tool13),
                 ),
               ],
             ),

@@ -30,7 +30,7 @@ class _BlogScreenState extends State<BlogScreen> {
         }
         return sites;
       });
-      if (mounted && r != null) toast(context, '블로그 ${r.length}개를 등록했어요.');
+      if (mounted && r != null) toast(context, S.blog1(r.length));
     } catch (e) {
       if (mounted) await showFailure(context, e, onRetry: _connectBlogger);
     }
@@ -111,7 +111,7 @@ class _BlogScreenState extends State<BlogScreen> {
               key: Key('site-${s.id}'),
               leading: Icon(s.isTistory ? Icons.content_copy : Icons.rss_feed),
               title: Text(s.title),
-              subtitle: Text(s.isTistory ? '티스토리 · 복사해서 올리기' : '구글 블로그 · 글 ${bs.postTotal(s.id)}개'),
+              subtitle: Text(s.isTistory ? S.blog2 : S.blog3(bs.postTotal(s.id))),
               trailing: const Icon(Icons.chevron_right),
               onTap: () async {
                 await Navigator.of(context).push(
@@ -191,7 +191,7 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
               ],
             ),
             SectionCard(
-              title: '블로그 스타일 카드',
+              title: S.blog4,
               icon: Icons.palette,
               trailing: style == null
                   ? null
@@ -221,7 +221,7 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
               ),
             ),
             SectionCard(
-              title: '새 글',
+              title: S.blog5,
               icon: Icons.drafts,
               child: Column(
                 children: [if (drafts.isEmpty) const Text(S.empty), for (final d in drafts) _draftTile(s, d)],
@@ -229,7 +229,7 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
             ),
             if (!s.isTistory)
               SectionCard(
-                title: '${S.channelEdits} (제목·라벨)',
+                title: S.blog6(S.channelEdits),
                 icon: Icons.history,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -290,9 +290,9 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
           children: [
             Text(d.title, style: Theme.of(context).textTheme.titleMedium),
             Text(switch (d.status) {
-              'copyReady' => '복사해서 티스토리에 올려 주세요',
-              'draftOnBlogger' => '구글 블로그에 초안(비공개)으로 올림 · 확인 후 공개해 주세요',
-              _ => '확인 완료',
+              'copyReady' => S.blog7,
+              'draftOnBlogger' => S.blog8,
+              _ => S.blog9,
             }),
             const SizedBox(height: 8),
             ButtonWrap(
@@ -319,14 +319,14 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
                 ),
                 if (d.status == 'draftOnBlogger')
                   BigButton(
-                    label: '구글 블로그에서 열기',
+                    label: S.blog10,
                     icon: Icons.open_in_new,
                     primary: false,
                     onPressed: () => u.env.launchUrl(Uri.parse(bs.bloggerEditUrl(s, d.remotePostId))),
                   ),
                 if (!done)
                   BigButton(
-                    label: d.status == 'copyReady' ? '올렸어요' : '확인하고 공개했어요',
+                    label: d.status == 'copyReady' ? S.blog11 : S.blog12,
                     icon: Icons.check,
                     onPressed: () {
                       bs.markDraftDone(d.id);
@@ -377,7 +377,7 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
   Future<void> _edits(BlogSite s) async {
     try {
       final n = await runWithProgress(context, S.blogRunEdits, (c, p) => bs.runEdits(s.id, cancel: c));
-      if (mounted) toast(context, n == 0 ? S.editsNone : '글 $n개를 다듬었어요. 마음에 안 들면 되돌릴 수 있어요.');
+      if (mounted) toast(context, n == 0 ? S.editsNone : S.blog13(n));
     } catch (e) {
       if (mounted) await showFailure(context, e);
     }
@@ -411,7 +411,7 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
   }
 
   Future<void> _remove(BlogSite s) async {
-    if (!await confirm(context, '"${s.title}" 블로그를 앱에서 뺄까요? (블로그의 글은 그대로예요)', yes: S.delete, danger: true)) return;
+    if (!await confirm(context, S.blog14(s.title), yes: S.delete, danger: true)) return;
     await bs.removeSite(s.id);
     if (mounted) Navigator.pop(context);
   }

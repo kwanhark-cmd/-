@@ -51,7 +51,7 @@ class _VoiceSheetState extends State<_VoiceSheet> {
     if (!mounted) return;
     setState(() => listening = false);
     if (words == null || words.trim().isEmpty) {
-      setState(() => status = u.env.speech.available ? '잘 듣지 못했어요. 다시 눌러 말씀해 주세요.' : S.voiceNotAvailable);
+      setState(() => status = u.env.speech.available ? S.voice1 : S.voiceNotAvailable);
       return;
     }
     await _run(words);
@@ -76,7 +76,7 @@ class _VoiceSheetState extends State<_VoiceSheet> {
         if (ok) {
           await _run(words, confirmed: true);
         } else {
-          setState(() => answer = '취소했어요.');
+          setState(() => answer = S.voice2);
         }
       }
     } catch (e) {
@@ -96,7 +96,7 @@ class _VoiceSheetState extends State<_VoiceSheet> {
             Text(S.voiceListen, style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 8),
             if (status.isNotEmpty) Text(status),
-            if (heard.isNotEmpty) Text('들은 말: "$heard"', style: const TextStyle(color: Colors.grey)),
+            if (heard.isNotEmpty) Text(S.voice3(heard), style: const TextStyle(color: Colors.grey)),
             if (answer.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(

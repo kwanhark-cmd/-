@@ -89,7 +89,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               ListTile(
                 title: const Text(S.settingsBriefingTime),
-                subtitle: Text('${s.briefingHour}시 ${s.briefingMinute.toString().padLeft(2, '0')}분'),
+                subtitle: Text(S.set1(s.briefingHour, s.briefingMinute.toString().padLeft(2, '0'))),
                 trailing: const Icon(Icons.schedule),
                 onTap: () async {
                   final t = await showTimePicker(
@@ -115,7 +115,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _aiSection(),
         _googleSection(),
         SectionCard(
-          title: '유튜브',
+          title: S.set2,
           icon: Icons.smart_display,
           child: Column(
             children: [
@@ -126,7 +126,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const SizedBox(height: 12),
               NumberField(
-                label: '${S.settingsEditsPerDay} (${s.isFirstMonth(u.env.now()) ? S.editsFirstMonth : '0이면 수정 안 함'})',
+                label: S.set3(S.settingsEditsPerDay, s.isFirstMonth(u.env.now()) ? S.editsFirstMonth : '0이면 수정 안 함'),
                 value: s.editsPerChannelPerDay,
                 onChanged: (v) => s.editsPerChannelPerDay = v.toInt(),
               ),
@@ -136,7 +136,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _runnerSection(),
         for (final sec in SettingsScreen.extraSections) sec(context, u, _refresh),
         SectionCard(
-          title: '자료 관리',
+          title: S.set4,
           icon: Icons.storage,
           child: ButtonWrap(
             children: [
@@ -205,14 +205,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (u.ai.isPracticeMode) const Text('지금은 ${S.practiceMode}예요. 아래에 키를 넣으면 실제 AI가 켜져요.'),
+          if (u.ai.isPracticeMode) Text(S.set5(S.practiceMode)),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
             initialValue: s.aiProvider,
             decoration: const InputDecoration(labelText: S.settingsAiProvider),
             items: const [
               DropdownMenuItem(value: 'claude', child: Text('Claude (Anthropic)')),
-              DropdownMenuItem(value: 'other', enabled: false, child: Text('다른 제공자 (준비 중)')),
+              DropdownMenuItem(value: 'other', enabled: false, child: Text(S.set6)),
             ],
             onChanged: (v) => setState(() => s.aiProvider = v ?? 'claude'),
           ),
@@ -229,10 +229,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             key: const Key('ai-key'),
             controller: aiKey,
             obscureText: true,
-            decoration: InputDecoration(
-              labelText: S.settingsAiKey,
-              helperText: u.ai.hasKey ? '저장된 키가 있어요 (보안을 위해 내용은 보여 주지 않아요)' : '키가 없어요',
-            ),
+            decoration: InputDecoration(labelText: S.settingsAiKey, helperText: u.ai.hasKey ? S.set7 : S.set8),
           ),
           const SizedBox(height: 8),
           ButtonWrap(
@@ -268,9 +265,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 8),
           Text('${S.settingsAiUsed}: \$${u.ai.monthCostUsd.toStringAsFixed(3)}'),
-          Text(
-            '예: 영상 제목 다듬기 1번 ≈ \$${u.ai.estimateCost('x' * 1500, 'x' * 1500, expectedOutput: 800).toStringAsFixed(3)}',
-          ),
+          Text(S.set9(u.ai.estimateCost('x' * 1500, 'x' * 1500, expectedOutput: 800).toStringAsFixed(3))),
         ],
       ),
     );
@@ -298,8 +293,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('구글 앱이 아직 "테스트" 상태예요'),
-            subtitle: const Text('테스트 상태에서는 연결이 7일마다 만료돼요. 만료 전에 알려 드려요.'),
+            title: const Text(S.set10),
+            subtitle: const Text(S.set11),
             value: s.googleAppInTesting,
             onChanged: (v) => setState(() => s.googleAppInTesting = v),
           ),
@@ -312,7 +307,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               }
               googleSecret.clear();
               widget.state.refresh();
-              if (mounted) toast(context, '저장했어요.');
+              if (mounted) toast(context, S.set12);
             },
           ),
         ],
@@ -332,7 +327,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             title: const Text(S.settingsRunnerOn),
-            subtitle: const Text('켜면 정한 시간대에 하루 한 번: 채널 새로 불러오기 → 영상 다듬기. 시작과 끝에 알려 드려요. 업로드·삭제·공개는 하지 않아요.'),
+            subtitle: const Text(S.set13),
             value: s.runnerEnabled,
             onChanged: u.env.isDesktop ? (v) => setState(() => s.runnerEnabled = v) : null,
           ),
@@ -344,7 +339,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               if (u.env.isDesktop)
                 BigButton(
-                  label: '지금 한 번 실행',
+                  label: S.set14,
                   icon: Icons.play_arrow,
                   primary: false,
                   onPressed: u.runner.running
@@ -354,7 +349,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           if (mounted) toast(context, S.runnerDone(r.edits, r.deferred));
                         }),
                 ),
-              BigButton(label: '작업 기록 보기', icon: Icons.receipt_long, primary: false, onPressed: _jobLog),
+              BigButton(label: S.set15, icon: Icons.receipt_long, primary: false, onPressed: _jobLog),
             ],
           ),
         ],
@@ -366,7 +361,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     isExpanded: true,
     initialValue: value.clamp(0, 23),
     decoration: InputDecoration(labelText: label),
-    items: [for (var h = 0; h < 24; h++) DropdownMenuItem(value: h, child: Text('$h시'))],
+    items: [for (var h = 0; h < 24; h++) DropdownMenuItem(value: h, child: Text(S.set16(h)))],
     onChanged: (v) => setState(() => set(v ?? value)),
   );
 
@@ -375,7 +370,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     builder: (c) {
       final log = u.jobs.recentLog();
       return AlertDialog(
-        title: const Text('작업 기록'),
+        title: const Text(S.set17),
         content: SizedBox(
           width: 600,
           child: log.isEmpty
@@ -408,7 +403,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       toast(context, S.settingsRestoreBad);
       return;
     }
-    if (!await confirm(context, '지금 자료를 이 백업으로 바꿀까요? (지금 자료도 자동으로 따로 보관해 둬요)', yes: S.settingsRestore)) return;
+    if (!await confirm(context, S.set18, yes: S.settingsRestore)) return;
     final user = u.user;
     final accounts = u.env.accounts;
     widget.state.logout();
@@ -436,7 +431,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 await Clipboard.setData(ClipboardData(text: text));
                 if (c.mounted) Navigator.pop(c);
               },
-              child: const Text('내용 복사'),
+              child: const Text(S.set19),
             ),
             FilledButton(onPressed: () => Navigator.pop(c), child: const Text(S.ok)),
           ],

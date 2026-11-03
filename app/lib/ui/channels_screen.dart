@@ -51,11 +51,11 @@ Future<void> connectGoogleFlow(BuildContext context, UserContext u) async {
     final rows = await runWithProgress(context, S.channelConnectGoogle, (cancel, p) async {
       final r = await u.youtube.connectGoogle(channelUrl: url.text);
       for (var i = 0; i < r.length; i++) {
-        p(i / r.length, '${r[i].title} 영상 불러오는 중');
+        p(i / r.length, S.chan1(r[i].title));
         try {
           await u.youtube.syncChannel(r[i].channelId, cancel: cancel);
         } catch (e) {
-          u.env.logger.warn('첫 불러오기 실패: $e');
+          u.env.logger.warn(S.chan2(e));
         }
       }
       return r;
@@ -246,10 +246,7 @@ class _ChannelDetailScreenState extends State<ChannelDetailScreen> {
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       title: Text(v.title),
-                      subtitle: Text(
-                        '${S.views(v.viewCount)}${v.privacy != 'public' ? ' · ${v.privacy == 'private' ? '비공개' : '일부 공개'}' : ''}'
-                        '${v.tags.isEmpty ? ' · 키워드 없음' : ' · 키워드 ${v.tags.length}개'}',
-                      ),
+                      subtitle: Text(S.videoLine(v.viewCount, v.privacy, v.tags.length)),
                       onTap: () => _showVideo(v),
                     ),
                   if (_videos.length < _total) BigButton(label: S.loadMore, primary: false, onPressed: _more),
@@ -316,11 +313,11 @@ class _ChannelDetailScreenState extends State<ChannelDetailScreen> {
           children: [
             Text(S.views(v.viewCount)),
             const SizedBox(height: 8),
-            const Text('설명', style: TextStyle(fontWeight: FontWeight.bold)),
-            Text(v.description.isEmpty ? '(없음)' : v.description),
+            const Text(S.chan5, style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(v.description.isEmpty ? S.chan6 : v.description),
             const SizedBox(height: 8),
-            const Text('키워드', style: TextStyle(fontWeight: FontWeight.bold)),
-            Text(v.tags.isEmpty ? '(없음)' : v.tags.join(', ')),
+            const Text(S.chan7, style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(v.tags.isEmpty ? S.chan6 : v.tags.join(', ')),
           ],
         ),
       ),
@@ -358,7 +355,7 @@ Future<StyleCard?> editStyleDialog(BuildContext context, StyleCard s) {
           children: [
             f(S.styleMood, mood),
             f(S.styleTone, tone),
-            f('${S.styleTopics} (쉼표로 구분)', topics),
+            f(S.chan8(S.styleTopics), topics),
             f(S.styleTitlePattern, pattern),
             f(S.styleAudience, audience),
             f(S.styleNotes, notes, lines: 3),

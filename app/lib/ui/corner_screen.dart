@@ -40,7 +40,7 @@ class _CornerScreenState extends State<CornerScreen> {
               TextField(
                 key: const Key('corner-name'),
                 controller: name,
-                decoration: const InputDecoration(labelText: '${S.cornerName} (예: 사장님의 하루)'),
+                decoration: InputDecoration(labelText: S.corner1(S.cornerName)),
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
@@ -78,7 +78,7 @@ class _CornerScreenState extends State<CornerScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
       children: [
-        const Text('내 이야기를 콘텐츠로 만들어요. 직접 찍은 영상과 음성 메모를 넣으면 자막·제목·설명·키워드·썸네일을 여러 형식으로 만들어 드려요.'),
+        const Text(S.corner2),
         const SizedBox(height: 12),
         BigButton(key: const Key('corner-new'), label: S.cornerNew, icon: Icons.add, onPressed: _new),
         const SizedBox(height: 12),
@@ -89,7 +89,7 @@ class _CornerScreenState extends State<CornerScreen> {
               key: Key('corner-${c.id}'),
               leading: const Icon(Icons.auto_stories),
               title: Text(c.name),
-              subtitle: Text('${u.youtube.channel(c.channelId)?.title ?? ''} · 소재 ${cornerOf(u).items(c.id).length}개'),
+              subtitle: Text(S.corner3(u.youtube.channel(c.channelId)?.title ?? '', cornerOf(u).items(c.id).length)),
               trailing: const Icon(Icons.chevron_right),
               onTap: () async {
                 await Navigator.of(context).push(
@@ -122,11 +122,11 @@ class _CornerDetailScreenState extends State<CornerDetailScreen> {
   List<Production> made = [];
 
   String _crLabel(CornerItem i) => switch (i.copyright) {
-    'own' => '직접 찍음',
-    'licensed' => '사용 허락 받음',
-    'approved' => '사용하기로 함',
-    'excluded' => '뺌',
-    _ => '저작권 확인 필요',
+    'own' => S.corner4,
+    'licensed' => S.corner5,
+    'approved' => S.corner6,
+    'excluded' => S.corner7,
+    _ => S.corner8,
   };
 
   IconData _icon(String kind) => switch (kind) {
@@ -164,12 +164,7 @@ class _CornerDetailScreenState extends State<CornerDetailScreen> {
                   primary: false,
                   onPressed: () => busy.run(_addMemo),
                 ),
-                BigButton(
-                  label: '이야기 글로 쓰기',
-                  icon: Icons.edit_note,
-                  primary: false,
-                  onPressed: () => busy.run(_addText),
-                ),
+                BigButton(label: S.corner9, icon: Icons.edit_note, primary: false, onPressed: () => busy.run(_addText)),
                 BigButton(
                   key: const Key('corner-import'),
                   label: S.cornerImport,
@@ -180,7 +175,7 @@ class _CornerDetailScreenState extends State<CornerDetailScreen> {
               ],
             ),
             SectionCard(
-              title: '소재 (${items.length})',
+              title: S.corner10(items.length),
               icon: Icons.inventory_2,
               child: Column(
                 children: [
@@ -244,7 +239,10 @@ class _CornerDetailScreenState extends State<CornerDetailScreen> {
                       leading: const Icon(Icons.check_circle_outline),
                       title: Text(p.title),
                       subtitle: Text(
-                        '${formatLabel(p.format)}${p.extra['srt'] != null && '${p.extra['srt']}'.isNotEmpty ? ' · ${S.cornerSubtitles} 있음' : ''}',
+                        S.join2(
+                          formatLabel(p.format),
+                          p.extra['srt'] != null && '${p.extra['srt']}'.isNotEmpty ? ' · ${S.cornerSubtitles} 있음' : '',
+                        ),
                       ),
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute<void>(
@@ -276,7 +274,7 @@ class _CornerDetailScreenState extends State<CornerDetailScreen> {
   Future<void> _addMemo() async {
     final memos = u.memos.list(limit: 50);
     if (memos.isEmpty) {
-      toast(context, '저장된 음성 메모가 없어요. 마이크 버튼을 눌러 "메모, ..." 라고 말해 보세요.');
+      toast(context, S.corner11);
       return;
     }
     final id = await showDialog<int>(
@@ -298,11 +296,11 @@ class _CornerDetailScreenState extends State<CornerDetailScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('이야기'),
+        title: const Text(S.corner12),
         content: TextField(
           controller: t,
           maxLines: 6,
-          decoration: const InputDecoration(labelText: '들려주고 싶은 이야기'),
+          decoration: const InputDecoration(labelText: S.corner13),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(c, false), child: const Text(S.cancel)),
@@ -319,7 +317,7 @@ class _CornerDetailScreenState extends State<CornerDetailScreen> {
     if (dir == null) return;
     final r = await cs.importFrom(widget.cornerId, FolderMaterialSource(dir));
     if (!mounted) return;
-    toast(context, '소재 ${r.added}개를 가져왔어요.${r.needCheck > 0 ? ' 저작권 확인이 필요한 소재가 ${r.needCheck}개 있어요.' : ''}');
+    toast(context, S.corner14(r.added, r.needCheck > 0 ? ' 저작권 확인이 필요한 소재가 ${r.needCheck}개 있어요.' : ''));
     setState(() {});
   }
 
@@ -339,7 +337,7 @@ class _CornerDetailScreenState extends State<CornerDetailScreen> {
       final r = await runWithProgress(context, S.cornerMake, (cancel, p) => cs.make(c.id, formats: formats.toList()));
       if (r != null && mounted) {
         setState(() => made = r);
-        toast(context, '${r.length}가지 형식으로 만들었어요. "제작" 메뉴에서 확인하고 올릴 수 있어요.');
+        toast(context, S.corner15(r.length));
       }
     } on ProductionBlocked catch (e) {
       if (mounted) toast(context, e.message);

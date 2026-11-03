@@ -17,7 +17,7 @@ Future<void> runEditsFlow(BuildContext context, UserContext u) async {
       final all = <EditProposal>[];
       final chans = u.youtube.channels();
       for (var i = 0; i < chans.length; i++) {
-        p(i / chans.length, '${chans[i].title} 살펴보는 중');
+        p(i / chans.length, S.edits1(chans[i].title));
         all.addAll(await u.edits.plan(chans[i].channelId, cancel: cancel));
       }
       return all;
@@ -45,8 +45,8 @@ Future<void> runEditsFlow(BuildContext context, UserContext u) async {
               for (final p in proposals) ...[
                 Text('${S.editBefore}: ${p.video.title}', style: const TextStyle(color: Colors.grey)),
                 Text('${S.editAfter}: ${p.after.title}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                if (p.after.tags.join() != p.video.tags.join()) Text('키워드: ${p.after.tags.join(', ')}'),
-                if (p.after.description != p.video.description) const Text('설명도 다듬어요'),
+                if (p.after.tags.join() != p.video.tags.join()) Text(S.edits2(p.after.tags.join(', '))),
+                if (p.after.description != p.video.description) const Text(S.edits3),
                 const Divider(),
               ],
             ],
@@ -69,8 +69,11 @@ Future<void> runEditsFlow(BuildContext context, UserContext u) async {
       (cancel, p) => u.edits.apply(proposals, cancel: cancel, progress: p),
     );
     if (r == null || !context.mounted) return;
-    final msg =
-        '${S.editsDone(r.applied)}${r.failed > 0 ? ' 실패 ${r.failed}개.' : ''}${r.deferred > 0 ? ' ${S.runnerQuotaDefer}' : ''}';
+    final msg = S.edits4(
+      S.editsDone(r.applied),
+      r.failed > 0 ? ' 실패 ${r.failed}개.' : '',
+      r.deferred > 0 ? ' ${S.runnerQuotaDefer}' : '',
+    );
     toast(context, msg);
     if (u.settings.ttsEnabled) await u.env.speaker.speak(msg);
   } catch (e) {
@@ -195,7 +198,7 @@ class _EditsScreenState extends State<EditsScreen> {
     if (!await confirm(context, '${S.editRevertAll}?', yes: S.editRevert)) return;
     final r = await u.edits.revertDay(day);
     if (!mounted) return;
-    toast(context, '${r.reverted}개를 되돌렸어요.${r.conflicts > 0 ? ' 유튜브에서 직접 바뀐 ${r.conflicts}개는 하나씩 확인해 주세요.' : ''}');
+    toast(context, S.edits5(r.reverted, r.conflicts > 0 ? ' 유튜브에서 직접 바뀐 ${r.conflicts}개는 하나씩 확인해 주세요.' : ''));
     setState(() {});
   }
 }
