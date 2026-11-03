@@ -55,7 +55,7 @@ class _MemosScreenState extends State<MemosScreen> {
   Widget build(BuildContext context) {
     final list = u.memos.list();
     return Scaffold(
-      appBar: AppBar(title: const Text(S.voiceMemoTitle)),
+      appBar: pageBar(context, S.voiceMemoTitle),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),

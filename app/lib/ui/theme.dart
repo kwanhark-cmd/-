@@ -295,7 +295,7 @@ ThemeData buildAppTheme(AppTokens t, Brightness b) {
     side: t.highContrast ? BorderSide(color: t.border, width: 2) : BorderSide.none,
   );
   const minSize = Size(AppTokens.touch, AppTokens.buttonHeight);
-  const textStyle = TextStyle(fontSize: AppTokens.fontButton, fontWeight: FontWeight.w700);
+  const textStyle = TextStyle(fontFamily: 'NotoSansKR', fontSize: AppTokens.fontButton, fontWeight: FontWeight.w700);
   const pad = EdgeInsets.symmetric(horizontal: AppTokens.gapL, vertical: AppTokens.gapM);
   final transitions = t.reduceMotion
       ? const PageTransitionsTheme(
@@ -327,12 +327,27 @@ ThemeData buildAppTheme(AppTokens t, Brightness b) {
     visualDensity: VisualDensity.comfortable,
     materialTapTargetSize: MaterialTapTargetSize.padded,
     textTheme: TextTheme(
-      headlineSmall: TextStyle(fontSize: AppTokens.fontTitle, fontWeight: FontWeight.w800, color: t.text),
-      titleLarge: TextStyle(fontSize: AppTokens.fontSection, fontWeight: FontWeight.w700, color: t.text),
-      titleMedium: TextStyle(fontSize: AppTokens.fontBody + 1, fontWeight: FontWeight.w700, color: t.text),
-      bodyLarge: TextStyle(fontSize: AppTokens.fontBody + 1, color: t.text),
-      bodyMedium: TextStyle(fontSize: AppTokens.fontBody, color: t.text),
-      bodySmall: TextStyle(fontSize: AppTokens.fontSmall, color: t.textSoft),
+      headlineSmall: TextStyle(
+        fontFamily: 'NotoSansKR',
+        fontSize: AppTokens.fontTitle,
+        fontWeight: FontWeight.w800,
+        color: t.text,
+      ),
+      titleLarge: TextStyle(
+        fontFamily: 'NotoSansKR',
+        fontSize: AppTokens.fontSection,
+        fontWeight: FontWeight.w700,
+        color: t.text,
+      ),
+      titleMedium: TextStyle(
+        fontFamily: 'NotoSansKR',
+        fontSize: AppTokens.fontBody + 1,
+        fontWeight: FontWeight.w700,
+        color: t.text,
+      ),
+      bodyLarge: TextStyle(fontFamily: 'NotoSansKR', fontSize: AppTokens.fontBody + 1, color: t.text),
+      bodyMedium: TextStyle(fontFamily: 'NotoSansKR', fontSize: AppTokens.fontBody, color: t.text),
+      bodySmall: TextStyle(fontFamily: 'NotoSansKR', fontSize: AppTokens.fontSmall, color: t.textSoft),
       labelLarge: textStyle,
     ),
     appBarTheme: AppBarTheme(
@@ -343,6 +358,7 @@ ThemeData buildAppTheme(AppTokens t, Brightness b) {
       centerTitle: false,
       toolbarHeight: 64,
       titleTextStyle: TextStyle(
+        fontFamily: 'NotoSansKR',
         fontFamily: 'NotoSansKR',
         fontSize: AppTokens.fontTitle - 2,
         fontWeight: FontWeight.w800,
@@ -410,8 +426,18 @@ ThemeData buildAppTheme(AppTokens t, Brightness b) {
     chipTheme: ChipThemeData(
       backgroundColor: t.tonal,
       selectedColor: t.primary,
-      labelStyle: TextStyle(color: t.onTonal, fontSize: AppTokens.fontBody, fontWeight: FontWeight.w600),
-      secondaryLabelStyle: TextStyle(color: t.onPrimary, fontSize: AppTokens.fontBody, fontWeight: FontWeight.w700),
+      labelStyle: TextStyle(
+        fontFamily: 'NotoSansKR',
+        color: t.onTonal,
+        fontSize: AppTokens.fontBody,
+        fontWeight: FontWeight.w600,
+      ),
+      secondaryLabelStyle: TextStyle(
+        fontFamily: 'NotoSansKR',
+        color: t.onPrimary,
+        fontSize: AppTokens.fontBody,
+        fontWeight: FontWeight.w700,
+      ),
       checkmarkColor: t.onPrimary,
       padding: const EdgeInsets.symmetric(horizontal: AppTokens.gapM, vertical: AppTokens.gapS),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTokens.radiusSmall)),
@@ -427,7 +453,12 @@ ThemeData buildAppTheme(AppTokens t, Brightness b) {
       indicatorColor: t.tonal,
       height: 76,
       labelTextStyle: WidgetStatePropertyAll(
-        TextStyle(fontSize: AppTokens.fontSmall - 1, fontWeight: FontWeight.w700, color: t.text),
+        TextStyle(
+          fontFamily: 'NotoSansKR',
+          fontSize: AppTokens.fontSmall - 1,
+          fontWeight: FontWeight.w700,
+          color: t.text,
+        ),
       ),
       iconTheme: WidgetStateProperty.resolveWith(
         (s) => IconThemeData(size: 28, color: s.contains(WidgetState.selected) ? t.onTonal : t.textSoft),
@@ -438,8 +469,13 @@ ThemeData buildAppTheme(AppTokens t, Brightness b) {
       indicatorColor: t.tonal,
       selectedIconTheme: IconThemeData(color: t.onTonal, size: 30),
       unselectedIconTheme: IconThemeData(color: t.textSoft, size: 28),
-      selectedLabelTextStyle: TextStyle(color: t.text, fontWeight: FontWeight.w800, fontSize: AppTokens.fontSmall),
-      unselectedLabelTextStyle: TextStyle(color: t.textSoft, fontSize: AppTokens.fontSmall),
+      selectedLabelTextStyle: TextStyle(
+        fontFamily: 'NotoSansKR',
+        color: t.text,
+        fontWeight: FontWeight.w800,
+        fontSize: AppTokens.fontSmall,
+      ),
+      unselectedLabelTextStyle: TextStyle(fontFamily: 'NotoSansKR', color: t.textSoft, fontSize: AppTokens.fontSmall),
     ),
     inputDecorationTheme: InputDecorationTheme(
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppTokens.radiusSmall)),
@@ -447,7 +483,7 @@ ThemeData buildAppTheme(AppTokens t, Brightness b) {
         borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
         borderSide: BorderSide(color: t.border, width: t.highContrast ? 2 : 1),
       ),
-      labelStyle: TextStyle(color: t.textSoft, fontSize: AppTokens.fontBody),
+      labelStyle: TextStyle(fontFamily: 'NotoSansKR', color: t.textSoft, fontSize: AppTokens.fontBody),
       filled: true,
       fillColor: t.card,
     ),
@@ -455,6 +491,7 @@ ThemeData buildAppTheme(AppTokens t, Brightness b) {
       backgroundColor: t.card,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTokens.radius + 4)),
       titleTextStyle: TextStyle(
+        fontFamily: 'NotoSansKR',
         fontFamily: 'NotoSansKR',
         fontSize: AppTokens.fontSection,
         fontWeight: FontWeight.w800,

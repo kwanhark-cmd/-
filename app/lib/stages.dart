@@ -10,6 +10,7 @@ import 'features/blog/blogger_api.dart';
 import 'features/production/production_service.dart';
 import 'features/tools/tools_service.dart';
 import 'ui/blog_screen.dart';
+import 'ui/channels_screen.dart';
 import 'ui/common.dart';
 import 'ui/corner_screen.dart';
 import 'ui/dashboard.dart';
@@ -87,6 +88,7 @@ void _stage2() {
     Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => ReviewScreen(user: u)));
   });
 
+  ChannelsScreen.waitingCount = (u, ch) => productionOf(u).reviewList().where((p) => p.channelId == ch).length;
   DashboardScreen.tileCounts['review'] = (u) => productionOf(u).reviewList().length;
   DashboardScreen.todaySources.add((u, shell) {
     final n = productionOf(u).reviewList().length;

@@ -746,36 +746,50 @@ class _AnimatedCheck extends StatelessWidget {
   );
 }
 
-/// 모든 하위 화면의 같은 자리 "뒤로"(왼쪽 위)·"홈"(오른쪽 위) 버튼과 큰 제목.
-class AppPage extends StatelessWidget {
-  const AppPage({super.key, required this.title, required this.body, this.actions = const []});
-  final String title;
-  final Widget body;
-  final List<Widget> actions;
+/// 하위 화면 위쪽 막대: 같은 자리에 "뒤로"(왼쪽)·"처음 화면"(오른쪽) 버튼, 큰 제목.
+PreferredSizeWidget pageBar(BuildContext context, String title, {List<Widget> actions = const []}) => AppBar(
+  title: Text(title),
+  actions: [
+    ...actions,
+    IconButton(
+      key: const Key('go-home'),
+      tooltip: S.uiHome,
+      icon: const Icon(Icons.home_rounded),
+      onPressed: () => Navigator.of(context).popUntil((r) => r.isFirst),
+    ),
+    const SizedBox(width: AppTokens.gapS),
+  ],
+);
+
+/// 숫자·정보 표시용 옅은 칩 (상태 색이 아님).
+class InfoChip extends StatelessWidget {
+  const InfoChip(this.icon, this.label, {super.key});
+  final IconData icon;
+  final String label;
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: Text(title),
-      actions: [
-        ...actions,
-        IconButton(
-          key: const Key('go-home'),
-          tooltip: S.uiHome,
-          icon: const Icon(Icons.home_rounded),
-          onPressed: () => Navigator.of(context).popUntil((r) => r.isFirst),
-        ),
-        const SizedBox(width: AppTokens.gapS),
-      ],
-    ),
-    body: SafeArea(
-      child: Align(
-        alignment: Alignment.topCenter,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: AppTokens.contentMaxWidth),
-          child: body,
-        ),
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: AppTokens.gapS + 2, vertical: AppTokens.gapXs),
+      decoration: BoxDecoration(
+        color: t.tonal,
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+        border: t.highContrast ? Border.all(color: t.border, width: 2) : null,
       ),
-    ),
-  );
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 18, color: t.onTonal),
+          const SizedBox(width: AppTokens.gapXs),
+          Flexible(
+            child: Text(
+              label,
+              style: TextStyle(color: t.onTonal, fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

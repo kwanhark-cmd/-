@@ -143,7 +143,7 @@ class _CornerDetailScreenState extends State<CornerDetailScreen> {
     if (c == null) return const Scaffold(body: EmptyHint(S.empty));
     final items = cs.items(c.id);
     return Scaffold(
-      appBar: AppBar(title: Text(c.name)),
+      appBar: pageBar(context, c.name),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),

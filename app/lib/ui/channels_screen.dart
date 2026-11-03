@@ -69,6 +69,9 @@ Future<void> connectGoogleFlow(BuildContext context, UserContext u) async {
 class ChannelsScreen extends StatefulWidget {
   const ChannelsScreen({super.key, required this.user});
   final UserContext user;
+
+  /// 채널별 확인 대기 개수 (2단계에서 연결).
+  static int Function(UserContext u, String channelId)? waitingCount;
   @override
   State<ChannelsScreen> createState() => _ChannelsScreenState();
 }
@@ -76,62 +79,127 @@ class ChannelsScreen extends StatefulWidget {
 class _ChannelsScreenState extends State<ChannelsScreen> {
   UserContext get u => widget.user;
 
+  Future<void> _add() async {
+    await connectGoogleFlow(context, u);
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _open(String channelId) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ChannelDetailScreen(user: u, channelId: channelId),
+      ),
+    );
+    if (mounted) setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
+    final t = context.tokens;
     final chans = u.youtube.channels();
     final broken = u.youtube.brokenAccounts();
+    final brokenIds = broken.map((a) => a.id).toSet();
+    final waiting = ChannelsScreen.waitingCount;
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+      padding: const EdgeInsets.fromLTRB(AppTokens.pagePad, AppTokens.gapS, AppTokens.pagePad, AppTokens.bottomSpace),
       children: [
-        BigButton(
-          key: const Key('add-channel'),
-          label: S.channelAdd,
-          icon: Icons.add,
-          onPressed: () async {
-            await connectGoogleFlow(context, u);
-            if (mounted) setState(() {});
-          },
+        TipBanner(
+          text: S.chanTip,
+          seen: u.settings.tipSeen('channels'),
+          onSeen: () => u.settings.markTipSeen('channels'),
         ),
+        BigButton(key: const Key('add-channel'), label: S.channelAdd, icon: Icons.add, onPressed: _add),
         for (final a in broken)
-          Card(
-            color: Theme.of(context).colorScheme.errorContainer,
-            child: ListTile(
-              leading: const Icon(Icons.link_off),
-              title: Text('${a.label}: ${S.failureMessage(FailureKind.permissionRevoked)}'),
-              trailing: TextButton(
-                onPressed: () async {
-                  await connectGoogleFlow(context, u);
-                  if (mounted) setState(() {});
-                },
-                child: const Text(S.reconnect),
-              ),
+          StripeCard(
+            status: Status.problem,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const StatusBadge(Status.problem, S.dashBroken, shake: true),
+                const SizedBox(height: AppTokens.gapS),
+                Text('${a.label}: ${S.failureMessage(FailureKind.permissionRevoked)}'),
+                const SizedBox(height: AppTokens.gapS),
+                BigButton(label: S.reconnect, icon: Icons.link, onPressed: _add),
+              ],
             ),
           ),
-        const SizedBox(height: 12),
-        if (chans.isEmpty) const EmptyHint(S.channelNone),
-        for (final c in chans)
-          Card(
-            child: ListTile(
-              key: Key('channel-${c.channelId}'),
-              leading: const CircleAvatar(child: Icon(Icons.smart_display)),
-              title: Text(c.title, style: Theme.of(context).textTheme.titleMedium),
-              subtitle: Text(
-                '${S.subscribers(c.subscriberCount)} · ${S.videoCount(c.videoCount)} · ${S.views(c.viewCount)}',
-              ),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () async {
-                await Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => ChannelDetailScreen(user: u, channelId: c.channelId),
-                  ),
-                );
-                if (mounted) setState(() {});
-              },
+        const SizedBox(height: AppTokens.gapM),
+        if (chans.isEmpty)
+          EmptyState(icon: 'video', message: S.chanEmptyHow, actionLabel: S.channelAdd, onAction: _add),
+        for (var i = 0; i < chans.length; i++)
+          Appear(
+            index: i,
+            child: _channelCard(
+              t,
+              chans[i],
+              brokenIds.contains(chans[i].accountId),
+              waiting?.call(u, chans[i].channelId) ?? 0,
             ),
           ),
       ],
     );
   }
+
+  Widget _channelCard(AppTokens t, ChannelRow c, bool broken, int waiting) {
+    final status = broken ? Status.problem : Status.done;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppTokens.gapS - 2),
+      child: StripeCard(
+        key: Key('channel-${c.channelId}'),
+        status: status,
+        thick: true,
+        onTap: () => _open(c.channelId),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+              child: SizedBox(
+                width: 76,
+                height: 76,
+                child: thumbFor(u, c.channelId).isNotEmpty
+                    ? Image.network(
+                        thumbFor(u, c.channelId),
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => const Icon3D('video', size: 76),
+                      )
+                    : const Icon3D('video', size: 76),
+              ),
+            ),
+            const SizedBox(width: AppTokens.gapM),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(c.title, style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: AppTokens.gapXs),
+                  Text(
+                    '${S.subscribers(c.subscriberCount)} · ${S.videoCount(c.videoCount)} · ${S.views(c.viewCount)}',
+                    style: TextStyle(color: t.textSoft),
+                  ),
+                  const SizedBox(height: AppTokens.gapS),
+                  Wrap(
+                    spacing: AppTokens.gapS,
+                    runSpacing: AppTokens.gapS,
+                    children: [
+                      StatusBadge(status, broken ? S.dashBroken : S.chanConnected),
+                      if (waiting > 0) StatusBadge(Status.check, S.dash5(waiting), shake: true),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: t.textSoft, size: AppTokens.iconM),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 채널 썸네일 주소 (없으면 빈 문자열).
+String thumbFor(UserContext u, String channelId) {
+  final r = u.db.select('SELECT thumbnail FROM channels WHERE channel_id = ?', [channelId]);
+  return r.isEmpty ? '' : (r.first['thumbnail'] as String);
 }
 
 class ChannelDetailScreen extends StatefulWidget {
@@ -179,16 +247,29 @@ class _ChannelDetailScreenState extends State<ChannelDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final c = u.youtube.channel(widget.channelId);
-    if (c == null) return const Scaffold(body: EmptyHint(S.empty));
+    if (c == null) return Scaffold(appBar: pageBar(context, S.navChannels), body: const EmptyHint(S.empty));
     final style = StyleCard.decode(c.styleJson);
     return Scaffold(
-      appBar: AppBar(title: Text(c.title)),
+      appBar: pageBar(context, c.title),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(
+            AppTokens.pagePad,
+            AppTokens.gapS,
+            AppTokens.pagePad,
+            AppTokens.bottomSpace,
+          ),
           children: [
-            Text('${S.subscribers(c.subscriberCount)} · ${S.videoCount(c.videoCount)} · ${S.views(c.viewCount)}'),
-            const SizedBox(height: 12),
+            Wrap(
+              spacing: AppTokens.gapS,
+              runSpacing: AppTokens.gapS,
+              children: [
+                InfoChip(Icons.people, S.subscribers(c.subscriberCount)),
+                InfoChip(Icons.video_library, S.videoCount(c.videoCount)),
+                InfoChip(Icons.visibility, S.views(c.viewCount)),
+              ],
+            ),
+            const SizedBox(height: AppTokens.gapM),
             ButtonWrap(
               children: [
                 BigButton(
@@ -217,7 +298,7 @@ class _ChannelDetailScreenState extends State<ChannelDetailScreen> {
             ),
             SectionCard(
               title: S.channelStyle,
-              icon: Icons.palette,
+              icon3d: 'sparkles',
               trailing: style == null
                   ? null
                   : IconButton(tooltip: S.edit, icon: const Icon(Icons.edit), onPressed: () => _editStyle(c, style)),
@@ -225,7 +306,7 @@ class _ChannelDetailScreenState extends State<ChannelDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (style == null) const Text(S.styleEmpty) else _styleView(style),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppTokens.gapM),
                   BigButton(
                     key: const Key('analyze-style'),
                     label: S.styleAnalyze,
@@ -236,30 +317,63 @@ class _ChannelDetailScreenState extends State<ChannelDetailScreen> {
                 ],
               ),
             ),
-            SectionCard(
-              title: '${S.channelVideos} ($_total)',
-              icon: Icons.list,
+            const SizedBox(height: AppTokens.gapS),
+            Row(
+              children: [
+                const Icon3D('video', size: AppTokens.icon3dS),
+                const SizedBox(width: AppTokens.gapS),
+                Expanded(child: Text('${S.channelVideos} ($_total)', style: Theme.of(context).textTheme.titleLarge)),
+              ],
+            ),
+            if (_videos.isEmpty) const EmptyHint(S.chanNoVideos),
+            for (var i = 0; i < _videos.length; i++) _videoTile(_videos[i], i),
+            if (_videos.length < _total) BigButton(label: S.loadMore, primary: false, onPressed: _more),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _videoTile(YtVideo v, int i) {
+    final t = context.tokens;
+    final hidden = v.privacy != 'public';
+    return Appear(
+      index: i,
+      child: StripeCard(
+        status: hidden ? Status.check : null,
+        onTap: () => _showVideo(v),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+              child: SizedBox(
+                width: 112,
+                height: 63,
+                child: v.thumbnailUrl.isEmpty
+                    ? ColoredBox(
+                        color: t.tonal,
+                        child: Icon(Icons.smart_display, color: t.onTonal, size: AppTokens.iconM),
+                      )
+                    : Image.network(
+                        v.thumbnailUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => ColoredBox(
+                          color: t.tonal,
+                          child: Icon(Icons.smart_display, color: t.onTonal, size: AppTokens.iconM),
+                        ),
+                      ),
+              ),
+            ),
+            const SizedBox(width: AppTokens.gapM),
+            Expanded(
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (_videos.isEmpty) const Text(S.empty),
-                  for (final v in _videos)
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: v.thumbnailUrl.isEmpty
-                          ? const Icon(Icons.smart_display)
-                          : SizedBox(
-                              width: 96,
-                              child: Image.network(
-                                v.thumbnailUrl,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, _, _) => const Icon(Icons.smart_display),
-                              ),
-                            ),
-                      title: Text(v.title),
-                      subtitle: Text(S.videoLine(v.viewCount, v.privacy, v.tags.length)),
-                      onTap: () => _showVideo(v),
-                    ),
-                  if (_videos.length < _total) BigButton(label: S.loadMore, primary: false, onPressed: _more),
+                  Text(
+                    v.title,
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: AppTokens.fontBody),
+                  ),
+                  Text(S.videoLine(v.viewCount, v.privacy, v.tags.length), style: TextStyle(color: t.textSoft)),
                 ],
               ),
             ),
@@ -310,7 +424,7 @@ class _ChannelDetailScreenState extends State<ChannelDetailScreen> {
   }
 
   Future<void> _disconnect(ChannelRow c) async {
-    if (!await confirm(context, S.channelDisconnectConfirm(c.title), yes: S.channelDisconnect, danger: true)) return;
+    if (!await confirmDanger(context, S.channelDisconnectConfirm(c.title), yes: S.channelDisconnect)) return;
     await u.youtube.disconnectChannel(c.channelId);
     if (mounted) Navigator.of(context).pop();
   }

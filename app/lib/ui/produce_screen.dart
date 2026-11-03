@@ -226,7 +226,7 @@ class _ProductionDetailScreenState extends State<ProductionDetailScreen> {
       child: SelectableText(text.isEmpty ? S.chan6 : text),
     );
     return Scaffold(
-      appBar: AppBar(title: Text(formatLabel(p.format))),
+      appBar: pageBar(context, formatLabel(p.format)),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -533,7 +533,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
     final u = widget.user;
     final list = productionOf(u).reviewList();
     return Scaffold(
-      appBar: AppBar(title: const Text(S.produceReviewList)),
+      appBar: pageBar(context, S.produceReviewList),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),

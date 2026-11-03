@@ -51,7 +51,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
     final cs = Theme.of(context).colorScheme;
     final s = u.settings;
     return Scaffold(
-      appBar: AppBar(title: const Text(S.toolsTitle)),
+      appBar: pageBar(context, S.toolsTitle),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),

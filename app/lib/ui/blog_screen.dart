@@ -151,7 +151,7 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
     final edits = u.editLog.list(targetType: 'post', parentId: 'blog${s.id}', limit: 50);
     final posts = bs.posts(s.id, limit: _limit);
     return Scaffold(
-      appBar: AppBar(title: Text(s.title)),
+      appBar: pageBar(context, s.title),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),

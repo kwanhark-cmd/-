@@ -419,6 +419,11 @@ class S {
   static const dashTileSettingsSub = '글씨 크기·연결·자동 작업';
   static String dash7(int n) => '비공개로 올린 영상 $n개가 확인을 기다려요. 보고 괜찮으면 유튜브에서 공개해 주세요.';
   static const dashReviewNow = '지금 확인하기';
+  // 채널
+  static const chanTip = '채널 카드를 누르면 영상 목록과 채널 스타일 카드를 볼 수 있어요. 테두리가 초록이면 잘 연결된 것, 빨강이면 다시 연결이 필요해요.';
+  static const chanEmptyHow = '"채널 등록"을 누르고 구글 계정으로 연결하면 내 채널이 모두 나타나요. 계정이 없어도 연습 계정으로 미리 써 볼 수 있어요.';
+  static const chanConnected = '연결됨';
+  static const chanNoVideos = '"새로 불러오기"를 누르면 유튜브에서 영상 목록을 가져와요.';
   static const uiDangerSecond = '정말 할까요? 한 번 더 확인할게요.';
   static const thumbTitle = '썸네일 그림';
   static const thumbNone = '아직 썸네일 그림이 없어요. 문구로 만들거나 직접 만든 그림을 넣어 주세요.';

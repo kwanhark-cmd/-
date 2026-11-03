@@ -102,7 +102,7 @@ class _EditsScreenState extends State<EditsScreen> {
     final list = u.editLog.list(targetType: 'video', parentId: widget.channelId);
     final todayApplied = list.where((e) => e.day == today && e.status == EditStatus.applied).length;
     return Scaffold(
-      appBar: AppBar(title: const Text(S.editsTitle)),
+      appBar: pageBar(context, S.editsTitle),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
