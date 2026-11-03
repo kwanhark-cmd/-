@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../app/services.dart';
 import '../core/db.dart';
 import '../core/strings.dart';
+import '../features/youtube/trending.dart';
 import 'common.dart';
 import 'edits_screen.dart';
 import 'home_shell.dart';
@@ -263,6 +264,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: tile,
             ),
         const SizedBox(height: AppTokens.gapS),
+        ?_trendingCard(),
         for (final card in DashboardScreen.extraCards) ap(card(u, shell)),
         ap(
           SectionCard(
@@ -330,6 +332,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  /// 주목할 영상: 평소보다 조회수가 빨리 늘고 있는 내 영상 (없으면 카드도 없음).
+  Widget? _trendingCard() {
+    final list = TrendingService(u.db, u.youtube).find();
+    if (list.isEmpty) return null;
+    return SectionCard(
+      key: const Key('trending-card'),
+      title: S.trendTitle,
+      icon3d: 'fire',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(S.trendHelp, style: TextStyle(color: context.tokens.textSoft)),
+          for (final v in list)
+            ListCard(
+              icon: 'chart',
+              title: v.title,
+              subtitle: u.youtube.channel(v.channelId)?.title ?? '',
+              status: Status.done,
+              badge: StatusBadge(Status.done, S.trendBadge(v.ratio.round(), v.perDay), shake: true),
+              onTap: () => u.env.launchUrl(Uri.parse('https://www.youtube.com/watch?v=${v.videoId}')),
+            ),
+        ],
+      ),
     );
   }
 

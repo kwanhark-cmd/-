@@ -221,6 +221,13 @@ class YouTubeService {
     return channel(c.channelId)!;
   }
 
+  /// 영상별 오늘 조회수 기록 (주목할 영상 찾기에 사용).
+  void _recordVideoStat(YtVideo v) => db.execute(
+    'INSERT INTO video_stats(video_id, day, view_count) VALUES(?,?,?) '
+    'ON CONFLICT(video_id, day) DO UPDATE SET view_count=excluded.view_count',
+    [v.videoId, dayKey(now()), v.viewCount],
+  );
+
   void _recordStats(String channelId, int views, int subs) {
     db.execute(
       'INSERT INTO channel_stats(channel_id, day, view_count, subscriber_count) VALUES(?,?,?,?) '
@@ -358,6 +365,7 @@ class YouTubeService {
         db.transaction(() {
           for (final v in vids) {
             saveVideo(v);
+            _recordVideoStat(v);
           }
         });
         count += vids.length;

@@ -332,6 +332,15 @@ const userDataMigrations = <Migration>[
     )''',
     'CREATE INDEX idx_corner_items ON corner_items(corner_id)',
   ]),
+  // v5: 추가 기능(주목할 영상) — 영상별 날마다 조회수 기록
+  Migration(5, [
+    '''CREATE TABLE video_stats(
+      video_id TEXT NOT NULL,
+      day TEXT NOT NULL,
+      view_count INTEGER NOT NULL,
+      PRIMARY KEY(video_id, day)
+    )''',
+  ]),
 ];
 
 /// 오늘 날짜 문자열 (yyyy-MM-dd, 기기 시간 기준).

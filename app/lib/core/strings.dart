@@ -474,6 +474,10 @@ class S {
   static const batchDesc = '설명 바뀜';
   static String batchApply(int n) => '고른 $n개 적용하기';
   static const batchUndoAll = '방금 것 모두 되돌리기';
+  // 추가 기능: 주목할 영상
+  static const trendTitle = '주목할 영상';
+  static const trendHelp = '평소보다 조회수가 빨리 늘고 있는 내 영상이에요. 비슷한 주제로 새 콘텐츠를 만들어 보세요.';
+  static String trendBadge(int ratio, int perDay) => '평소보다 $ratio배 · 하루 +${num(perDay)}회';
   static const uiDangerSecond = '정말 할까요? 한 번 더 확인할게요.';
   static const thumbTitle = '썸네일 그림';
   static const thumbNone = '아직 썸네일 그림이 없어요. 문구로 만들거나 직접 만든 그림을 넣어 주세요.';

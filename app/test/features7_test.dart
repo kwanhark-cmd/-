@@ -2,6 +2,7 @@ import 'package:channel_biseo/app/app.dart';
 import 'package:channel_biseo/app/services.dart';
 import 'package:channel_biseo/features/ai/brain.dart';
 import 'package:channel_biseo/features/production/desc_template.dart';
+import 'package:channel_biseo/features/youtube/trending.dart';
 import 'package:channel_biseo/stages.dart';
 import 'package:channel_biseo/ui/channels_screen.dart';
 import 'package:channel_biseo/ui/edits_screen.dart';
@@ -134,6 +135,44 @@ void main() {
       await t.pumpAndSettle();
       expect(u.editLog.list(), isEmpty);
       expect(k.mockYt.updateCalls, 0);
+      await t.pumpWidget(const SizedBox());
+    });
+  });
+
+  group('주목할 영상', () {
+    Future<void> nextDay(TestKit k, UserContext u, Map<String, int> boost) async {
+      k.clock.advance(const Duration(days: 1));
+      k.mockYt.videos.updateAll((id, v) => v.copyWith(viewCount: v.viewCount + (boost[id] ?? 10)));
+      for (final c in u.youtube.channels()) {
+        await u.youtube.syncChannel(c.channelId);
+      }
+    }
+
+    test('평소보다 갑자기 많이 늘어난 영상만 찾는다', () async {
+      final (k, _, u) = await setup();
+      final svc = TrendingService(u.db, u.youtube);
+      expect(svc.find(), isEmpty); // 기록이 하루뿐이면 비교 못 함
+      await nextDay(k, u, {'UC_mock_cook_v5': 3000, 'UC_mock_trip_v3': 40});
+      final list = svc.find();
+      expect(list.single.videoId, 'UC_mock_cook_v5');
+      expect(list.single.perDay, 3000);
+      expect(list.single.ratio, greaterThanOrEqualTo(3));
+      // 모두 똑같이 늘면 주목할 영상 없음
+      await nextDay(k, u, {});
+      expect(svc.find(), isEmpty);
+    });
+
+    testWidgets('홈에 주목할 영상 카드가 나온다', (t) async {
+      final (k, s, u) = await setup();
+      await nextDay(k, u, {'UC_mock_trip_v7': 5000});
+      t.view.physicalSize = const Size(390 * 3, 2400 * 3);
+      t.view.devicePixelRatio = 3;
+      addTearDown(t.view.reset);
+      await t.pumpWidget(ChannelBiseoApp(state: s));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('trending-card')), findsOneWidget);
+      expect(find.textContaining('하루 +5,000회'), findsOneWidget);
+      expect(t.takeException(), isNull);
       await t.pumpWidget(const SizedBox());
     });
   });
