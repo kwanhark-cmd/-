@@ -117,6 +117,10 @@ final shots = <Shot>[
   Shot('10-블로그', (t, s, k) async => navIcon(t, Icons.rss_feed)),
   Shot('11-내코너', (t, s, k) async => navIcon(t, Icons.auto_stories)),
   Shot('12-설정', (t, s, k) async => navIcon(t, Icons.settings)),
+  Shot('13-게시달력', (t, s, k) async {
+    await navIcon(t, Icons.movie_creation);
+    await tapKey(t, 'open-calendar');
+  }),
 ];
 
 Future<(TestKit, AppState)> _prepare(WidgetTester t) async {
