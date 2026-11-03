@@ -721,7 +721,11 @@ void celebrate(BuildContext context, String message, {SnackBarAction? action}) {
             Expanded(
               child: Text(
                 message,
-                style: const TextStyle(color: Colors.white, fontSize: AppTokens.fontBody, fontWeight: FontWeight.w700),
+                style: TextStyle(
+                  color: t.onStatusFor(Status.done),
+                  fontSize: AppTokens.fontBody,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ],
