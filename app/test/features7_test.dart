@@ -1,10 +1,16 @@
+import 'dart:io';
+
 import 'package:channel_biseo/app/app.dart';
 import 'package:channel_biseo/app/services.dart';
 import 'package:channel_biseo/features/ai/ai_service.dart';
 import 'package:channel_biseo/features/ai/brain.dart';
 import 'package:channel_biseo/features/production/desc_template.dart';
 import 'package:channel_biseo/features/youtube/trending.dart';
+import 'package:channel_biseo/core/db.dart';
+import 'package:channel_biseo/features/production/calendar.dart';
 import 'package:channel_biseo/stages.dart';
+import 'package:channel_biseo/ui/blog_screen.dart';
+import 'package:channel_biseo/ui/calendar_screen.dart';
 import 'package:channel_biseo/ui/channels_screen.dart';
 import 'package:channel_biseo/ui/edits_screen.dart';
 import 'package:channel_biseo/ui/produce_screen.dart';
@@ -229,6 +235,67 @@ void main() {
       await t.tap(find.byKey(const Key('kw-add')));
       await t.pumpAndSettle();
       expect(productionOf(u).byId(p.id)!.tags, contains(label));
+      expect(t.takeException(), isNull);
+      await t.pumpWidget(const SizedBox());
+    });
+  });
+
+  group('게시 달력', () {
+    test('만듦·예약·확인 대기·공개함·블로그 글을 날짜별로 모은다', () async {
+      final (k, _, u) = await setup();
+      final ps = productionOf(u);
+      final a = await ps.create(channelId: 'UC_mock_cook', format: ContentFormat.shorts, topic: '만든 것');
+      final b = await ps.create(channelId: 'UC_mock_trip', format: ContentFormat.long, topic: '올린 것');
+      final v = File('${Directory.systemTemp.createTempSync('v').path}/a.mp4')..writeAsBytesSync([1]);
+      ps.attachOwnVideo(b.id, v.path);
+      await ps.uploadPrivate(b.id, userConfirmed: true, aiLabelMethod: 'setting');
+      final c = await ps.create(channelId: 'UC_mock_money', format: ContentFormat.long, topic: '내일 올릴 것');
+      ps.attachOwnVideo(c.id, v.path);
+      u.quota.reserve(u.quota.remaining);
+      await ps.uploadPrivate(c.id, userConfirmed: true, aiLabelMethod: 'setting');
+      final site = blogOf(u).addTistory('티', '');
+      await blogOf(u).newPost(site.id, topic: '가을');
+      final today = dayKey(k.clock());
+      final tomorrow = dayKey(k.clock().add(const Duration(days: 1)));
+      final m = CalendarService(u.db).byDay(k.clock().year, k.clock().month);
+      final kinds = m[today]!.map((e) => e.kind).toSet();
+      expect(kinds, containsAll([CalKind.made, CalKind.waiting, CalKind.blogWaiting]));
+      expect(m[today]!.where((e) => e.productionId == a.id).single.kind, CalKind.made);
+      expect(m[tomorrow]!.single.kind, CalKind.scheduled);
+      ps.markDoneByUser(b.id);
+      expect(
+        CalendarService(u.db)
+            .byDay(k.clock().year, k.clock().month)[today]!
+            .where((e) => e.productionId == b.id)
+            .single
+            .kind,
+        CalKind.published,
+      );
+    });
+
+    testWidgets('달력 화면: 날짜를 누르면 그날 일이 보이고, 달을 넘길 수 있다', (t) async {
+      final (k, s, u) = await setup();
+      await productionOf(u).create(channelId: 'UC_mock_cook', format: ContentFormat.shorts, topic: '달력 시험');
+      t.view.physicalSize = const Size(320 * 2, 568 * 2);
+      t.view.devicePixelRatio = 2;
+      addTearDown(t.view.reset);
+      s.setTextScale(1.6);
+      await t.pumpWidget(ChannelBiseoApp(state: s));
+      await t.pumpAndSettle();
+      final nav = t.state<NavigatorState>(find.byType(Navigator).first);
+      // ignore: unawaited_futures
+      nav.push(MaterialPageRoute<void>(builder: (_) => CalendarScreen(user: u)));
+      await t.pumpAndSettle();
+      expect(find.text('2026년 11월'), findsOneWidget);
+      await t.scrollUntilVisible(find.byKey(const Key('cal-event-0')), 200, scrollable: find.byType(Scrollable).first);
+      expect(find.textContaining('달력 시험'), findsOneWidget);
+      await t.drag(find.byType(Scrollable).first, const Offset(0, 3000));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('cal-day-1')));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('cal-next')));
+      await t.pumpAndSettle();
+      expect(find.text('2026년 12월'), findsOneWidget);
       expect(t.takeException(), isNull);
       await t.pumpWidget(const SizedBox());
     });

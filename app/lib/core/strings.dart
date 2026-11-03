@@ -486,6 +486,22 @@ class S {
   static const kwCostFree = '연습 모드라 비용이 들지 않았어요';
   static String kwCost(String usd) => '이번 추천 예상 비용 약 $usd달러';
   static String kwAdded(int n) => '검색어 $n개를 키워드에 더했어요.';
+  // 추가 기능: 게시 달력
+  static const calTitle = '게시 달력';
+  static const calPrev = '지난달';
+  static const calNext = '다음 달';
+  static String calMonth(int y, int m) => '$y년 $m월';
+  static const calWeekdays = ['일', '월', '화', '수', '목', '금', '토'];
+  static String calDay(String d) => '${int.parse(d.substring(5, 7))}월 ${int.parse(d.substring(8, 10))}일';
+  static const calNothing = '이날은 할 일이 없어요.';
+  static String calCellLabel(int d, int n) => n == 0 ? '$d일' : '$d일, $n개';
+  static const calMade = '만듦';
+  static const calScheduled = '올릴 예정';
+  static const calWaiting = '확인 대기';
+  static const calPublished = '공개함';
+  static const calBlogWaiting = '블로그 글 확인 대기';
+  static const calBlogDone = '블로그 글 올림';
+  static const calCheckLegend = '예정·확인 대기';
   static const uiDangerSecond = '정말 할까요? 한 번 더 확인할게요.';
   static const thumbTitle = '썸네일 그림';
   static const thumbNone = '아직 썸네일 그림이 없어요. 문구로 만들거나 직접 만든 그림을 넣어 주세요.';

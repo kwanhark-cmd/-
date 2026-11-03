@@ -8,6 +8,7 @@ import '../core/strings.dart';
 import '../features/ai/brain.dart';
 import '../features/production/production_service.dart';
 import '../features/production/thumbnail.dart';
+import 'calendar_screen.dart';
 import 'common.dart';
 import 'tools_screen.dart';
 
@@ -221,6 +222,16 @@ class _ProduceScreenState extends State<ProduceScreen> {
                     ),
                   );
                 }
+                if (mounted) setState(() {});
+              },
+            ),
+            BigButton(
+              key: const Key('open-calendar'),
+              label: S.calTitle,
+              icon: Icons.calendar_month,
+              primary: false,
+              onPressed: () async {
+                await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => CalendarScreen(user: u)));
                 if (mounted) setState(() {});
               },
             ),

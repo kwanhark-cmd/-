@@ -4,6 +4,7 @@ import 'package:channel_biseo/app/app.dart';
 import 'package:channel_biseo/features/ai/brain.dart';
 import 'package:channel_biseo/stages.dart';
 import 'package:channel_biseo/ui/blog_screen.dart';
+import 'package:channel_biseo/ui/calendar_screen.dart';
 import 'package:channel_biseo/ui/channels_screen.dart';
 import 'package:channel_biseo/ui/corner_screen.dart';
 import 'package:channel_biseo/ui/edits_screen.dart';
@@ -171,6 +172,7 @@ void main() {
       await push(CornerDetailScreen(user: u, cornerId: corner.id), '코너 상세');
       await push(MemosScreen(user: u), '음성 메모');
       await push(ToolsScreen(user: u), '도구 연결');
+      await push(CalendarScreen(user: u), '게시 달력');
       // 첫 실행 안내 4단계
       u.settings.onboardingDone = false;
       state.refresh();
