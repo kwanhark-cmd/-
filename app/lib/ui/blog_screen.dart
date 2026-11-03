@@ -86,6 +86,7 @@ class _BlogScreenState extends State<BlogScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(AppTokens.pagePad, AppTokens.gapS, AppTokens.pagePad, AppTokens.bottomSpace),
       children: [
+        TipBanner(text: S.blogTip, seen: u.settings.tipSeen('blog'), onSeen: () => u.settings.markTipSeen('blog')),
         ButtonWrap(
           children: [
             BigButton(
@@ -104,19 +105,21 @@ class _BlogScreenState extends State<BlogScreen> {
           ],
         ),
         const SizedBox(height: AppTokens.gapM),
-        if (sites.isEmpty) const EmptyHint(S.blogNone),
-        for (final s in sites)
-          Card(
-            child: ListTile(
-              key: Key('site-${s.id}'),
-              leading: Icon(s.isTistory ? Icons.content_copy : Icons.rss_feed),
-              title: Text(s.title),
-              subtitle: Text(s.isTistory ? S.blog2 : S.blog3(bs.postTotal(s.id))),
-              trailing: const Icon(Icons.chevron_right),
+        if (sites.isEmpty)
+          EmptyState(icon: 'blog', message: S.blogEmptyHow, actionLabel: S.blogAddBlogger, onAction: _connectBlogger),
+        for (var i = 0; i < sites.length; i++)
+          Appear(
+            index: i,
+            child: ListCard(
+              key: Key('site-${sites[i].id}'),
+              icon: sites[i].isTistory ? 'memo' : 'blog',
+              title: sites[i].title,
+              subtitle: sites[i].isTistory ? S.blog2 : S.blog3(bs.postTotal(sites[i].id)),
+              status: sites[i].isTistory ? null : Status.done,
               onTap: () async {
                 await Navigator.of(context).push(
                   MaterialPageRoute<void>(
-                    builder: (_) => BlogDetailScreen(user: u, siteId: s.id),
+                    builder: (_) => BlogDetailScreen(user: u, siteId: sites[i].id),
                   ),
                 );
                 if (mounted) setState(() {});
@@ -145,7 +148,7 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final s = bs.site(widget.siteId);
-    if (s == null) return const Scaffold(body: EmptyHint(S.empty));
+    if (s == null) return Scaffold(appBar: pageBar(context, S.navBlog), body: const EmptyHint(S.empty));
     final style = s.style;
     final drafts = bs.drafts(s.id);
     final edits = u.editLog.list(targetType: 'post', parentId: 'blog${s.id}', limit: 50);
@@ -282,13 +285,15 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
 
   Widget _draftTile(BlogSite s, BlogDraftRow d) {
     final done = d.status == 'postedByUser' || d.status == 'publishedByUser';
-    return Card(
+    return StripeCard(
+      status: done ? Status.done : Status.check,
       child: Padding(
-        padding: const EdgeInsets.all(AppTokens.gapM),
+        padding: EdgeInsets.zero,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(d.title, style: Theme.of(context).textTheme.titleMedium),
+            StatusBadge(done ? Status.done : Status.check, done ? S.blog9 : S.blogWaiting),
             Text(switch (d.status) {
               'copyReady' => S.blog7,
               'draftOnBlogger' => S.blog8,
@@ -413,7 +418,7 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
   }
 
   Future<void> _remove(BlogSite s) async {
-    if (!await confirm(context, S.blog14(s.title), yes: S.delete, danger: true)) return;
+    if (!await confirmDanger(context, S.blog14(s.title))) return;
     await bs.removeSite(s.id);
     if (mounted) Navigator.pop(context);
   }

@@ -432,6 +432,13 @@ class S {
   static const prodTip = '"새로 만들기"를 누르고 채널과 형식만 고르면 제목·설명·키워드·썸네일·대본을 한 번에 만들어 드려요. 유튜브에는 항상 "비공개"로만 올라가요.';
   static const prodEmptyHow = '"새로 만들기"를 누르고 채널과 형식(쇼츠, 롱폼 등)을 고르면 시작돼요.';
   static const prodReviewEmpty = '확인을 기다리는 영상이 없어요. 콘텐츠를 만들어 비공개로 올리면 여기에 모여요.';
+  // 블로그·코너·메모
+  static const blogTip = '구글 블로그는 연결하면 글을 자동으로 다듬고, 새 글은 "초안"으로만 올려요. 티스토리는 글을 만들어 드리면 "복사" 버튼으로 붙여 넣으면 돼요.';
+  static const blogEmptyHow = '"구글 블로그 연결"을 누르거나, 티스토리 이름과 주소를 추가해 시작하세요.';
+  static const blogWaiting = '확인 필요';
+  static const cornerEmptyHow = '"코너 만들기"를 누르고 코너 이름(예: 사장님의 하루)과 올릴 채널을 정하면 시작돼요.';
+  static const memoEmptyHow = '"말로 메모 남기기"를 누르고 떠오른 생각을 말해 보세요. 콘텐츠를 만들 때 소재로 쓸 수 있어요.';
+  static const memoUsed = '제작에 사용함';
   static const uiDangerSecond = '정말 할까요? 한 번 더 확인할게요.';
   static const thumbTitle = '썸네일 그림';
   static const thumbNone = '아직 썸네일 그림이 없어요. 문구로 만들거나 직접 만든 그림을 넣어 주세요.';

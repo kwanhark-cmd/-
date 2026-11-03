@@ -793,3 +793,54 @@ class InfoChip extends StatelessWidget {
     );
   }
 }
+
+/// 목록 한 줄 카드: 3D 아이콘 + 제목 + 설명 (+ 배지) + 오른쪽 화살표 또는 버튼.
+class ListCard extends StatelessWidget {
+  const ListCard({
+    super.key,
+    required this.icon,
+    required this.title,
+    this.subtitle,
+    this.badge,
+    this.onTap,
+    this.trailing,
+    this.status,
+  });
+  final String icon;
+  final String title;
+  final String? subtitle;
+  final Widget? badge;
+  final VoidCallback? onTap;
+  final Widget? trailing;
+  final Status? status;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    return StripeCard(
+      status: status,
+      onTap: onTap,
+      child: Row(
+        children: [
+          Icon3D(icon, size: AppTokens.icon3dS + 8),
+          const SizedBox(width: AppTokens.gapM),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: AppTokens.fontBody),
+                ),
+                if (subtitle != null) Text(subtitle!, style: TextStyle(color: t.textSoft)),
+                if (badge != null) ...[const SizedBox(height: AppTokens.gapXs), badge!],
+              ],
+            ),
+          ),
+          trailing ??
+              (onTap != null ? Icon(Icons.chevron_right, color: t.textSoft, size: AppTokens.iconM) : const SizedBox()),
+        ],
+      ),
+    );
+  }
+}

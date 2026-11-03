@@ -67,20 +67,21 @@ class _MemosScreenState extends State<MemosScreen> {
               ],
             ),
             const SizedBox(height: AppTokens.gapM),
-            if (list.isEmpty) const EmptyHint(S.empty),
-            for (final m in list)
-              Card(
-                child: ListTile(
-                  title: Text(m.text),
-                  subtitle: Text(
-                    S.join2(m.createdAt.toLocal().toString().substring(0, 16), m.used ? ' · 제작에 사용함' : ''),
-                  ),
+            if (list.isEmpty) const EmptyState(icon: 'mic', message: S.memoEmptyHow),
+            for (var i = 0; i < list.length; i++)
+              Appear(
+                index: i,
+                child: ListCard(
+                  icon: 'mic',
+                  title: list[i].text,
+                  subtitle: list[i].createdAt.toLocal().toString().substring(0, 16),
+                  badge: list[i].used ? const StatusBadge(Status.done, S.memoUsed) : null,
                   trailing: IconButton(
                     tooltip: S.delete,
                     icon: const Icon(Icons.delete_outline),
                     onPressed: () async {
-                      if (await confirm(context, S.memo1, yes: S.delete, danger: true)) {
-                        u.memos.delete(m.id);
+                      if (await confirmDanger(context, S.memo1)) {
+                        u.memos.delete(list[i].id);
                         if (mounted) setState(() {});
                       }
                     },

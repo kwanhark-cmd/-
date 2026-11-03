@@ -78,23 +78,27 @@ class _CornerScreenState extends State<CornerScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(AppTokens.pagePad, AppTokens.gapS, AppTokens.pagePad, AppTokens.bottomSpace),
       children: [
-        const Text(S.corner2),
+        TipBanner(text: S.corner2, seen: u.settings.tipSeen('corner'), onSeen: () => u.settings.markTipSeen('corner')),
         const SizedBox(height: AppTokens.gapM),
         BigButton(key: const Key('corner-new'), label: S.cornerNew, icon: Icons.add, onPressed: _new),
         const SizedBox(height: AppTokens.gapM),
-        if (list.isEmpty) const EmptyHint(S.cornerNone),
-        for (final c in list)
-          Card(
-            child: ListTile(
-              key: Key('corner-${c.id}'),
-              leading: const Icon(Icons.auto_stories),
-              title: Text(c.name),
-              subtitle: Text(S.corner3(u.youtube.channel(c.channelId)?.title ?? '', cornerOf(u).items(c.id).length)),
-              trailing: const Icon(Icons.chevron_right),
+        if (list.isEmpty)
+          EmptyState(icon: 'corner', message: S.cornerEmptyHow, actionLabel: S.cornerNew, onAction: _new),
+        for (var i = 0; i < list.length; i++)
+          Appear(
+            index: i,
+            child: ListCard(
+              key: Key('corner-${list[i].id}'),
+              icon: 'corner',
+              title: list[i].name,
+              subtitle: S.corner3(
+                u.youtube.channel(list[i].channelId)?.title ?? '',
+                cornerOf(u).items(list[i].id).length,
+              ),
               onTap: () async {
                 await Navigator.of(context).push(
                   MaterialPageRoute<void>(
-                    builder: (_) => CornerDetailScreen(user: u, cornerId: c.id),
+                    builder: (_) => CornerDetailScreen(user: u, cornerId: list[i].id),
                   ),
                 );
                 if (mounted) setState(() {});
@@ -129,18 +133,10 @@ class _CornerDetailScreenState extends State<CornerDetailScreen> {
     _ => S.corner8,
   };
 
-  IconData _icon(String kind) => switch (kind) {
-    'video' => Icons.movie,
-    'audio' => Icons.graphic_eq,
-    'image' => Icons.image,
-    'memo' => Icons.mic,
-    _ => Icons.notes,
-  };
-
   @override
   Widget build(BuildContext context) {
     final c = cs.corner(widget.cornerId);
-    if (c == null) return const Scaffold(body: EmptyHint(S.empty));
+    if (c == null) return Scaffold(appBar: pageBar(context, S.navCorner), body: const EmptyHint(S.empty));
     final items = cs.items(c.id);
     return Scaffold(
       appBar: pageBar(context, c.name),
@@ -181,17 +177,24 @@ class _CornerDetailScreenState extends State<CornerDetailScreen> {
                 children: [
                   if (items.isEmpty) const Text(S.empty),
                   for (final i in items)
-                    ListTile(
+                    ListCard(
                       key: Key('item-${i.id}'),
-                      contentPadding: EdgeInsets.zero,
-                      leading: Icon(_icon(i.kind)),
-                      title: Text(i.title.isEmpty ? i.text : i.title, maxLines: 2, overflow: TextOverflow.ellipsis),
-                      subtitle: Text(
+                      icon: switch (i.kind) {
+                        'video' => 'video',
+                        'audio' => 'mic',
+                        'image' => 'picture',
+                        'memo' => 'mic',
+                        _ => 'memo',
+                      },
+                      title: i.title.isEmpty ? i.text : i.title,
+                      status: i.needsCheck ? Status.check : (i.copyright == 'excluded' ? Status.problem : Status.done),
+                      badge: StatusBadge(
+                        i.needsCheck ? Status.check : (i.copyright == 'excluded' ? Status.problem : Status.done),
                         _crLabel(i),
-                        style: TextStyle(color: i.needsCheck ? Theme.of(context).colorScheme.error : null),
+                        shake: i.needsCheck,
                       ),
                       trailing: i.needsCheck
-                          ? TextButton(
+                          ? FilledButton(
                               key: Key('check-${i.id}'),
                               onPressed: () => _check(i),
                               child: const Text(S.cornerCopyright),
