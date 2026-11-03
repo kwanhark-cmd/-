@@ -6,7 +6,7 @@ class S {
 
   static const appName = '유튜브 블로그 채널 관리 비서';
   static const practiceMode = '연습 모드';
-  static const practiceModeHint = '아직 실제 계정이나 AI가 연결되지 않아 가짜 자료로 연습하고 있어요.';
+  static const practiceModeHint = '아직 실제 계정이나 인공지능이 연결되지 않아 가짜 자료로 연습하고 있어요.';
 
   // ---- 공통 버튼 ----
   static const ok = '확인';
@@ -69,7 +69,7 @@ class S {
   static const wizardConnectNow = '지금 구글 계정 연결하기';
   static const wizardStep4 = '4. 연습 모드 안내';
   static const wizardPracticeIntro =
-      '계정이나 AI 키가 없으면 "연습 모드"로 동작해요. 가짜 채널과 영상으로 모든 기능을 미리 써 볼 수 있고, '
+      '계정이나 인공지능 키가 없으면 "연습 모드"로 동작해요. 가짜 채널과 영상으로 모든 기능을 미리 써 볼 수 있고, '
       '실제 유튜브에는 아무것도 바뀌지 않아요. 화면 위에 "연습 모드" 표시가 보이면 연습 중이라는 뜻이에요.';
   static const wizardFinish = '시작하기';
 
@@ -83,7 +83,7 @@ class S {
 
   // ---- 현황 ----
   static const homeQuota = '오늘 남은 유튜브 사용량';
-  static const homeCost = '이번 달 AI 비용';
+  static const homeCost = '이번 달 인공지능 비용';
   static const homeTodayEdits = '오늘 수정한 영상';
   static const homeReviewWaiting = '확인 기다리는 영상';
   static const homeBriefing = '아침 브리핑 듣기';
@@ -185,18 +185,18 @@ class S {
   static const settingsVoiceRate = '읽는 속도';
   static const settingsBriefingTime = '아침 브리핑 시간';
   static const settingsBriefingOn = '아침 브리핑 켜기';
-  static const settingsAi = 'AI 연결 (API 키)';
-  static const settingsAiKey = 'Claude API 키';
-  static const settingsAiModel = 'AI 모델';
-  static const settingsAiProvider = 'AI 제공자';
+  static const settingsAi = '인공지능 연결 (API 키)';
+  static const settingsAiKey = 'Claude 연결 열쇠 (API 키)';
+  static const settingsAiModel = '인공지능 종류';
+  static const settingsAiProvider = '인공지능 회사';
   static const settingsAiLimit = '한 달 비용 한도 (달러)';
   static const settingsAiUsed = '이번 달 사용한 비용';
-  static const settingsAiKeySaved = 'API 키를 안전한 곳(기기 보안 저장소)에 저장했어요.';
-  static const settingsAiKeyRemove = 'API 키 지우기';
-  static const settingsGoogle = '구글 연결 준비 (클라이언트 ID)';
-  static const settingsGoogleClientId = '클라이언트 ID';
-  static const settingsGoogleClientSecret = '클라이언트 보안 비밀 (데스크톱 앱용)';
-  static const settingsGoogleHint = 'README의 "구글 연결 준비하기"를 보고 만든 값을 넣어 주세요. 비워 두면 연습 모드로 동작해요.';
+  static const settingsAiKeySaved = '연결 열쇠를 안전한 곳(기기 보안 저장소)에 저장했어요.';
+  static const settingsAiKeyRemove = '연결 열쇠 지우기';
+  static const settingsGoogle = '구글 연결 준비 (구글 앱 번호)';
+  static const settingsGoogleClientId = '구글 앱 번호 (클라이언트 ID)';
+  static const settingsGoogleClientSecret = '구글 앱 비밀 값 (클라이언트 보안 비밀)';
+  static const settingsGoogleHint = '설명서(README)의 "구글 연결 준비하기"를 보고 만든 값을 넣어 주세요. 비워 두면 연습 모드로 동작해요.';
   static const settingsQuotaLimit = '유튜브 하루 사용량 한도';
   static const settingsEditsPerDay = '채널당 하루 수정 개수';
   static const settingsRunner = '자동 작업 실행기';
@@ -215,13 +215,13 @@ class S {
   static const settingsReset2 = '마지막 확인이에요. 지운 자료는 되살릴 수 없어요. 그래도 초기화할까요?';
   static const settingsResetDone = '초기화했어요.';
   static const settingsReport = '문제 신고 (로그 내보내기)';
-  static const settingsReportDone = '문제 신고 파일을 만들었어요. 이 파일을 Claude에게 보여 주세요. 비밀번호·토큰·키는 지워져 있어요.';
+  static const settingsReportDone = '문제 신고 파일을 만들었어요. 이 파일을 Claude에게 보여 주세요. 비밀번호·연결 정보·열쇠는 지워져 있어요.';
   static const settingsVersion = '앱 버전';
   static const settingsChangelog = '변경 내역';
   static const settingsIphone = '아이폰 지원 (준비 중)';
   static const settingsIphoneHint = '아이폰 앱은 준비 중이에요. 다른 기기를 쓰신다면 신경 쓰지 않으셔도 돼요.';
   static const settingsProduceLimit = '하루 제작 개수 한도';
-  static const settingsAiLabel = 'AI 콘텐츠 표시 방법 (기본값)';
+  static const settingsAiLabel = '인공지능 콘텐츠 표시 방법 (기본값)';
   static const settingsLanguage = '언어';
   static const settingsDeleteUser = '이 사용자 삭제';
 
@@ -229,7 +229,7 @@ class S {
   static const runnerStarting = '자동 작업을 시작해요.';
   static String runnerDone(int edits, int deferred) =>
       '자동 작업이 끝났어요. 수정 $edits개${deferred > 0 ? ', 내일로 미룬 작업 $deferred개' : ''}.';
-  static const runnerCostStop = 'AI 비용 한도에 도달해서 자동 작업을 멈췄어요.';
+  static const runnerCostStop = '인공지능 비용 한도에 도달해서 자동 작업을 멈췄어요.';
   static const runnerQuotaDefer = '유튜브 오늘 사용량이 다 되어서 남은 작업을 내일로 미뤘어요.';
   static const progressCancel = '작업 취소';
   static const progressCancelled = '작업을 취소했어요.';
@@ -239,7 +239,7 @@ class S {
   static const produceNew = '새로 만들기';
   static const produceChannel = '어느 채널에 만들까요?';
   static const produceFormat = '어떤 형식으로 만들까요?';
-  static const produceTopic = '주제나 아이디어 (비워 두면 AI가 정해요)';
+  static const produceTopic = '주제나 아이디어 (비워 두면 인공지능이 정해요)';
   static const produceUseMemo = '음성 메모 사용';
   static const produceMake = '만들기';
   static const produceReviewList = '확인 대기 목록';
@@ -251,13 +251,13 @@ class S {
   static const produceAiLabelCheck = 'AI 콘텐츠 표시를 확인해 주세요';
   static const produceAiLabelDesc = '설명 글에 표시';
   static const produceAiLabelChannel = '채널 소개에 표시';
-  static const produceAiLabelSetting = '업로드 설정의 AI 항목에 표시';
+  static const produceAiLabelSetting = '업로드 설정의 인공지능 항목에 표시';
   static const produceNeedVideo = '올릴 영상 파일이 없어요. "내가 만든 영상 넣기" 또는 "힉스필드로 영상 만들기"를 먼저 해 주세요.';
   static const produceAddOwnVideo = '내가 만든 영상 넣기';
   static const produceHiggsfield = '힉스필드로 영상 만들기';
   static String produceHiggsfieldConfirm(int est, int left) =>
-      '힉스필드로 영상을 만들면 크레딧이 약 $est 들어요. 지금 남은 크레딧은 $left이에요. 만들까요?';
-  static const produceHiggsfieldNotEnough = '힉스필드 크레딧이 부족해요.';
+      '힉스필드로 영상을 만들면 사용권(크레딧)이 약 $est 들어요. 지금 남은 사용권은 $left이에요. 만들까요?';
+  static const produceHiggsfieldNotEnough = '힉스필드 사용권(크레딧)이 부족해요.';
   static const produceOpenYoutube = '유튜브에서 확인하기';
   static const produceMarkPublished = '확인하고 공개했어요';
   static const produceUploaded = '비공개로 올렸어요. 확인 대기 목록에서 확인해 주세요.';
@@ -278,7 +278,7 @@ class S {
   static const toolTest = '연결 테스트';
   static const toolDisconnect = '연결 해제';
   static const toolConnect = '연결하기';
-  static const toolApiKey = 'API 키';
+  static const toolApiKey = '연결 열쇠 (API 키)';
   static const toolTestOk = '연결이 잘 되어 있어요.';
   static const toolExpired = '연결이 만료되었어요. 다시 연결해 주세요.';
   static const toolPriority = '사용 우선순위';
@@ -339,7 +339,7 @@ class S {
       case FailureKind.rateLimited:
         return '잠깐 동안 요청이 너무 많았어요. 조금 뒤 "다시 시도"를 눌러 주세요.';
       case FailureKind.costLimit:
-        return '이번 달 AI 비용 한도에 도달했어요. 설정에서 한도를 바꾸거나 다음 달에 다시 써 주세요. 그동안은 연습 모드로 동작해요.';
+        return '이번 달 인공지능 비용 한도에 도달했어요. 설정에서 한도를 바꾸거나 다음 달에 다시 써 주세요. 그동안은 연습 모드로 동작해요.';
       case FailureKind.notConnected:
         return '아직 연결되지 않았어요. 설정에서 먼저 연결해 주세요.';
       case FailureKind.notFound:
@@ -454,6 +454,7 @@ class S {
   static const setTipsAgain = '처음 사용 안내 다시 보기';
   static const setTipsAgainDone = '안내를 다시 보여 드릴게요.';
   static String wizStep(int n) => '$n / 4 단계';
+  static String dollars(double v, [int digits = 2]) => '${v.toStringAsFixed(digits)}달러';
   static const uiDangerSecond = '정말 할까요? 한 번 더 확인할게요.';
   static const thumbTitle = '썸네일 그림';
   static const thumbNone = '아직 썸네일 그림이 없어요. 문구로 만들거나 직접 만든 그림을 넣어 주세요.';
@@ -461,7 +462,7 @@ class S {
   static const thumbAttach = '내 썸네일 그림 넣기';
   static const thumbUploadFailed = '영상은 올렸지만 썸네일은 올리지 못했어요. 유튜브 스튜디오에서 직접 넣어 주세요. (채널 인증이 안 된 경우 생길 수 있어요)';
   static String aiCostConfirm(String est, String used, String limit) =>
-      '이 작업의 예상 AI 비용은 약 \$$est 이에요. (이번 달 사용 \$$used / 한도 \$$limit) 진행할까요?';
+      '이 작업의 예상 인공지능 비용은 약 $est달러예요. (이번 달 사용 $used달러 / 한도 $limit달러) 진행할까요?';
   static const voiceEngine = '음성 인식·읽어주기 서비스';
   static const voiceEngineDevice = '기기 내장 (무료, 기본)';
   static const voiceEngineExternal = '외부 음성 서비스 (준비 중)';
@@ -539,7 +540,7 @@ class S {
   static const prod12 = '이 콘텐츠를 앱에서 지울까요? (이미 유튜브에 올린 영상은 그대로예요)';
   static const prod13 = '키워드 (쉼표로 구분)';
   static const prod14 = '만들기';
-  static const prod15 = '채널 소개에 "AI의 도움을 받아 만든 콘텐츠가 있어요" 문구가 있는지 확인해 주세요.';
+  static const prod15 = '채널 소개에 "인공지능의 도움을 받아 만든 콘텐츠가 있어요" 문구가 있는지 확인해 주세요.';
   static const prod16 = '비공개로 올리기';
   static const prod17 = '비공개로 올린 영상이에요. "유튜브에서 확인하기"를 눌러 내용을 보고, 괜찮으면 유튜브에서 직접 공개해 주세요.';
   // settings_screen.dart
@@ -547,11 +548,11 @@ class S {
   static const set2 = '유튜브';
   static String set3(Object? p0, Object? p1) => '$p0 ($p1)';
   static const set4 = '자료 관리';
-  static String set5(Object? p0) => '지금은 $p0예요. 아래에 키를 넣으면 실제 AI가 켜져요.';
+  static String set5(Object? p0) => '지금은 $p0예요. 아래에 키를 넣으면 실제 인공지능이 켜져요.';
   static const set6 = '다른 제공자 (준비 중)';
   static const set7 = '저장된 키가 있어요 (보안을 위해 내용은 보여 주지 않아요)';
   static const set8 = '키가 없어요';
-  static String set9(Object? p0) => '예: 영상 제목 다듬기 1번 ≈ \$$p0';
+  static String set9(Object? p0) => '예: 영상 제목 다듬기 1번 ≈ $p0달러';
   static const set10 = '구글 앱이 아직 "테스트" 상태예요';
   static const set11 = '테스트 상태에서는 연결이 7일마다 만료돼요. 만료 전에 알려 드려요.';
   static const set12 = '저장했어요.';
@@ -574,7 +575,7 @@ class S {
   static String tool9(Object? p0) => '힉스필드 $p0';
   static const tool10 = '피그마 연결';
   static const tool11 = '피그마 개발자 설정에서 만든 앱 정보를 넣고 "연결하기"를 누르면 피그마 로그인 창이 열려요.';
-  static const tool12 = '클라이언트 ID';
+  static const tool12 = '피그마 앱 번호 (클라이언트 ID)';
   static const tool13 = '클라이언트 보안 비밀';
   // voice_sheet.dart
   static const voice1 = '잘 듣지 못했어요. 다시 눌러 말씀해 주세요.';

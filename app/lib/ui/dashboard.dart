@@ -237,7 +237,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     RingGauge(
                       value: costLeft,
                       label: S.homeCost,
-                      center: '\$${cost.toStringAsFixed(2)}\n/ \$${limit.toStringAsFixed(0)}',
+                      center: '${S.dollars(cost)}\n/ ${S.dollars(limit, 0)}',
                       status: gaugeStatus(costLeft),
                     ),
                   ],

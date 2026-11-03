@@ -331,7 +331,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onChanged: (v) => s.monthlyCostLimitUsd = v.toDouble(),
           ),
           const SizedBox(height: AppTokens.gapS),
-          Text('${S.settingsAiUsed}: \$${u.ai.monthCostUsd.toStringAsFixed(3)}'),
+          Text('${S.settingsAiUsed}: ${S.dollars(u.ai.monthCostUsd, 3)}'),
           Text(S.set9(u.ai.estimateCost('x' * 1500, 'x' * 1500, expectedOutput: 800).toStringAsFixed(3))),
         ],
       ),
