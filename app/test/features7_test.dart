@@ -4,6 +4,7 @@ import 'package:channel_biseo/features/ai/brain.dart';
 import 'package:channel_biseo/features/production/desc_template.dart';
 import 'package:channel_biseo/stages.dart';
 import 'package:channel_biseo/ui/channels_screen.dart';
+import 'package:channel_biseo/ui/edits_screen.dart';
 import 'package:channel_biseo/ui/produce_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -80,6 +81,59 @@ void main() {
       await t.pumpAndSettle();
       expect(DescTemplateStore(u.db).get('UC_mock_trip').hashtags, ['여행', '국내여행']);
       expect(t.takeException(), isNull);
+      await t.pumpWidget(const SizedBox());
+    });
+  });
+
+  group('일괄 수정 미리보기', () {
+    testWidgets('한 화면에서 보고, 체크를 뺀 것은 적용하지 않고, 방금 적용한 것을 한 번에 되돌린다', (t) async {
+      final (k, s, u) = await setup();
+      t.view.physicalSize = const Size(390 * 3, 844 * 3);
+      t.view.devicePixelRatio = 3;
+      addTearDown(t.view.reset);
+      final before = {for (final v in k.mockYt.videos.values) v.videoId: v.meta};
+      await t.pumpWidget(ChannelBiseoApp(state: s));
+      await t.pumpAndSettle();
+      final ctx = t.element(find.byType(NavigationBar));
+      // ignore: unawaited_futures
+      runEditsFlow(ctx, u);
+      await t.pumpAndSettle();
+      expect(find.text('이렇게 수정할게요'), findsOneWidget);
+      expect(find.text('고른 6개 적용하기'), findsOneWidget);
+      await t.tap(find.byKey(const Key('batch-0')));
+      await t.pumpAndSettle();
+      expect(find.text('고른 5개 적용하기'), findsOneWidget);
+      await t.tap(find.byKey(const Key('apply-edits')));
+      await t.pumpAndSettle();
+      expect(u.editLog.list().where((e) => e.status.name == 'applied').length, 5);
+      // 완료 알림의 "방금 것 모두 되돌리기"
+      await t.tap(find.text('방금 것 모두 되돌리기'));
+      await t.pumpAndSettle();
+      expect(u.editLog.list().where((e) => e.status.name == 'applied'), isEmpty);
+      for (final v in k.mockYt.videos.values) {
+        expect(v.meta.sameAs(before[v.videoId]!), isTrue);
+      }
+      expect(t.takeException(), isNull);
+      await t.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('모두 빼면 적용 버튼이 꺼지고, 닫으면 아무것도 바뀌지 않는다', (t) async {
+      final (k, s, u) = await setup();
+      await t.pumpWidget(ChannelBiseoApp(state: s));
+      await t.pumpAndSettle();
+      // ignore: unawaited_futures
+      runEditsFlow(t.element(find.byType(NavigationBar)), u);
+      await t.pumpAndSettle();
+      await t.tap(find.text('모두 빼기'));
+      await t.pumpAndSettle();
+      expect(find.text('고른 0개 적용하기'), findsOneWidget);
+      await t.tap(find.byKey(const Key('apply-edits')));
+      await t.pumpAndSettle();
+      expect(find.text('이렇게 수정할게요'), findsOneWidget); // 눌러도 닫히지 않음
+      await t.tap(find.byIcon(Icons.close));
+      await t.pumpAndSettle();
+      expect(u.editLog.list(), isEmpty);
+      expect(k.mockYt.updateCalls, 0);
       await t.pumpWidget(const SizedBox());
     });
   });

@@ -466,6 +466,14 @@ class S {
   static const tplLinks = '링크 (한 줄에 하나씩)';
   static const tplTags = '해시태그 (예: #집밥 #요리)';
   static const tplSaved = '설명 템플릿을 저장했어요. 새 영상 설명에 자동으로 붙어요.';
+  // 추가 기능: 일괄 수정 미리보기
+  static const batchHelp = '아래 변경안을 확인하고, 적용하지 않을 것은 체크를 빼 주세요.';
+  static const batchAll = '모두 고르기';
+  static const batchNone = '모두 빼기';
+  static const batchTitle = '제목 바뀜';
+  static const batchDesc = '설명 바뀜';
+  static String batchApply(int n) => '고른 $n개 적용하기';
+  static const batchUndoAll = '방금 것 모두 되돌리기';
   static const uiDangerSecond = '정말 할까요? 한 번 더 확인할게요.';
   static const thumbTitle = '썸네일 그림';
   static const thumbNone = '아직 썸네일 그림이 없어요. 문구로 만들거나 직접 만든 그림을 넣어 주세요.';

@@ -30,46 +30,14 @@ Future<void> runEditsFlow(BuildContext context, UserContext u) async {
       toast(context, S.editsNone);
       return;
     }
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: const Text(S.editsPreviewTitle),
-        content: SizedBox(
-          width: 600,
-          child: ListView(
-            shrinkWrap: true,
-            children: [
-              Text(
-                u.settings.isFirstMonth(u.env.now())
-                    ? S.editsFirstMonth
-                    : S.editsLimit(u.settings.editsPerChannelPerDay),
-              ),
-              const Divider(),
-              for (final p in proposals) ...[
-                Text('${S.editBefore}: ${p.video.title}', style: TextStyle(color: context.tokens.textSoft)),
-                Text('${S.editAfter}: ${p.after.title}', style: const TextStyle(fontWeight: FontWeight.w800)),
-                if (p.after.tags.join() != p.video.tags.join()) Text(S.edits2(p.after.tags.join(', '))),
-                if (p.after.description != p.video.description) const Text(S.edits3),
-                const Divider(),
-              ],
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text(S.cancel)),
-          FilledButton(
-            key: const Key('apply-edits'),
-            onPressed: () => Navigator.pop(c, true),
-            child: const Text(S.editsApply),
-          ),
-        ],
-      ),
-    );
-    if (ok != true || !context.mounted) return;
+    // 일괄 수정 미리보기: 한 화면에서 모든 변경안을 보고 고른 것만 적용
+    final chosen = await showBatchPreview(context, u, proposals);
+    if (chosen == null || chosen.isEmpty || !context.mounted) return;
+    final lastId = u.editLog.list(limit: 1).firstOrNull?.id ?? 0;
     final r = await runWithProgress(
       context,
       S.editsApply,
-      (cancel, p) => u.edits.apply(proposals, cancel: cancel, progress: p),
+      (cancel, p) => u.edits.apply(chosen, cancel: cancel, progress: p),
     );
     if (r == null || !context.mounted) return;
     final msg = S.edits4(
@@ -78,13 +46,165 @@ Future<void> runEditsFlow(BuildContext context, UserContext u) async {
       r.deferred > 0 ? ' ${S.runnerQuotaDefer}' : '',
     );
     if (r.applied > 0) {
-      celebrate(context, msg);
+      final justApplied = u.editLog
+          .list(limit: 500)
+          .where((e) => e.id > lastId && e.status == EditStatus.applied)
+          .map((e) => e.id)
+          .toList();
+      celebrate(
+        context,
+        msg,
+        action: SnackBarAction(
+          label: S.batchUndoAll,
+          onPressed: () async {
+            for (final id in justApplied.reversed) {
+              await u.edits.revert(id, force: true);
+            }
+          },
+        ),
+      );
     } else {
       toast(context, msg);
     }
     if (u.settings.ttsEnabled) await u.env.speaker.speak(msg);
   } catch (e) {
     if (context.mounted) await showFailure(context, e, onRetry: () => runEditsFlow(context, u));
+  }
+}
+
+/// 일괄 수정 미리보기 (전체 화면): 영상마다 수정 전/후를 보여 주고 체크한 것만 돌려준다.
+Future<List<EditProposal>?> showBatchPreview(BuildContext context, UserContext u, List<EditProposal> proposals) {
+  return showDialog<List<EditProposal>>(
+    context: context,
+    builder: (c) => Dialog.fullscreen(
+      child: _BatchPreview(u: u, proposals: proposals),
+    ),
+  );
+}
+
+class _BatchPreview extends StatefulWidget {
+  const _BatchPreview({required this.u, required this.proposals});
+  final UserContext u;
+  final List<EditProposal> proposals;
+  @override
+  State<_BatchPreview> createState() => _BatchPreviewState();
+}
+
+class _BatchPreviewState extends State<_BatchPreview> {
+  late final Set<int> on = {for (var i = 0; i < widget.proposals.length; i++) i};
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final u = widget.u;
+    final list = widget.proposals;
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(tooltip: S.cancel, icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+        title: const Text(S.editsPreviewTitle),
+      ),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(AppTokens.pagePad, AppTokens.gapS, AppTokens.pagePad, AppTokens.gapXl),
+          children: [
+            Row(
+              children: [
+                const Mascot(MascotMood.working, size: 56),
+                const SizedBox(width: AppTokens.gapM),
+                Expanded(
+                  child: Text(
+                    u.settings.isFirstMonth(u.env.now())
+                        ? '${S.batchHelp} ${S.editsFirstMonth}'
+                        : '${S.batchHelp} ${S.editsLimit(u.settings.editsPerChannelPerDay)}',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppTokens.gapS),
+            ButtonWrap(
+              children: [
+                BigButton(
+                  label: S.batchAll,
+                  icon: Icons.done_all,
+                  primary: false,
+                  onPressed: () => setState(() => on.addAll(List.generate(list.length, (i) => i))),
+                ),
+                BigButton(
+                  label: S.batchNone,
+                  icon: Icons.remove_done,
+                  primary: false,
+                  onPressed: () => setState(on.clear),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppTokens.gapS),
+            for (var i = 0; i < list.length; i++)
+              Appear(
+                index: i,
+                child: StripeCard(
+                  key: Key('batch-$i'),
+                  status: on.contains(i) ? Status.progress : null,
+                  onTap: () => setState(() => on.contains(i) ? on.remove(i) : on.add(i)),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Checkbox(
+                        value: on.contains(i),
+                        onChanged: (v) => setState(() => v == true ? on.add(i) : on.remove(i)),
+                      ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              u.youtube.channel(list[i].video.channelId)?.title ?? '',
+                              style: TextStyle(color: t.textSoft, fontSize: AppTokens.fontSmall),
+                            ),
+                            Text('${S.editBefore}: ${list[i].video.title}', style: TextStyle(color: t.textSoft)),
+                            Text(
+                              '${S.editAfter}: ${list[i].after.title}',
+                              style: const TextStyle(fontWeight: FontWeight.w800),
+                            ),
+                            const SizedBox(height: AppTokens.gapXs),
+                            Wrap(
+                              spacing: AppTokens.gapS,
+                              runSpacing: AppTokens.gapXs,
+                              children: [
+                                if (list[i].after.title != list[i].video.title)
+                                  const InfoChip(Icons.title, S.batchTitle),
+                                if (list[i].after.description != list[i].video.description)
+                                  const InfoChip(Icons.notes, S.batchDesc),
+                                if (list[i].after.tags.join() != list[i].video.tags.join())
+                                  InfoChip(Icons.sell, S.edits2(list[i].after.tags.take(5).join(', '))),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(AppTokens.gapL),
+          child: BigButton(
+            key: const Key('apply-edits'),
+            label: S.batchApply(on.length),
+            icon: Icons.check,
+            onPressed: on.isEmpty
+                ? null
+                : () => Navigator.pop(context, [
+                    for (var i = 0; i < list.length; i++)
+                      if (on.contains(i)) list[i],
+                  ]),
+          ),
+        ),
+      ),
+    );
   }
 }
 
