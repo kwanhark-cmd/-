@@ -1,5 +1,6 @@
 import 'package:channel_biseo/app/app.dart';
 import 'package:channel_biseo/app/services.dart';
+import 'package:channel_biseo/features/ai/ai_service.dart';
 import 'package:channel_biseo/features/ai/brain.dart';
 import 'package:channel_biseo/features/production/desc_template.dart';
 import 'package:channel_biseo/features/youtube/trending.dart';
@@ -172,6 +173,62 @@ void main() {
       await t.pumpAndSettle();
       expect(find.byKey(const Key('trending-card')), findsOneWidget);
       expect(find.textContaining('하루 +5,000회'), findsOneWidget);
+      expect(t.takeException(), isNull);
+      await t.pumpWidget(const SizedBox());
+    });
+  });
+
+  group('검색어 추천', () {
+    test('연습 모드: 기존 키워드와 겹치지 않는 추천, 비용 0', () async {
+      final (_, _, u) = await setup();
+      final style = Brain.mockStyle('집밥 요리 교실', ['김치찌개 만들기']);
+      final list = await u.brain.suggestKeywords('김치찌개 끓이기', ['김치찌개 만들기'], style);
+      expect(list, isNotEmpty);
+      expect(list.length, lessThanOrEqualTo(8));
+      expect(list, isNot(contains('김치찌개 만들기')));
+      expect(u.ai.monthCostUsd, 0);
+    });
+
+    test('인공지능이 켜져 있으면 실제로 묻고 비용이 기록된다', () async {
+      registerStages();
+      final k = TestKit(aiProviders: {'claude': FakeAiProvider((r) => '{"keywords":["집밥 레시피","김치찌개 황금레시피","집밥"]}')});
+      final s = AppState(k.env);
+      await s.login(k.env.accounts.create('ai', '1234'));
+      final u = s.user!;
+      await u.ai.setKey('sk-ant-test');
+      final list = await u.brain.suggestKeywords('김치찌개', ['집밥'], Brain.mockStyle('요리', const []));
+      expect(list, ['집밥 레시피', '김치찌개 황금레시피']);
+      expect(u.ai.monthCostUsd, greaterThan(0));
+    });
+
+    testWidgets('제작 상세에서 골라 키워드에 더하기', (t) async {
+      final (_, s, u) = await setup();
+      final p = await productionOf(u).create(channelId: 'UC_mock_cook', format: ContentFormat.shorts, topic: '잡채');
+      await t.pumpWidget(ChannelBiseoApp(state: s));
+      await t.pumpAndSettle();
+      final nav = t.state<NavigatorState>(find.byType(Navigator).first);
+      // ignore: unawaited_futures
+      nav.push(
+        MaterialPageRoute<void>(
+          builder: (_) => ProductionDetailScreen(user: u, id: p.id),
+        ),
+      );
+      await t.pumpAndSettle();
+      await t.scrollUntilVisible(
+        find.byKey(const Key('suggest-keywords')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await t.tap(find.byKey(const Key('suggest-keywords')));
+      await t.pumpAndSettle();
+      expect(find.text('연습 모드라 비용이 들지 않았어요'), findsOneWidget);
+      final chip = find.byType(FilterChip).first;
+      final label = ((t.widget<FilterChip>(chip).label) as Text).data!;
+      await t.tap(chip);
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('kw-add')));
+      await t.pumpAndSettle();
+      expect(productionOf(u).byId(p.id)!.tags, contains(label));
       expect(t.takeException(), isNull);
       await t.pumpWidget(const SizedBox());
     });

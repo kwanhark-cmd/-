@@ -478,6 +478,14 @@ class S {
   static const trendTitle = '주목할 영상';
   static const trendHelp = '평소보다 조회수가 빨리 늘고 있는 내 영상이에요. 비슷한 주제로 새 콘텐츠를 만들어 보세요.';
   static String trendBadge(int ratio, int perDay) => '평소보다 $ratio배 · 하루 +${num(perDay)}회';
+  // 추가 기능: 검색어 추천
+  static const kwSuggest = '검색어 추천';
+  static const kwHelp = '넣고 싶은 검색어를 눌러 고른 뒤 "키워드에 더하기"를 눌러 주세요.';
+  static const kwNone = '더 추천할 검색어가 없어요.';
+  static const kwAdd = '키워드에 더하기';
+  static const kwCostFree = '연습 모드라 비용이 들지 않았어요';
+  static String kwCost(String usd) => '이번 추천 예상 비용 약 $usd달러';
+  static String kwAdded(int n) => '검색어 $n개를 키워드에 더했어요.';
   static const uiDangerSecond = '정말 할까요? 한 번 더 확인할게요.';
   static const thumbTitle = '썸네일 그림';
   static const thumbNone = '아직 썸네일 그림이 없어요. 문구로 만들거나 직접 만든 그림을 넣어 주세요.';

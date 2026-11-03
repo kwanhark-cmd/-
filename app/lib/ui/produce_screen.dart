@@ -317,7 +317,16 @@ class _ProductionDetailScreenState extends State<ProductionDetailScreen> {
             block(S.produceThumbnail, p.thumbnailText),
             block(S.produceScript, p.script),
             ButtonWrap(
-              children: [BigButton(label: S.edit, icon: Icons.edit, primary: false, onPressed: () => _edit(p))],
+              children: [
+                BigButton(label: S.edit, icon: Icons.edit, primary: false, onPressed: () => _edit(p)),
+                BigButton(
+                  key: const Key('suggest-keywords'),
+                  label: S.kwSuggest,
+                  icon: Icons.manage_search,
+                  primary: false,
+                  onPressed: () => busy.run(() => _keywords(p)),
+                ),
+              ],
             ),
             SectionCard(
               title: S.thumbTitle,
@@ -432,6 +441,67 @@ class _ProductionDetailScreenState extends State<ProductionDetailScreen> {
         ),
       ),
     );
+  }
+
+  /// 검색어 추천: 인공지능 비용을 먼저 보여 주고, 고른 것만 키워드에 더한다.
+  Future<void> _keywords(Production p) async {
+    if (!await confirmAiCost(context, u, calls: 1, input: 1500, output: 300)) return;
+    if (!mounted) return;
+    final ch = u.youtube.channel(p.channelId);
+    final style = StyleCard.decode(ch?.styleJson) ?? Brain.mockStyle(ch?.title ?? '', const []);
+    final list = await runWithProgress(context, S.kwSuggest, (c, _) => u.brain.suggestKeywords(p.title, p.tags, style));
+    if (list == null || !mounted) return;
+    if (list.isEmpty) {
+      toast(context, S.kwNone);
+      return;
+    }
+    final picked = <String>{};
+    final cost = u.ai.isPracticeMode
+        ? S.kwCostFree
+        : S.kwCost(u.ai.estimateCost('x' * 750, 'x' * 750, expectedOutput: 300).toStringAsFixed(4));
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (d) => StatefulBuilder(
+        builder: (d, setD) => AlertDialog(
+          title: const Text(S.kwSuggest),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                InfoChip(Icons.payments, cost),
+                const SizedBox(height: AppTokens.gapS),
+                const Text(S.kwHelp),
+                const SizedBox(height: AppTokens.gapM),
+                Wrap(
+                  spacing: AppTokens.gapS,
+                  runSpacing: AppTokens.gapS,
+                  children: [
+                    for (final k in list)
+                      FilterChip(
+                        key: Key('kw-$k'),
+                        label: Text(k),
+                        selected: picked.contains(k),
+                        onSelected: (v) => setD(() => v ? picked.add(k) : picked.remove(k)),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(d, false), child: const Text(S.cancel)),
+            FilledButton(key: const Key('kw-add'), onPressed: () => Navigator.pop(d, true), child: const Text(S.kwAdd)),
+          ],
+        ),
+      ),
+    );
+    if (ok != true || picked.isEmpty) return;
+    ps.updateText(p.id, tags: [...p.tags, ...picked]);
+    if (mounted) {
+      celebrate(context, S.kwAdded(picked.length));
+      setState(() {});
+    }
   }
 
   Future<void> _edit(Production p) async {

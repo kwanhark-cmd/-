@@ -261,6 +261,37 @@ class Brain {
     );
   }
 
+  // ---------- 검색어 추천 ----------
+  /// 제목·키워드를 고칠 때 넣으면 좋은 관련 검색어 (이미 있는 키워드는 빼고).
+  Future<List<String>> suggestKeywords(String title, List<String> tags, StyleCard style) async {
+    final r = await _ask<List<String>>(
+      'keywords',
+      '채널 스타일: ${style.describe()}\n제목: $title\n지금 키워드: ${tags.join(', ')}\n'
+          '시청자가 유튜브에서 실제로 검색할 만한 관련 검색어 8개를 추천해 주세요. 지금 키워드와 겹치지 않게. '
+          'JSON: {"keywords":[""]}',
+      (j) => ((j['keywords'] as List<dynamic>?) ?? const []).map((e) => '$e').toList(),
+      () => mockKeywords(title, tags, style),
+      maxTokens: 600,
+    );
+    final have = tags.map((e) => e.trim()).toSet();
+    return _cleanTags(r).where((k) => !have.contains(k)).take(8).toList();
+  }
+
+  static List<String> mockKeywords(String title, List<String> tags, StyleCard style) {
+    final base = [
+      ...topWords([title], 2),
+      ...style.topics.take(2),
+    ];
+    const suffix = ['만들기', '쉽게', '초보', '꿀팁', '방법', '추천'];
+    final out = <String>[];
+    for (final b in base) {
+      for (final s in suffix) {
+        out.add('$b $s');
+      }
+    }
+    return out;
+  }
+
   // ---------- 블로그 ----------
   Future<BlogDraft> writeBlogPost(StyleCard style, String topic) {
     return _ask(
