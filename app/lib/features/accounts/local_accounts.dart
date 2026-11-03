@@ -37,7 +37,7 @@ class LocalAccounts {
   LocalAccounts({required this.baseDir, required this.secrets, this.logger, this.inMemory = false})
     : db = inMemory
           ? AppDatabase.inMemory(usersMigrations)
-          : AppDatabase.open(p.join(baseDir, 'users.sqlite'), usersMigrations, logger: logger);
+          : AppDatabase.open(p.join(baseDir, usersDbFile), usersMigrations, logger: logger);
 
   final String baseDir;
   final SecretStore secrets;
@@ -89,6 +89,8 @@ class LocalAccounts {
     return diff == 0;
   }
 
+  static const usersDbFile = 'users.sqlite';
+  String get usersDbPath => p.join(baseDir, usersDbFile);
   String userDir(int userId) => p.join(baseDir, 'users', 'u$userId');
   String userDbPath(int userId) => p.join(userDir(userId), 'data.sqlite');
 

@@ -511,6 +511,22 @@ class S {
   // 긴급 수정
   static const reportFromError = '문제 신고 파일 만들기';
   static String reportMade(String path) => '문제 신고 파일을 만들었어요: $path';
+
+  // 업데이트
+  static const updCheck = '업데이트 확인';
+  static const updCheckSub = '새 버전이 있는지 확인해요. 설치는 직접 누를 때만 해요.';
+  static const updChecking = '새 버전 확인 중';
+  static String updLatest(String v) => '지금 최신 버전이에요 ($v)';
+  static String updNew(String v) => '새 버전 $v 이 나왔어요';
+  static const updKeepsData = '설치해도 설정·연결 열쇠·채널·영상 자료는 그대로예요. 설치 전에 자동으로 백업해요.';
+  static const updManual = '이 기기에서는 다운로드 페이지에서 받아 설치해 주세요.';
+  static const updLater = '나중에';
+  static const updInstall = '설치하기';
+  static const updOpenPage = '다운로드 페이지 열기';
+  static const updInstalling = '업데이트 준비 중';
+  static const updBackingUp = '자료 백업 중';
+  static const updDownloading = '새 버전 받는 중';
+  static const updStarted = '설치 화면을 열었어요. 안내에 따라 "설치"를 눌러 주세요.';
   static const chanNoChannelAccount = '이 구글 계정에는 아직 유튜브 채널이 없어요. 채널을 가진 다른 구글 계정으로 연결해 주세요. (유튜브에서 채널을 먼저 만들어도 돼요)';
   static const chanOtherAccount = '다른 계정으로 연결';
   static String chanAddedSomeEmpty(int n, int empty) => '채널 $n개를 등록했어요. 그중 $empty개는 아직 영상이 없는 채널이에요.';

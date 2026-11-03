@@ -15,6 +15,7 @@ import 'app/services.dart';
 import 'core/logger.dart';
 import 'core/secret_store.dart';
 import 'features/runner/notifier.dart';
+import 'features/update/installer.dart';
 import 'features/voice/voice_io.dart';
 import 'stages.dart';
 import 'ui/common.dart';
@@ -61,6 +62,8 @@ Future<void> main() async {
         return f?.path;
       },
       pickDirectory: () => FilePicker.getDirectoryPath(),
+      installUpdate: UpdateInstaller(log).install,
+      osName: Platform.operatingSystem,
     );
     log.info('앱 시작 ${env.appVersion} ${env.platformName}');
     registerStages();

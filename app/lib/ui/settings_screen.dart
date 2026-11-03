@@ -13,6 +13,7 @@ import 'common.dart';
 import 'connection_status.dart';
 import 'memos_screen.dart';
 import 'onboarding.dart';
+import 'update_flow.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key, required this.state, required this.user});
@@ -58,6 +59,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           icon: Icons.bug_report,
           primary: false,
           onPressed: () => busy.run(_report),
+        ),
+        const SizedBox(height: AppTokens.gapS),
+        BigButton(
+          key: const Key('update-check'),
+          label: S.updCheck,
+          icon: Icons.system_update,
+          primary: false,
+          onPressed: () => checkUpdateFlow(context, u),
         ),
         if (u.youtube.hasRealChannel)
           SwitchListTile(

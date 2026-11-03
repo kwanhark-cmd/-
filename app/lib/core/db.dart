@@ -341,6 +341,13 @@ const userDataMigrations = <Migration>[
       PRIMARY KEY(video_id, day)
     )''',
   ]),
+  // v6: 업데이트 기록 (어떤 버전을 언제부터 썼는지). 문제 신고·되돌리기 안내에 사용.
+  Migration(6, [
+    '''CREATE TABLE app_versions(
+      version TEXT PRIMARY KEY,
+      first_seen TEXT NOT NULL
+    )''',
+  ]),
 ];
 
 /// 오늘 날짜 문자열 (yyyy-MM-dd, 기기 시간 기준).

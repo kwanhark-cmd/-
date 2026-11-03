@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:http/http.dart' as http;
 
 import '../core/db.dart';
@@ -13,6 +15,7 @@ import '../features/runner/job_runner.dart';
 import '../features/runner/notifier.dart';
 import '../features/settings/maintenance.dart';
 import '../features/settings/user_settings.dart';
+import '../features/update/update_service.dart';
 import '../features/voice/briefing.dart';
 import '../features/voice/memos.dart';
 import '../features/voice/voice_controller.dart';
@@ -43,7 +46,17 @@ class AppEnv {
     this.aiProviders,
     this.pickFile,
     this.pickDirectory,
+    this.installUpdate,
+    this.osName = '',
   });
+
+  /// 내려받은 업데이트 설치 시작 (실제 앱만). 테스트에서는 가짜.
+  final Future<void> Function(File installer)? installUpdate;
+
+  /// 'android' | 'windows' | 'macos' | 'linux' (업데이트 파일 고르기)
+  final String osName;
+
+  late final UpdateService updates = UpdateService(client: httpClient, currentVersion: appVersion, logger: logger);
 
   /// 파일 고르기 (확장자 목록). 고르지 않으면 null.
   final Future<String?> Function(List<String> extensions)? pickFile;
@@ -108,6 +121,31 @@ class UserContext {
   /// 다른 단계(2~4단계)가 기능을 붙이는 곳.
   final Map<String, Object> extensions = {};
 
+  /// 마지막 업데이트 전 백업 폴더 (이번 실행 중)
+  String? lastUpdateBackup;
+
+  /// 이 사용자가 쓴 앱 버전 기록. 업데이트 뒤 처음 열 때 한 줄 추가.
+  void _recordVersion() {
+    final v = env.appVersion;
+    final seen = db.select('SELECT 1 FROM app_versions WHERE version = ?', [v]).isNotEmpty;
+    if (seen) return;
+    final prev = db.select('SELECT version FROM app_versions ORDER BY first_seen DESC LIMIT 1');
+    db.execute('INSERT INTO app_versions(version, first_seen) VALUES(?, ?)', [v, env.now().toIso8601String()]);
+    if (prev.isNotEmpty) env.logger.info('업데이트됨: ${prev.first['version']} → $v (설정·자료 유지)');
+    // 예전 버전에서 쓰던 사람은 첫 실행 안내를 다시 보지 않게 (설정이 이미 있으면 건너뜀)
+    if (!settings.onboardingDone && hasExistingData) settings.onboardingDone = true;
+  }
+
+  /// 이미 쓰던 자료가 있는지 (계정·채널·제작·메모 중 하나라도)
+  bool get hasExistingData =>
+      db
+              .select(
+                'SELECT (SELECT COUNT(*) FROM accounts) + (SELECT COUNT(*) FROM productions) + (SELECT COUNT(*) FROM memos) AS n',
+              )
+              .first['n']
+          as int >
+      0;
+
   static Future<UserContext> open(AppEnv env, LocalUser user) async {
     final db = env.accounts.openUserDb(user.id);
     final c = UserContext._(env, user, db);
@@ -118,6 +156,7 @@ class UserContext {
   Future<void> _wire() async {
     final now = env.now;
     settings = UserSettings(db)..ensureFirstUseDay(now());
+    _recordVersion();
     secrets = UserSecrets(env.secrets, user.id);
     oauth = OAuthFlow(env.jsonHttp, env.launchUrl, now: now);
     tokens = TokenManager(secrets, oauth, now: now);

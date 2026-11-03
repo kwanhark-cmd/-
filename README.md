@@ -12,18 +12,41 @@
 
 ## 1. 설치 파일 받기
 
-설치 파일은 GitHub 가 자동으로 만들어 둡니다.
+> **새 버전 설치 = 앱 파일 덮어쓰기, 설정은 유지됨.**
+> 설정·연결 열쇠·채널·영상·제작 자료는 앱 파일이 아닌 사용자 폴더와 운영체제 보안 저장소에 있어서, 새 버전을 덮어써도 그대로 남아요. 지우고 다시 설치할 필요가 없어요.
 
-1. 이 저장소 페이지 위쪽의 **Actions** 를 누릅니다.
-2. 왼쪽에서 **빌드와 테스트** 를 누르고, 맨 위(가장 최근)의 초록색 ✅ 줄을 누릅니다.
-3. 아래 **Artifacts** 에서 내 기기에 맞는 파일을 내려받습니다.
-   - 윈도우: `채널비서-윈도우` → 압축을 풀고 `channel_biseo.exe` 실행
-   - 맥: `채널비서-맥` → 압축을 풀고 `channel_biseo.app` 을 응용 프로그램 폴더로 옮김
+### 처음 설치
+1. 이 저장소 페이지 오른쪽의 **Releases** (또는 주소 끝에 `/releases`)를 누릅니다.
+2. 맨 위(가장 최근) 버전에서 내 기기에 맞는 파일을 내려받습니다.
+   - 윈도우: `channel-biseo-windows-setup.exe` 실행 → 설치가 끝나면 시작 메뉴에 "채널관리비서"
+   - 맥: `channel-biseo-macos.zip` 압축을 풀고 `channel_biseo.app` 을 응용 프로그램 폴더로 옮김
      (처음 열 때 "확인되지 않은 개발자" 경고가 나오면: 앱을 **오른쪽 클릭 → 열기**)
-   - 안드로이드: `채널비서-안드로이드` → 압축을 풀고 `app-release.apk` 를 휴대폰에 옮겨 설치
+   - 안드로이드: `channel-biseo-android.apk` 를 휴대폰에서 열어 설치
      (설정에서 "출처를 알 수 없는 앱 설치" 를 허용해야 할 수 있어요)
+   - 리눅스: `channel-biseo-linux.tar.gz` 압축을 풀고 `bundle/channel_biseo` 실행
+
+아직 Releases 에 아무것도 없으면 **Actions → 빌드와 테스트 → 가장 최근 ✅ → Artifacts** 에서 받을 수 있어요.
 
 📷 `docs/사진/01-actions-artifacts.png` — Actions 화면의 Artifacts 위치
+
+### 새 버전으로 바꾸기 (업데이트)
+- **앱 안에서**: 설정 맨 위 **"업데이트 확인"** → 새 버전이 있으면 바뀐 점을 보여 줘요 → **"설치하기"** 를 누를 때만 받아서 설치해요 (자동으로 받지 않아요).
+  설치 전에 모든 자료를 `문서/채널관리비서/업데이트-백업/` 에 자동으로 백업해요.
+  - 윈도우: 설치 프로그램이 같은 자리에 덮어쓰고 앱을 다시 열어요.
+  - 맥: 앱이 닫히고 새 앱으로 바뀐 뒤 다시 열려요.
+  - 안드로이드: 설치 화면이 열리면 **"업데이트"** 를 누르세요.
+- **직접**: Releases 에서 새 파일을 받아 위 "처음 설치"와 똑같이 하면 돼요. 맥은 응용 프로그램 폴더의 앱을 새 것으로 **바꾸기**.
+- 앱 자료 형식이 바뀌는 버전이면 처음 열 때 자동으로 바꾸고, 바꾸기 전에 자동 백업해요. 첫 실행 안내는 다시 나오지 않아요.
+
+### 안드로이드 서명 키 (개발자·판매자용, 한 번만)
+안드로이드는 모든 버전이 **같은 서명 키**로 만들어져야 덮어쓰기 설치가 돼요. 키 파일은 저장소에 넣지 않고 GitHub 비밀 값으로 넣어요.
+1. 컴퓨터에서 키 만들기 (Java 가 있으면): `keytool -genkey -v -keystore release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias channelbiseo`
+2. `base64 -w0 release.jks` 결과를 복사
+3. 저장소 **Settings → Secrets and variables → Actions → New repository secret** 에 4개 추가:
+   `ANDROID_KEYSTORE_BASE64`(2번 결과), `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`(`channelbiseo`), `ANDROID_KEY_PASSWORD`
+4. `release.jks` 와 비밀번호는 잃어버리지 않게 따로 보관 (잃어버리면 다음 버전을 덮어쓸 수 없어요)
+
+키를 넣기 전에 받은 안드로이드 앱(1.1.0 이하)은 서명이 달라서 **한 번만** 지우고 새로 설치해야 해요. 지우기 전에 설정 → **백업 만들기** 에서 "다운로드" 같은 공용 폴더를 골라 백업하고, 새로 설치한 뒤 **백업에서 되살리기** 로 가져오세요. 연결 열쇠는 다시 넣어야 해요.
 
 ## 2. 처음 실행하기
 
@@ -148,3 +171,6 @@
 - 보고서: `docs/보고/` (화면 개선: `docs/보고/화면개선.md`), 화면 사진: `docs/화면/`, 안전 점검: `docs/검증/`, 판매 준비: `docs/배포준비.md`
 - 디자인 값(색·크기·간격·그림자·움직임): `app/lib/ui/theme.dart`, 공통 위젯: `app/lib/ui/widgets.dart`, 그림: `app/assets/icons3d/`
 - 커밋: `app/tool/commit.sh "메시지"` (검사를 모두 통과해야만 커밋)
+- 새 버전 공개: `app/pubspec.yaml` 의 version 과 `app/CHANGELOG.md` 를 올린 뒤 `git tag v1.2.0 && git push origin v1.2.0` → Actions 가 설치 파일을 만들어 Releases 에 올림 (태그와 앱 버전이 다르면 멈춤)
+- 앱 식별자(안드로이드 `com.channelbiseo.channel_biseo`, 맥 `com.channelbiseo.channelBiseo`, 실행 파일 `channel_biseo`, 윈도우 설치 AppId)는 **절대 바꾸지 않기** — 바꾸면 업데이트가 덮어쓰기가 아니라 다른 앱이 되고 자료를 못 찾음
+- 업데이트 시험 자료: `app/test/fixtures/v1.1.0` (1.1.0 코드로 실제로 만든 자료 폴더), 시험: `app/test/update_test.dart`
