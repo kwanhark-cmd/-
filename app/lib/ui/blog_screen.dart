@@ -1,0 +1,418 @@
+import 'package:flutter/material.dart';
+
+import '../app/services.dart';
+import '../core/strings.dart';
+import '../features/blog/blog_service.dart';
+import '../features/edits/edit_service.dart';
+import '../features/production/production_service.dart' show ProductionBlocked;
+import 'channels_screen.dart' show editStyleDialog;
+import 'common.dart';
+
+BlogService blogOf(UserContext u) => u.extensions['blog']! as BlogService;
+
+class BlogScreen extends StatefulWidget {
+  const BlogScreen({super.key, required this.user});
+  final UserContext user;
+  @override
+  State<BlogScreen> createState() => _BlogScreenState();
+}
+
+class _BlogScreenState extends State<BlogScreen> {
+  UserContext get u => widget.user;
+  BlogService get bs => blogOf(u);
+
+  Future<void> _connectBlogger() async {
+    try {
+      final r = await runWithProgress(context, S.blogAddBlogger, (cancel, p) async {
+        final sites = await bs.connectBlogger();
+        for (final s in sites) {
+          await bs.syncPosts(s.id, cancel: cancel, progress: p);
+        }
+        return sites;
+      });
+      if (mounted && r != null) toast(context, '블로그 ${r.length}개를 등록했어요.');
+    } catch (e) {
+      if (mounted) await showFailure(context, e, onRetry: _connectBlogger);
+    }
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _addTistory() async {
+    final name = TextEditingController();
+    final url = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text(S.blogAddTistory),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              key: const Key('tistory-name'),
+              controller: name,
+              decoration: const InputDecoration(labelText: S.blogTistoryName),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: url,
+              decoration: const InputDecoration(labelText: S.blogTistoryUrl),
+            ),
+            const SizedBox(height: 12),
+            const Text(S.blogTistoryCopyHint),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text(S.cancel)),
+          FilledButton(
+            key: const Key('tistory-ok'),
+            onPressed: () => Navigator.pop(c, true),
+            child: const Text(S.save),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      bs.addTistory(name.text, url.text);
+    } catch (e) {
+      if (mounted) await showFailure(context, e);
+    }
+    if (mounted) setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sites = bs.sites();
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+      children: [
+        ButtonWrap(
+          children: [
+            BigButton(
+              key: const Key('add-blogger'),
+              label: S.blogAddBlogger,
+              icon: Icons.add_link,
+              onPressed: _connectBlogger,
+            ),
+            BigButton(
+              key: const Key('add-tistory'),
+              label: S.blogAddTistory,
+              icon: Icons.add,
+              primary: false,
+              onPressed: _addTistory,
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (sites.isEmpty) const EmptyHint(S.blogNone),
+        for (final s in sites)
+          Card(
+            child: ListTile(
+              key: Key('site-${s.id}'),
+              leading: Icon(s.isTistory ? Icons.content_copy : Icons.rss_feed),
+              title: Text(s.title),
+              subtitle: Text(s.isTistory ? '티스토리 · 복사해서 올리기' : '구글 블로그 · 글 ${bs.postTotal(s.id)}개'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () async {
+                await Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => BlogDetailScreen(user: u, siteId: s.id),
+                  ),
+                );
+                if (mounted) setState(() {});
+              },
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class BlogDetailScreen extends StatefulWidget {
+  const BlogDetailScreen({super.key, required this.user, required this.siteId});
+  final UserContext user;
+  final int siteId;
+  @override
+  State<BlogDetailScreen> createState() => _BlogDetailScreenState();
+}
+
+class _BlogDetailScreenState extends State<BlogDetailScreen> {
+  UserContext get u => widget.user;
+  BlogService get bs => blogOf(u);
+  final busy = Busy();
+  int _limit = 30;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = bs.site(widget.siteId);
+    if (s == null) return const Scaffold(body: EmptyHint(S.empty));
+    final style = s.style;
+    final drafts = bs.drafts(s.id);
+    final edits = u.editLog.list(targetType: 'post', parentId: 'blog${s.id}', limit: 50);
+    final posts = bs.posts(s.id, limit: _limit);
+    return Scaffold(
+      appBar: AppBar(title: Text(s.title)),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            if (s.isTistory) const Text(S.blogTistoryCopyHint),
+            const Text(S.blogPerDay),
+            const SizedBox(height: 12),
+            ButtonWrap(
+              children: [
+                BigButton(
+                  key: const Key('blog-new'),
+                  label: S.blogNewPost,
+                  icon: Icons.post_add,
+                  onPressed: () => busy.run(() => _new(s)),
+                ),
+                if (!s.isTistory) ...[
+                  BigButton(
+                    key: const Key('blog-edits'),
+                    label: S.blogRunEdits,
+                    icon: Icons.auto_fix_high,
+                    primary: false,
+                    onPressed: () => busy.run(() => _edits(s)),
+                  ),
+                  BigButton(
+                    label: S.channelSync,
+                    icon: Icons.refresh,
+                    primary: false,
+                    onPressed: () => busy.run(() => _sync(s)),
+                  ),
+                ],
+                BigButton(
+                  label: S.delete,
+                  icon: Icons.link_off,
+                  danger: true,
+                  onPressed: () => busy.run(() => _remove(s)),
+                ),
+              ],
+            ),
+            SectionCard(
+              title: '블로그 스타일 카드',
+              icon: Icons.palette,
+              trailing: style == null
+                  ? null
+                  : IconButton(
+                      icon: const Icon(Icons.edit),
+                      tooltip: S.edit,
+                      onPressed: () async {
+                        final r = await editStyleDialog(context, style);
+                        if (r != null) bs.saveStyle(s.id, r);
+                        if (mounted) setState(() {});
+                      },
+                    ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(style == null ? S.styleEmpty : style.describe()),
+                  const SizedBox(height: 8),
+                  BigButton(
+                    label: S.styleAnalyze,
+                    primary: false,
+                    onPressed: () => busy.run(() async {
+                      await bs.analyze(s.id);
+                      if (mounted) setState(() {});
+                    }),
+                  ),
+                ],
+              ),
+            ),
+            SectionCard(
+              title: '새 글',
+              icon: Icons.drafts,
+              child: Column(
+                children: [if (drafts.isEmpty) const Text(S.empty), for (final d in drafts) _draftTile(s, d)],
+              ),
+            ),
+            if (!s.isTistory)
+              SectionCard(
+                title: '${S.channelEdits} (제목·라벨)',
+                icon: Icons.history,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (edits.isEmpty) const Text(S.editsNone),
+                    for (final e in edits)
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text('${e.before.title} → ${e.after.title}'),
+                        subtitle: Text(
+                          '${e.day} · ${e.status == EditStatus.applied
+                              ? S.editStatusApplied
+                              : e.status == EditStatus.reverted
+                              ? S.editStatusReverted
+                              : S.editStatusFailed}',
+                        ),
+                        trailing: e.status == EditStatus.applied
+                            ? TextButton(
+                                key: Key('post-revert-${e.id}'),
+                                onPressed: () => busy.run(() => _revert(e.id)),
+                                child: const Text(S.editRevert),
+                              )
+                            : null,
+                      ),
+                  ],
+                ),
+              ),
+            if (!s.isTistory)
+              SectionCard(
+                title: '${S.blogPosts} (${bs.postTotal(s.id)})',
+                icon: Icons.article,
+                child: Column(
+                  children: [
+                    for (final p in posts)
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(p.title),
+                        subtitle: Text(p.labels.join(', ')),
+                      ),
+                    if (posts.length >= _limit)
+                      BigButton(label: S.loadMore, primary: false, onPressed: () => setState(() => _limit += 30)),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _draftTile(BlogSite s, BlogDraftRow d) {
+    final done = d.status == 'postedByUser' || d.status == 'publishedByUser';
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(d.title, style: Theme.of(context).textTheme.titleMedium),
+            Text(switch (d.status) {
+              'copyReady' => '복사해서 티스토리에 올려 주세요',
+              'draftOnBlogger' => '구글 블로그에 초안(비공개)으로 올림 · 확인 후 공개해 주세요',
+              _ => '확인 완료',
+            }),
+            const SizedBox(height: 8),
+            ButtonWrap(
+              children: [
+                BigButton(
+                  key: Key('copy-title-${d.id}'),
+                  label: S.blogCopyTitle,
+                  icon: Icons.copy,
+                  primary: false,
+                  onPressed: () => copyText(context, d.title),
+                ),
+                BigButton(
+                  key: Key('copy-body-${d.id}'),
+                  label: S.blogCopyBody,
+                  icon: Icons.copy,
+                  primary: false,
+                  onPressed: () => copyText(context, BlogService.tistoryBody(d)),
+                ),
+                BigButton(
+                  label: S.blogCopyTags,
+                  icon: Icons.copy,
+                  primary: false,
+                  onPressed: () => copyText(context, BlogService.tistoryTags(d)),
+                ),
+                if (d.status == 'draftOnBlogger')
+                  BigButton(
+                    label: '구글 블로그에서 열기',
+                    icon: Icons.open_in_new,
+                    primary: false,
+                    onPressed: () => u.env.launchUrl(Uri.parse(bs.bloggerEditUrl(s, d.remotePostId))),
+                  ),
+                if (!done)
+                  BigButton(
+                    label: d.status == 'copyReady' ? '올렸어요' : '확인하고 공개했어요',
+                    icon: Icons.check,
+                    onPressed: () {
+                      bs.markDraftDone(d.id);
+                      setState(() {});
+                    },
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _new(BlogSite s) async {
+    final topic = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text(S.blogNewPost),
+        content: TextField(
+          key: const Key('blog-topic'),
+          controller: topic,
+          decoration: const InputDecoration(labelText: S.produceTopic),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text(S.cancel)),
+          FilledButton(
+            key: const Key('blog-make'),
+            onPressed: () => Navigator.pop(c, true),
+            child: const Text(S.produceMake),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    try {
+      await runWithProgress(context, S.blogNewPost, (c, p) => bs.newPost(s.id, topic: topic.text));
+      if (mounted) toast(context, s.isTistory ? S.blogTistoryCopyHint : S.blogDraftSaved);
+    } on ProductionBlocked catch (e) {
+      if (mounted) toast(context, e.message);
+    } catch (e) {
+      if (mounted) await showFailure(context, e, onRetry: () => _new(s));
+    }
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _edits(BlogSite s) async {
+    try {
+      final n = await runWithProgress(context, S.blogRunEdits, (c, p) => bs.runEdits(s.id, cancel: c));
+      if (mounted) toast(context, n == 0 ? S.editsNone : '글 $n개를 다듬었어요. 마음에 안 들면 되돌릴 수 있어요.');
+    } catch (e) {
+      if (mounted) await showFailure(context, e);
+    }
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _sync(BlogSite s) async {
+    try {
+      await runWithProgress(context, S.channelSync, (c, p) => bs.syncPosts(s.id, cancel: c, progress: p));
+    } catch (e) {
+      if (mounted) await showFailure(context, e, onRetry: () => _sync(s));
+    }
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _revert(int id, {bool force = false}) async {
+    final r = await bs.revert(id, force: force);
+    if (!mounted) return;
+    switch (r.outcome) {
+      case RevertOutcome.reverted:
+      case RevertOutcome.alreadyReverted:
+        toast(context, S.editReverted);
+      case RevertOutcome.newerEditExists:
+        toast(context, S.editRevertNewerFirst);
+      case RevertOutcome.conflict:
+        if (await confirm(context, S.editRevertConflict, yes: S.editRevertAnyway)) return _revert(id, force: true);
+      case RevertOutcome.failed:
+        await showFailure(context, r.failure ?? Exception(), onRetry: () => _revert(id, force: force));
+    }
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _remove(BlogSite s) async {
+    if (!await confirm(context, '"${s.title}" 블로그를 앱에서 뺄까요? (블로그의 글은 그대로예요)', yes: S.delete, danger: true)) return;
+    await bs.removeSite(s.id);
+    if (mounted) Navigator.pop(context);
+  }
+}

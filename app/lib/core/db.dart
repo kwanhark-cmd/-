@@ -273,6 +273,42 @@ const userDataMigrations = <Migration>[
       info_json TEXT NOT NULL DEFAULT '{}'
     )''',
   ]),
+  // v3: 3단계(구글 블로그·티스토리)
+  Migration(3, [
+    '''CREATE TABLE blog_sites(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      platform TEXT NOT NULL,
+      blog_id TEXT NOT NULL DEFAULT '',
+      title TEXT NOT NULL,
+      url TEXT NOT NULL DEFAULT '',
+      account_id INTEGER NOT NULL DEFAULT 0,
+      style_json TEXT,
+      added_at TEXT NOT NULL
+    )''',
+    '''CREATE TABLE posts(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      site_id INTEGER NOT NULL,
+      post_id TEXT NOT NULL,
+      title TEXT NOT NULL,
+      content TEXT NOT NULL DEFAULT '',
+      labels_json TEXT NOT NULL DEFAULT '[]',
+      url TEXT NOT NULL DEFAULT '',
+      published_at TEXT NOT NULL DEFAULT '',
+      updated_at TEXT NOT NULL,
+      UNIQUE(site_id, post_id)
+    )''',
+    '''CREATE TABLE blog_drafts(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      site_id INTEGER NOT NULL,
+      title TEXT NOT NULL,
+      html TEXT NOT NULL,
+      tags_json TEXT NOT NULL DEFAULT '[]',
+      status TEXT NOT NULL,
+      remote_post_id TEXT NOT NULL DEFAULT '',
+      day TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    )''',
+  ]),
 ];
 
 /// 오늘 날짜 문자열 (yyyy-MM-dd, 기기 시간 기준).

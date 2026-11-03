@@ -4,8 +4,11 @@ import 'package:path/path.dart' as p;
 import 'app/app.dart';
 import 'core/strings.dart';
 import 'features/ai/brain.dart';
+import 'features/blog/blog_service.dart';
+import 'features/blog/blogger_api.dart';
 import 'features/production/production_service.dart';
 import 'features/tools/tools_service.dart';
+import 'ui/blog_screen.dart';
 import 'ui/common.dart';
 import 'ui/dashboard.dart';
 import 'ui/produce_screen.dart';
@@ -20,6 +23,7 @@ void registerStages() {
   if (_registered) return;
   _registered = true;
   _stage2();
+  _stage3();
 }
 
 // ---------------- 2단계: 콘텐츠 제작과 업로드 ----------------
@@ -147,6 +151,39 @@ void _stage2() {
       ),
     );
   });
+}
+
+// ---------------- 3단계: 구글 블로그·티스토리 ----------------
+/// 테스트에서 가짜 블로그를 바꿔 끼울 때.
+MockBloggerApi Function() mockBloggerFactory = MockBloggerApi.new;
+
+void _stage3() {
+  AppState.plugins.add((u) async {
+    final bs = BlogService(
+      db: u.db,
+      youtube: u.youtube,
+      realApi: RealBloggerApi(u.env.jsonHttp),
+      mockApi: mockBloggerFactory(),
+      tokens: u.tokens,
+      oauth: u.oauth,
+      brain: u.brain,
+      editLog: u.editLog,
+      settings: u.settings,
+      now: u.env.now,
+      logger: u.env.logger,
+    );
+    u.extensions['blog'] = bs;
+    u.runner.dailyTasks.add(bs.dailyTask);
+    u.briefing.todaySources.add(bs.briefingItems);
+  });
+  TabsRegistry.addTab(
+    (u, shell) => AppTab(
+      S.navBlog,
+      Icons.rss_feed,
+      (k) => BlogScreen(key: k, user: u),
+      id: 'blog',
+    ),
+  );
 }
 
 /// 테스트 등에서 형식 이름이 필요할 때.

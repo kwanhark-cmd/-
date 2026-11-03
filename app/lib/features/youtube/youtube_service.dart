@@ -164,9 +164,11 @@ class YouTubeService {
       db.execute('UPDATE accounts SET label = ? WHERE id = ?', [label, accountId]);
       // 다시 연결한 경우: 채널이 하나도 안 남은 예전 계정 정리
       final orphans = db
-          .select('SELECT id FROM accounts WHERE id != ? AND id NOT IN (SELECT DISTINCT account_id FROM channels)', [
-            accountId,
-          ])
+          .select(
+            'SELECT id FROM accounts WHERE id != ? AND id NOT IN (SELECT DISTINCT account_id FROM channels) '
+            ' $_notUsedByBlogs',
+            [accountId],
+          )
           .map((r) => r['id'] as int)
           .toList();
       for (final o in orphans) {
@@ -182,6 +184,12 @@ class YouTubeService {
       rethrow;
     }
   }
+
+  bool get _hasBlogTable =>
+      db.select("SELECT 1 FROM sqlite_master WHERE type='table' AND name='blog_sites'").isNotEmpty;
+
+  /// 블로그(3단계)에서 쓰는 계정은 정리하지 않는다.
+  String get _notUsedByBlogs => _hasBlogTable ? 'AND id NOT IN (SELECT DISTINCT account_id FROM blog_sites)' : '';
 
   static bool _sameChannel(String url, YtChannel c) {
     final u = url.trim().toLowerCase();
@@ -231,7 +239,10 @@ class YouTubeService {
       db.execute('DELETE FROM channels WHERE channel_id = ?', [channelId]);
     });
     final left = db.select('SELECT COUNT(*) AS n FROM channels WHERE account_id = ?', [c.accountId]).first['n'] as int;
-    if (left == 0) {
+    final blogs = _hasBlogTable
+        ? db.select('SELECT COUNT(*) AS n FROM blog_sites WHERE account_id = ?', [c.accountId]).first['n'] as int
+        : 0;
+    if (left == 0 && blogs == 0) {
       final a = account(c.accountId);
       if (a != null && !a.mock) {
         final t = await tokens.load(a.id);

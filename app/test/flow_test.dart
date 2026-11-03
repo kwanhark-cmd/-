@@ -5,6 +5,7 @@ import 'package:channel_biseo/core/db.dart';
 import 'package:channel_biseo/features/edits/edit_service.dart';
 import 'package:channel_biseo/stages.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'helpers.dart';
@@ -167,6 +168,34 @@ void main() {
     await back(t);
     await tap(t, 'open-review');
     expect(find.byKey(const Key('review-1')), findsOneWidget);
+    expect(t.takeException(), isNull);
+    await t.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('3단계 흐름: 티스토리 추가 → 새 글 → 본문 복사', (t) async {
+    await setPhone(t);
+    String? clip;
+    t.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      if (call.method == 'Clipboard.setData') clip = (call.arguments as Map)['text'] as String?;
+      return null;
+    });
+    final k = TestKit();
+    final state = AppState(k.env);
+    await state.login(k.env.accounts.create('블로그', '1234'));
+    state.user!.settings.onboardingDone = true;
+    await t.pumpWidget(ChannelBiseoApp(state: state));
+    await t.pumpAndSettle();
+    await t.tap(find.byIcon(Icons.rss_feed).last);
+    await t.pumpAndSettle();
+    await tap(t, 'add-tistory');
+    await enter(t, 'tistory-name', '내 티스토리');
+    await tap(t, 'tistory-ok');
+    await tapText(t, '내 티스토리');
+    await tap(t, 'blog-new');
+    await enter(t, 'blog-topic', '가을 단풍');
+    await tap(t, 'blog-make');
+    await tap(t, 'copy-body-1');
+    expect(clip, contains('가을 단풍'));
     expect(t.takeException(), isNull);
     await t.pumpWidget(const SizedBox());
   });

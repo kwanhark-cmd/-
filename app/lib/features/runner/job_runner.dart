@@ -104,6 +104,9 @@ class JobRunner {
   /// 다른 단계에서 작업 종류를 추가한다 (예: 'blogEdits').
   final Map<String, JobHandler> handlers = {};
 
+  /// 매일 자동 작업 때 함께 할 일 (예: 3단계 블로그 글 다듬기). 돌려주는 값은 기록할 한 줄.
+  final List<Future<String> Function(CancelToken cancel)> dailyTasks = [];
+
   bool running = false;
   CancelToken? _cancel;
   double progress = 0;
@@ -178,6 +181,17 @@ class JobRunner {
         }
       }
       edits.updateViewsAfter();
+      for (final task in dailyTasks) {
+        if (cancel.isCancelled) break;
+        try {
+          queue.log(await task(cancel));
+        } on AppFailure catch (e) {
+          queue.log(e.userMessage);
+        } catch (e, st) {
+          logger?.error('추가 작업 오류', e, st);
+          queue.log(S.errorGeneric);
+        }
+      }
       // 3) 대기열 작업
       for (final job in queue.due()) {
         if (cancel.isCancelled) break;
