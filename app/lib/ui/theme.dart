@@ -359,7 +359,6 @@ ThemeData buildAppTheme(AppTokens t, Brightness b) {
       toolbarHeight: 64,
       titleTextStyle: TextStyle(
         fontFamily: 'NotoSansKR',
-        fontFamily: 'NotoSansKR',
         fontSize: AppTokens.fontTitle - 2,
         fontWeight: FontWeight.w800,
         color: t.text,
@@ -491,7 +490,6 @@ ThemeData buildAppTheme(AppTokens t, Brightness b) {
       backgroundColor: t.card,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTokens.radius + 4)),
       titleTextStyle: TextStyle(
-        fontFamily: 'NotoSansKR',
         fontFamily: 'NotoSansKR',
         fontSize: AppTokens.fontSection,
         fontWeight: FontWeight.w800,
