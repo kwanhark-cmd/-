@@ -519,6 +519,55 @@ class S {
   static const chanStatVideos = '영상';
   static const chanStatViews = '조회수';
 
+  // 구글 연결 준비 마법사
+  static const gsTitle = '구글 연결 준비 마법사';
+  static const gsOpenWizard = '구글 연결 준비 마법사 (처음이면 여기부터)';
+  static String gsStepOf(int n, int all) => '$all단계 중 $n단계';
+  static const gsPrev = '이전';
+  static const gsNext = '다음';
+  static const gsDone = '다 했어요';
+  static const gs1Title = '1. 구글 클라우드 프로젝트 만들기';
+  static const gs1Body =
+      '구글 클라우드 콘솔에서 새 프로젝트를 만들어요. 이름은 아무거나 괜찮아요 (예: 채널비서). 만든 뒤 화면 위쪽에서 그 프로젝트가 선택되어 있는지 확인하세요. 돈은 들지 않아요.';
+  static const gsOpenProject = '프로젝트 만들기 열기';
+  static const gs2Title = '2. 유튜브·블로거 사용 켜기';
+  static const gs2Body = '"YouTube Data API v3" 와 "Blogger API v3" 두 가지를 각각 열어 파란 "사용" 버튼을 눌러요. 블로그를 안 쓰면 유튜브만 켜도 돼요.';
+  static const gsOpenYoutubeApi = 'YouTube Data API v3 열기';
+  static const gsOpenBloggerApi = 'Blogger API v3 열기';
+  static const gs3Title = '3. 앱 이름 정하기 (브랜딩)와 대상 "외부"';
+  static const gs3Body =
+      'Google Auth Platform → 브랜딩에서 앱 이름(예: 채널비서)과 내 이메일을 넣고 저장해요. 그다음 "대상(Audience)" 에서 사용자 유형을 "외부"로 골라요. 게시 상태는 "테스트"로 두면 돼요.';
+  static const gsOpenBranding = '브랜딩 열기';
+  static const gsOpenAudience = '대상(Audience) 열기';
+  static const gs4Title = '4. 클라이언트 만들기: 유형 "데스크톱 앱"';
+  static const gs4Body =
+      '"클라이언트" 에서 "클라이언트 만들기"를 누르고 애플리케이션 유형을 꼭 "데스크톱 앱"으로 골라요. 만든 뒤 "JSON 다운로드" 를 눌러 파일을 받아 두세요 (client_secret_… 로 시작하는 파일).';
+  static const gsOpenClients = '클라이언트 만들기 열기';
+  static const gs5Title = '5. 테스트 사용자에 내 구글 계정 넣기';
+  static const gs5Body =
+      '"대상(Audience)" 아래쪽 "테스트 사용자"에서 "사용자 추가"를 눌러 유튜브 채널이 있는 내 구글 계정(지메일 주소)을 넣어요. 여기 넣은 계정만 연결할 수 있어요.';
+  static const gs7Days =
+      '앱이 "테스트" 상태이면 구글이 연결을 7일마다 끊어요. 끊기기 전에 앱이 알려 드리고, "다시 연결"만 누르면 돼요. 7일 제한을 없애려면 구글의 앱 확인(게시)을 받아야 해요.';
+  static const gs6Title = '6. 앱 번호·비밀 값 넣기';
+  static const gs6Body = '4단계에서 받은 JSON 파일을 불러오면 자동으로 채워져요. 직접 붙여 넣어도 돼요.';
+  static const gsImportJson = 'JSON 파일 불러오기';
+  static const gsOrType = '또는 직접 넣기';
+  static const gsImported = '구글 앱 번호와 비밀 값을 불러와 저장했어요.';
+  static const gsJsonErrorTitle = '이 파일은 쓸 수 없어요';
+  static const gsWrongType = '유형이 달라요, 데스크톱 앱으로 다시 만들어 주세요. (4단계에서 애플리케이션 유형을 "데스크톱 앱"으로 고르고 다시 JSON 을 받아 주세요.)';
+  static const gsNotJson = '구글에서 받은 JSON 파일이 아니에요. client_secret_… 로 시작하는 파일을 골라 주세요.';
+  static const gsNotClientFile = '앱 번호나 비밀 값이 들어 있지 않아요. 4단계에서 "JSON 다운로드"로 받은 파일을 골라 주세요.';
+  static const gs7Title = '7. 처음 연결할 때 나오는 경고';
+  static const gs7Body = '내가 만든 앱은 구글의 확인을 받지 않아서 처음 연결할 때 "확인되지 않은 앱" 경고가 나와요. 내 앱이니 안심하고 아래 그림처럼 넘어가면 돼요.';
+  static const gsPicTitle = 'Google에서 확인하지 않은 앱';
+  static const gsPicWarning = '이 앱은 Google의 확인을 받지 않았습니다. 개발자를 알고 신뢰하는 경우에만 계속하세요.';
+  static const gsPicWarningMore = '고급 설정을 눌렀더니 아래에 이 줄이 생겼어요.';
+  static const gsPicAdvanced = '고급';
+  static const gsPicGoTo = '채널비서(으)로 이동(안전하지 않음)';
+  static const gsPicTapHere = '여기를 눌러요';
+  static const gsPic1Caption = '왼쪽 아래 "고급"을 눌러요';
+  static const gsPic2Caption = '아래에 생긴 "…(으)로 이동"을 눌러요';
+
   // 설정 묶음
   static const grpAccount = '계정 연결';
   static const grpAccountSub = '유튜브·구글 블로그 연결 준비';

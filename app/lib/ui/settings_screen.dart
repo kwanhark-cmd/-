@@ -8,9 +8,9 @@ import '../app/services.dart';
 import '../core/strings.dart';
 import '../features/ai/ai_service.dart';
 import '../features/settings/maintenance.dart';
-import '../features/youtube/youtube_service.dart';
 import 'common.dart';
 import 'connection_status.dart';
+import 'google_setup_screen.dart';
 import 'memos_screen.dart';
 import 'onboarding.dart';
 import 'update_flow.dart';
@@ -449,6 +449,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           const Text(S.settingsGoogleHint),
           const SizedBox(height: AppTokens.gapM),
+          BigButton(
+            key: const Key('open-google-setup'),
+            label: S.gsOpenWizard,
+            icon: Icons.auto_fix_high,
+            onPressed: () async {
+              await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => GoogleSetupScreen(user: u)));
+              if (mounted) setState(() => googleId.text = u.settings.googleClientId);
+              widget.state.refresh();
+            },
+          ),
+          const SizedBox(height: AppTokens.gapS),
+          BigButton(
+            key: const Key('import-google-json'),
+            label: S.gsImportJson,
+            icon: Icons.file_open,
+            primary: false,
+            onPressed: () async {
+              final id = await importGoogleClientFile(context, u);
+              if (id != null && mounted) setState(() => googleId.text = id);
+              widget.state.refresh();
+            },
+          ),
+          const SizedBox(height: AppTokens.gapM),
           TextField(
             controller: googleId,
             decoration: const InputDecoration(labelText: S.settingsGoogleClientId),
@@ -469,10 +492,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           BigButton(
             label: S.save,
             onPressed: () async {
-              s.googleClientId = googleId.text;
-              if (googleSecret.text.isNotEmpty) {
-                await u.secrets.write(YouTubeService.googleSecretKey, googleSecret.text.trim());
-              }
+              await saveGoogleClient(u, googleId.text, googleSecret.text);
               googleSecret.clear();
               widget.state.refresh();
               if (mounted) toast(context, S.set12);
