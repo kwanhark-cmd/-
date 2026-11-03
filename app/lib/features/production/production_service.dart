@@ -166,6 +166,7 @@ class ProductionService {
     String extraMemo = '',
     Map<String, dynamic> extra = const {},
     bool countsTowardLimit = true,
+    bool checkSimilarity = true,
   }) async {
     if (countsTowardLimit && madeToday() >= settings.produceDailyLimit) {
       throw ProductionBlocked(S.produceLimitReached);
@@ -177,7 +178,7 @@ class ProductionService {
         Brain.mockStyle(ch.title, youtube.videos(channelId, limit: 30).map((v) => v.title).toList());
     final memo = [if (memoId != null) memos.byId(memoId)?.text ?? '', extraMemo].where((e) => e.isNotEmpty).join('\n');
     final plan = await brain.planContent(style, format, topic, memo: memo);
-    if (tooSimilar(channelId, plan.title, plan.tags)) throw ProductionBlocked(S.produceTooSimilar);
+    if (checkSimilarity && tooSimilar(channelId, plan.title, plan.tags)) throw ProductionBlocked(S.produceTooSimilar);
     final id = db.insert(
       '''INSERT INTO productions(channel_id, format, topic, title, description, tags_json, thumbnail_text, script,
            memo_id, corner_id, fingerprint, status, ai_label_method, extra_json, day, created_at, updated_at)

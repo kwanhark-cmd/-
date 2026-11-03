@@ -309,6 +309,29 @@ const userDataMigrations = <Migration>[
       created_at TEXT NOT NULL
     )''',
   ]),
+  // v4: 4단계(사용자 코너)
+  Migration(4, [
+    '''CREATE TABLE corners(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      channel_id TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    )''',
+    '''CREATE TABLE corner_items(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      corner_id INTEGER NOT NULL,
+      kind TEXT NOT NULL,
+      path TEXT NOT NULL DEFAULT '',
+      title TEXT NOT NULL DEFAULT '',
+      text TEXT NOT NULL DEFAULT '',
+      source TEXT NOT NULL DEFAULT 'own',
+      copyright TEXT NOT NULL DEFAULT 'own',
+      duration_ms INTEGER NOT NULL DEFAULT 0,
+      used INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL
+    )''',
+    'CREATE INDEX idx_corner_items ON corner_items(corner_id)',
+  ]),
 ];
 
 /// 오늘 날짜 문자열 (yyyy-MM-dd, 기기 시간 기준).

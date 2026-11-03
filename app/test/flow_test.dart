@@ -200,6 +200,33 @@ void main() {
     await t.pumpWidget(const SizedBox());
   });
 
+  testWidgets('4단계 흐름: 코너 만들기 → 영상 넣기 → 저작권 확인 → 자동 제작', (t) async {
+    await setPhone(t);
+    final k = TestKit();
+    final state = AppState(k.env);
+    await state.login(k.env.accounts.create('코너', '1234'));
+    final u = state.user!;
+    u.settings.onboardingDone = true;
+    await u.youtube.connectGoogle();
+    await t.pumpWidget(ChannelBiseoApp(state: state));
+    await t.pumpAndSettle();
+    await t.tap(find.byIcon(Icons.auto_stories).last);
+    await t.pumpAndSettle();
+    await tap(t, 'corner-new');
+    await enter(t, 'corner-name', '사장님의 하루');
+    await tap(t, 'corner-ok');
+    await tapText(t, '사장님의 하루');
+    k.pickResult = (File('${Directory.systemTemp.createTempSync('c').path}/드라마 1화.mp4')..writeAsBytesSync([1])).path;
+    await tap(t, 'corner-add-video');
+    expect(find.textContaining('저작권이 있을 수 있어요'), findsOneWidget);
+    await tapText(t, '네, 사용해도 돼요');
+    expect(find.text('사용하기로 함'), findsOneWidget);
+    await tap(t, 'corner-make');
+    expect(find.textContaining('가지 형식으로 만들었어요'), findsOneWidget);
+    expect(t.takeException(), isNull);
+    await t.pumpWidget(const SizedBox());
+  });
+
   testWidgets('아주 큰 글씨 + 작은 화면에서도 모든 메뉴가 잘리지 않는다', (t) async {
     t.view.physicalSize = const Size(320 * 2, 640 * 2);
     t.view.devicePixelRatio = 2;

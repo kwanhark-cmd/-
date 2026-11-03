@@ -1,0 +1,350 @@
+import 'package:flutter/material.dart';
+
+import '../app/services.dart';
+import '../core/strings.dart';
+import '../features/ai/brain.dart';
+import '../features/corner/corner_service.dart';
+import '../features/corner/material_source.dart';
+import '../features/production/production_service.dart';
+import 'common.dart';
+import 'produce_screen.dart';
+
+CornerService cornerOf(UserContext u) => u.extensions['corner']! as CornerService;
+
+class CornerScreen extends StatefulWidget {
+  const CornerScreen({super.key, required this.user});
+  final UserContext user;
+  @override
+  State<CornerScreen> createState() => _CornerScreenState();
+}
+
+class _CornerScreenState extends State<CornerScreen> {
+  UserContext get u => widget.user;
+
+  Future<void> _new() async {
+    final chans = u.youtube.channels();
+    if (chans.isEmpty) {
+      toast(context, S.channelNone);
+      return;
+    }
+    final name = TextEditingController();
+    var ch = chans.first.channelId;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => StatefulBuilder(
+        builder: (c, setD) => AlertDialog(
+          title: const Text(S.cornerNew),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                key: const Key('corner-name'),
+                controller: name,
+                decoration: const InputDecoration(labelText: '${S.cornerName} (예: 사장님의 하루)'),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                initialValue: ch,
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: S.cornerChannel),
+                items: [for (final x in chans) DropdownMenuItem(value: x.channelId, child: Text(x.title))],
+                onChanged: (v) => setD(() => ch = v ?? ch),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text(S.cancel)),
+            FilledButton(
+              key: const Key('corner-ok'),
+              onPressed: () => Navigator.pop(c, true),
+              child: const Text(S.save),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (ok != true) return;
+    try {
+      cornerOf(u).create(name.text, ch);
+    } catch (e) {
+      if (mounted) await showFailure(context, e);
+    }
+    if (mounted) setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final list = cornerOf(u).corners();
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+      children: [
+        const Text('내 이야기를 콘텐츠로 만들어요. 직접 찍은 영상과 음성 메모를 넣으면 자막·제목·설명·키워드·썸네일을 여러 형식으로 만들어 드려요.'),
+        const SizedBox(height: 12),
+        BigButton(key: const Key('corner-new'), label: S.cornerNew, icon: Icons.add, onPressed: _new),
+        const SizedBox(height: 12),
+        if (list.isEmpty) const EmptyHint(S.cornerNone),
+        for (final c in list)
+          Card(
+            child: ListTile(
+              key: Key('corner-${c.id}'),
+              leading: const Icon(Icons.auto_stories),
+              title: Text(c.name),
+              subtitle: Text('${u.youtube.channel(c.channelId)?.title ?? ''} · 소재 ${cornerOf(u).items(c.id).length}개'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () async {
+                await Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => CornerDetailScreen(user: u, cornerId: c.id),
+                  ),
+                );
+                if (mounted) setState(() {});
+              },
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class CornerDetailScreen extends StatefulWidget {
+  const CornerDetailScreen({super.key, required this.user, required this.cornerId});
+  final UserContext user;
+  final int cornerId;
+  @override
+  State<CornerDetailScreen> createState() => _CornerDetailScreenState();
+}
+
+class _CornerDetailScreenState extends State<CornerDetailScreen> {
+  UserContext get u => widget.user;
+  CornerService get cs => cornerOf(u);
+  final busy = Busy();
+  final Set<ContentFormat> formats = {ContentFormat.shorts, ContentFormat.long, ContentFormat.image};
+  List<Production> made = [];
+
+  String _crLabel(CornerItem i) => switch (i.copyright) {
+    'own' => '직접 찍음',
+    'licensed' => '사용 허락 받음',
+    'approved' => '사용하기로 함',
+    'excluded' => '뺌',
+    _ => '저작권 확인 필요',
+  };
+
+  IconData _icon(String kind) => switch (kind) {
+    'video' => Icons.movie,
+    'audio' => Icons.graphic_eq,
+    'image' => Icons.image,
+    'memo' => Icons.mic,
+    _ => Icons.notes,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final c = cs.corner(widget.cornerId);
+    if (c == null) return const Scaffold(body: EmptyHint(S.empty));
+    final items = cs.items(c.id);
+    return Scaffold(
+      appBar: AppBar(title: Text(c.name)),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            ButtonWrap(
+              children: [
+                BigButton(
+                  key: const Key('corner-add-video'),
+                  label: S.cornerAddVideo,
+                  icon: Icons.videocam,
+                  primary: false,
+                  onPressed: () => busy.run(_addVideo),
+                ),
+                BigButton(
+                  key: const Key('corner-add-memo'),
+                  label: S.cornerAddMemo,
+                  icon: Icons.mic,
+                  primary: false,
+                  onPressed: () => busy.run(_addMemo),
+                ),
+                BigButton(
+                  label: '이야기 글로 쓰기',
+                  icon: Icons.edit_note,
+                  primary: false,
+                  onPressed: () => busy.run(_addText),
+                ),
+                BigButton(
+                  key: const Key('corner-import'),
+                  label: S.cornerImport,
+                  icon: Icons.folder_open,
+                  primary: false,
+                  onPressed: () => busy.run(_import),
+                ),
+              ],
+            ),
+            SectionCard(
+              title: '소재 (${items.length})',
+              icon: Icons.inventory_2,
+              child: Column(
+                children: [
+                  if (items.isEmpty) const Text(S.empty),
+                  for (final i in items)
+                    ListTile(
+                      key: Key('item-${i.id}'),
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(_icon(i.kind)),
+                      title: Text(i.title.isEmpty ? i.text : i.title, maxLines: 2, overflow: TextOverflow.ellipsis),
+                      subtitle: Text(
+                        _crLabel(i),
+                        style: TextStyle(color: i.needsCheck ? Theme.of(context).colorScheme.error : null),
+                      ),
+                      trailing: i.needsCheck
+                          ? TextButton(
+                              key: Key('check-${i.id}'),
+                              onPressed: () => _check(i),
+                              child: const Text(S.cornerCopyright),
+                            )
+                          : IconButton(
+                              tooltip: S.delete,
+                              icon: const Icon(Icons.close),
+                              onPressed: () {
+                                cs.removeItem(i.id);
+                                setState(() {});
+                              },
+                            ),
+                    ),
+                ],
+              ),
+            ),
+            SectionCard(
+              title: S.cornerMake,
+              icon: Icons.auto_awesome,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final f in ContentFormat.values)
+                        FilterChip(
+                          label: Text(formatLabel(f)),
+                          selected: formats.contains(f),
+                          onSelected: (v) => setState(() => v ? formats.add(f) : formats.remove(f)),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  BigButton(
+                    key: const Key('corner-make'),
+                    label: S.cornerMake,
+                    icon: Icons.auto_awesome,
+                    onPressed: formats.isEmpty ? null : () => busy.run(() => _make(c)),
+                  ),
+                  for (final p in made)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.check_circle_outline),
+                      title: Text(p.title),
+                      subtitle: Text(
+                        '${formatLabel(p.format)}${p.extra['srt'] != null && '${p.extra['srt']}'.isNotEmpty ? ' · ${S.cornerSubtitles} 있음' : ''}',
+                      ),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => ProductionDetailScreen(user: u, id: p.id),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _addVideo() async {
+    final path = await u.env.pickFile?.call(ProductionService.videoExtensions);
+    if (path == null) return;
+    try {
+      final it = cs.addOwnVideo(widget.cornerId, path);
+      if (it.needsCheck && mounted) await _check(it);
+    } catch (e) {
+      if (mounted) await showFailure(context, e);
+    }
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _addMemo() async {
+    final memos = u.memos.list(limit: 50);
+    if (memos.isEmpty) {
+      toast(context, '저장된 음성 메모가 없어요. 마이크 버튼을 눌러 "메모, ..." 라고 말해 보세요.');
+      return;
+    }
+    final id = await showDialog<int>(
+      context: context,
+      builder: (c) => SimpleDialog(
+        title: const Text(S.cornerAddMemo),
+        children: [
+          for (final m in memos) SimpleDialogOption(onPressed: () => Navigator.pop(c, m.id), child: Text(m.text)),
+        ],
+      ),
+    );
+    if (id == null) return;
+    cs.addMemo(widget.cornerId, id);
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _addText() async {
+    final t = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('이야기'),
+        content: TextField(
+          controller: t,
+          maxLines: 6,
+          decoration: const InputDecoration(labelText: '들려주고 싶은 이야기'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text(S.cancel)),
+          FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text(S.save)),
+        ],
+      ),
+    );
+    if (ok == true && t.text.trim().isNotEmpty) cs.addText(widget.cornerId, t.text);
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _import() async {
+    final dir = await u.env.pickDirectory?.call();
+    if (dir == null) return;
+    final r = await cs.importFrom(widget.cornerId, FolderMaterialSource(dir));
+    if (!mounted) return;
+    toast(context, '소재 ${r.added}개를 가져왔어요.${r.needCheck > 0 ? ' 저작권 확인이 필요한 소재가 ${r.needCheck}개 있어요.' : ''}');
+    setState(() {});
+  }
+
+  Future<void> _check(CornerItem i) async {
+    final allow = await confirm(
+      context,
+      '${S.cornerCopyrightAsk}\n\n"${i.title}"',
+      yes: S.cornerCopyrightYes,
+      no: S.cornerCopyrightNo,
+    );
+    cs.decideCopyright(i.id, allow);
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _make(Corner c) async {
+    try {
+      final r = await runWithProgress(context, S.cornerMake, (cancel, p) => cs.make(c.id, formats: formats.toList()));
+      if (r != null && mounted) {
+        setState(() => made = r);
+        toast(context, '${r.length}가지 형식으로 만들었어요. "제작" 메뉴에서 확인하고 올릴 수 있어요.');
+      }
+    } on ProductionBlocked catch (e) {
+      if (mounted) toast(context, e.message);
+    } catch (e) {
+      if (mounted) await showFailure(context, e);
+    }
+  }
+}

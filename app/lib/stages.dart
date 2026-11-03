@@ -5,11 +5,13 @@ import 'app/app.dart';
 import 'core/strings.dart';
 import 'features/ai/brain.dart';
 import 'features/blog/blog_service.dart';
+import 'features/corner/corner_service.dart';
 import 'features/blog/blogger_api.dart';
 import 'features/production/production_service.dart';
 import 'features/tools/tools_service.dart';
 import 'ui/blog_screen.dart';
 import 'ui/common.dart';
+import 'ui/corner_screen.dart';
 import 'ui/dashboard.dart';
 import 'ui/produce_screen.dart';
 import 'ui/settings_screen.dart';
@@ -24,6 +26,7 @@ void registerStages() {
   _registered = true;
   _stage2();
   _stage3();
+  _stage4();
 }
 
 // ---------------- 2단계: 콘텐츠 제작과 업로드 ----------------
@@ -182,6 +185,28 @@ void _stage3() {
       Icons.rss_feed,
       (k) => BlogScreen(key: k, user: u),
       id: 'blog',
+    ),
+  );
+}
+
+// ---------------- 4단계: 사용자 코너 ----------------
+void _stage4() {
+  AppState.plugins.add((u) async {
+    u.extensions['corner'] = CornerService(
+      db: u.db,
+      production: productionOf(u),
+      memos: u.memos,
+      now: u.env.now,
+      mediaDir: p.join(u.env.accounts.userDir(u.user.id), 'media'),
+      logger: u.env.logger,
+    );
+  });
+  TabsRegistry.addTab(
+    (u, shell) => AppTab(
+      S.navCorner,
+      Icons.auto_stories,
+      (k) => CornerScreen(key: k, user: u),
+      id: 'corner',
     ),
   );
 }

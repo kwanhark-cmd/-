@@ -158,6 +158,22 @@ void main() {
       expect(c.select("SELECT name FROM sqlite_master WHERE name='x'"), isEmpty);
     });
 
+    test('1단계 자료(v1)를 최신 버전으로 자동 변환해도 채널·수정 내역이 남는다', () {
+      final dir = Directory.systemTemp.createTempSync('mig3');
+      final path = p.join(dir.path, 'data.sqlite');
+      final v1 = AppDatabase.open(path, userDataMigrations.where((m) => m.version == 1).toList());
+      v1.execute("INSERT INTO channels(channel_id, title, added_at) VALUES('C1','옛 채널','2026-01-01')");
+      v1.close();
+      final now = AppDatabase.open(path, userDataMigrations);
+      expect(now.version, userDataMigrations.last.version);
+      expect(now.select('SELECT title FROM channels').first['title'], '옛 채널');
+      expect(
+        now.select("SELECT name FROM sqlite_master WHERE name IN ('productions','blog_sites','corners')").length,
+        3,
+      );
+      expect(Directory(p.join(dir.path, 'backups')).listSync(), isNotEmpty);
+    });
+
     test('설정 저장', () {
       final d = AppDatabase.inMemory(userDataMigrations);
       d.setSetting('a', 3);
