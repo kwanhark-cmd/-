@@ -844,3 +844,52 @@ class ListCard extends StatelessWidget {
     );
   }
 }
+
+/// 여러 개 중 하나 고르기: 화면이 좁거나 글씨가 커도 줄바꿈되는 큰 버튼들. 고른 것은 주요색 + 체크.
+class ChoiceWrap<T> extends StatelessWidget {
+  const ChoiceWrap({super.key, required this.options, required this.value, required this.onChanged});
+  final List<(T, String)> options;
+  final T value;
+  final ValueChanged<T> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    return Wrap(
+      spacing: AppTokens.gapS,
+      runSpacing: AppTokens.gapS,
+      children: [
+        for (final (v, label) in options)
+          Press3D(
+            key: ValueKey('choice-$v'),
+            color: v == value ? t.primary : t.tonal,
+            depth: 3,
+            semanticLabel: label,
+            onTap: () => onChanged(v),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: AppTokens.buttonHeight - 4, minWidth: 88),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppTokens.gapL, vertical: AppTokens.gapS),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (v == value) ...[Icon(Icons.check, color: t.onPrimary), const SizedBox(width: AppTokens.gapXs)],
+                    Flexible(
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          color: v == value ? t.onPrimary : t.onTonal,
+                          fontWeight: FontWeight.w800,
+                          fontSize: AppTokens.fontButton,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}

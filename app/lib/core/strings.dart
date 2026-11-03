@@ -439,6 +439,20 @@ class S {
   static const cornerEmptyHow = '"코너 만들기"를 누르고 코너 이름(예: 사장님의 하루)과 올릴 채널을 정하면 시작돼요.';
   static const memoEmptyHow = '"말로 메모 남기기"를 누르고 떠오른 생각을 말해 보세요. 콘텐츠를 만들 때 소재로 쓸 수 있어요.';
   static const memoUsed = '제작에 사용함';
+  // 설정 — 보기
+  static const setViewTitle = '보기 (글씨·밝기·움직임)';
+  static const setBrightness = '화면 밝기';
+  static const setBrightAuto = '자동';
+  static const setBrightLight = '밝게';
+  static const setBrightDark = '어둡게';
+  static const setHighContrast = '또렷하게 보기 (고대비)';
+  static const setHighContrastSub = '글자와 바탕의 차이를 크게 해서 더 잘 보여요.';
+  static const setReduceMotion = '움직임 줄이기';
+  static const setReduceMotionSub = '화면이 움직이는 효과를 끄고 바로바로 보여 줘요.';
+  static const setHaptics = '누를 때 진동';
+  static const setSound = '누를 때 소리';
+  static const setTipsAgain = '처음 사용 안내 다시 보기';
+  static const setTipsAgainDone = '안내를 다시 보여 드릴게요.';
   static const uiDangerSecond = '정말 할까요? 한 번 더 확인할게요.';
   static const thumbTitle = '썸네일 그림';
   static const thumbNone = '아직 썸네일 그림이 없어요. 문구로 만들거나 직접 만든 그림을 넣어 주세요.';

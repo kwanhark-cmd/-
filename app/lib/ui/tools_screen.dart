@@ -33,10 +33,11 @@ class _ToolsScreenState extends State<ToolsScreen> {
     if (mounted) setState(() => tools = t);
   }
 
-  Color _color(ToolState s, ColorScheme cs) => switch (s) {
-    ToolState.connected => Colors.green.shade700,
-    ToolState.preparing => cs.outline,
-    _ => cs.error,
+  Status _status(ToolState s) => switch (s) {
+    ToolState.connected => Status.done,
+    ToolState.preparing => Status.progress,
+    ToolState.notConnected => Status.problem,
+    ToolState.expired => Status.problem,
   };
 
   String _label(ToolState s) => switch (s) {
@@ -48,28 +49,40 @@ class _ToolsScreenState extends State<ToolsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final s = u.settings;
     return Scaffold(
       appBar: pageBar(context, S.toolsTitle),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(AppTokens.gapL),
+          padding: const EdgeInsets.fromLTRB(
+            AppTokens.pagePad,
+            AppTokens.gapS,
+            AppTokens.pagePad,
+            AppTokens.bottomSpace,
+          ),
           children: [
             for (final t in tools)
-              Card(
+              StripeCard(
+                status: _status(t.state),
                 child: Padding(
-                  padding: const EdgeInsets.all(AppTokens.gapL),
+                  padding: EdgeInsets.zero,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.circle, color: _color(t.state, cs), size: 18),
+                          Icon3D(switch (t.id) {
+                            ToolId.googleVids => 'video',
+                            ToolId.higgsfield => 'sparkles',
+                            ToolId.figma => 'picture',
+                            ToolId.vrew => 'mic',
+                          }, size: AppTokens.icon3dS),
                           const SizedBox(width: AppTokens.gapS),
                           Expanded(child: Text(t.name, style: Theme.of(context).textTheme.titleMedium)),
                         ],
                       ),
+                      const SizedBox(height: AppTokens.gapXs),
+                      StatusBadge(_status(t.state), _label(t.state)),
                       Text('${t.role} · ${_label(t.state)}', key: Key('tool-state-${t.id.name}')),
                       if (t.detail.isNotEmpty) Text(t.detail),
                       const SizedBox(height: AppTokens.gapS),
@@ -105,7 +118,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
               ),
             SectionCard(
               title: S.toolPriority,
-              icon: Icons.low_priority,
+              icon3d: 'pin',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

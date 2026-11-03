@@ -189,14 +189,10 @@ class FontScalePicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final v = state.textScale;
-    return SegmentedButton<double>(
-      segments: const [
-        ButtonSegment(value: 1.0, label: Text(S.settingsFontSmall)),
-        ButtonSegment(value: 1.3, label: Text(S.settingsFontLarge)),
-        ButtonSegment(value: 1.6, label: Text(S.settingsFontHuge)),
-      ],
-      selected: {v >= 1.6 ? 1.6 : (v >= 1.3 ? 1.3 : 1.0)},
-      onSelectionChanged: (s) => state.setTextScale(s.first),
+    return ChoiceWrap<double>(
+      options: const [(1.0, S.settingsFontSmall), (1.3, S.settingsFontLarge), (1.6, S.settingsFontHuge)],
+      value: v >= 1.6 ? 1.6 : (v >= 1.3 ? 1.3 : 1.0),
+      onChanged: state.setTextScale,
     );
   }
 }

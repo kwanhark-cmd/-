@@ -49,12 +49,68 @@ class _SettingsScreenState extends State<SettingsScreen> {
       padding: const EdgeInsets.fromLTRB(AppTokens.pagePad, AppTokens.gapS, AppTokens.pagePad, AppTokens.bottomSpace),
       children: [
         SectionCard(
-          title: S.settingsFontSize,
-          icon: Icons.format_size,
+          title: S.setViewTitle,
+          icon3d: 'sparkles',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text(S.settingsFontSize, style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: AppTokens.gapS),
               FontScalePicker(state: widget.state),
+              const SizedBox(height: AppTokens.gapL),
+              Text(S.setBrightness, style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: AppTokens.gapS),
+              ChoiceWrap<String>(
+                key: const Key('theme-mode'),
+                options: const [('system', S.setBrightAuto), ('light', S.setBrightLight), ('dark', S.setBrightDark)],
+                value: widget.state.themeMode,
+                onChanged: (v) => widget.state.setView(themeMode: v),
+              ),
+              const SizedBox(height: AppTokens.gapS),
+              SwitchListTile(
+                key: const Key('high-contrast'),
+                contentPadding: EdgeInsets.zero,
+                title: const Text(S.setHighContrast),
+                subtitle: const Text(S.setHighContrastSub),
+                value: widget.state.highContrast,
+                onChanged: (v) => widget.state.setView(highContrast: v),
+              ),
+              SwitchListTile(
+                key: const Key('reduce-motion'),
+                contentPadding: EdgeInsets.zero,
+                title: const Text(S.setReduceMotion),
+                subtitle: const Text(S.setReduceMotionSub),
+                value: widget.state.reduceMotion,
+                onChanged: (v) => widget.state.setView(reduceMotion: v),
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text(S.setHaptics),
+                value: s.haptics,
+                onChanged: (v) => setState(() {
+                  s.haptics = v;
+                  UiPrefs.haptics = v;
+                }),
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text(S.setSound),
+                value: s.clickSound,
+                onChanged: (v) => setState(() {
+                  s.clickSound = v;
+                  UiPrefs.sound = v;
+                }),
+              ),
+              const SizedBox(height: AppTokens.gapS),
+              BigButton(
+                label: S.setTipsAgain,
+                icon: Icons.lightbulb,
+                primary: false,
+                onPressed: () {
+                  s.resetTips();
+                  toast(context, S.setTipsAgainDone);
+                },
+              ),
               const SizedBox(height: AppTokens.gapS),
               const Text('${S.settingsLanguage}: ${S.wizardLanguageKo}'),
             ],
@@ -62,7 +118,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         SectionCard(
           title: S.settingsVoice,
-          icon: Icons.record_voice_over,
+          icon3d: 'mic',
           child: Column(
             children: [
               SwitchListTile(
@@ -126,7 +182,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _googleSection(),
         SectionCard(
           title: S.set2,
-          icon: Icons.smart_display,
+          icon3d: 'video',
           child: Column(
             children: [
               NumberField(
@@ -147,7 +203,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         for (final sec in SettingsScreen.extraSections) sec(context, u, _refresh),
         SectionCard(
           title: S.set4,
-          icon: Icons.storage,
+          icon3d: 'folder',
           child: ButtonWrap(
             children: [
               BigButton(
@@ -181,7 +237,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         SectionCard(
           title: S.settingsVersion,
-          icon: Icons.info_outline,
+          icon3d: 'robot',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -211,13 +267,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final s = u.settings;
     return SectionCard(
       title: S.settingsAi,
-      icon: Icons.psychology,
+      icon3d: 'robot',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (u.ai.isPracticeMode) Text(S.set5(S.practiceMode)),
           const SizedBox(height: AppTokens.gapS),
           DropdownButtonFormField<String>(
+            isExpanded: true,
             initialValue: s.aiProvider,
             decoration: const InputDecoration(labelText: S.settingsAiProvider),
             items: const [
@@ -285,7 +342,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final s = u.settings;
     return SectionCard(
       title: S.settingsGoogle,
-      icon: Icons.key,
+      icon3d: 'key',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -329,7 +386,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final s = u.settings;
     return SectionCard(
       title: S.settingsRunner,
-      icon: Icons.schedule,
+      icon3d: 'working',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -106,7 +106,7 @@ void _stage2() {
     final s = u.settings;
     return SectionCard(
       title: S.stage2,
-      icon: Icons.movie_creation,
+      icon3d: 'tools',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
