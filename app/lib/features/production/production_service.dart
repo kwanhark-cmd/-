@@ -15,6 +15,7 @@ import '../voice/memos.dart';
 import '../youtube/models.dart';
 import '../youtube/quota.dart';
 import '../youtube/youtube_service.dart';
+import 'desc_template.dart';
 
 enum ProductionStatus {
   /// 만든 직후 (영상 파일 없음 또는 확인 전)
@@ -103,6 +104,7 @@ class ProductionService {
   final DateTime Function() now;
   final String mediaDir;
   final AppLogger? logger;
+  late final DescTemplateStore templates = DescTemplateStore(db);
 
   // ---------------- 읽기 ----------------
   List<Production> list({String? channelId, List<ProductionStatus>? statuses, int limit = 50, int offset = 0}) {
@@ -179,7 +181,15 @@ class ProductionService {
         StyleCard.decode(ch.styleJson) ??
         Brain.mockStyle(ch.title, youtube.videos(channelId, limit: 30).map((v) => v.title).toList());
     final memo = [if (memoId != null) memos.byId(memoId)?.text ?? '', extraMemo].where((e) => e.isNotEmpty).join('\n');
-    final plan = await brain.planContent(style, format, topic, memo: memo);
+    final raw = await brain.planContent(style, format, topic, memo: memo);
+    // 채널 설명 템플릿(고정 문구·링크·해시태그)을 설명 끝에 붙인다
+    final plan = ContentPlan(
+      title: raw.title,
+      description: templates.get(channelId).applyTo(raw.description),
+      tags: raw.tags,
+      thumbnailText: raw.thumbnailText,
+      script: raw.script,
+    );
     if (checkSimilarity && tooSimilar(channelId, plan.title, plan.tags)) throw ProductionBlocked(S.produceTooSimilar);
     final id = db.insert(
       '''INSERT INTO productions(channel_id, format, topic, title, description, tags_json, thumbnail_text, script,

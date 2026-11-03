@@ -4,6 +4,7 @@ import '../app/services.dart';
 import '../core/failure.dart';
 import '../core/strings.dart';
 import '../features/ai/brain.dart';
+import '../features/production/desc_template.dart';
 import '../features/youtube/models.dart';
 import '../features/youtube/youtube_service.dart';
 import 'common.dart';
@@ -289,6 +290,16 @@ class _ChannelDetailScreenState extends State<ChannelDetailScreen> {
                   ),
                 ),
                 BigButton(
+                  key: const Key('tpl-edit'),
+                  label: S.tplTitle,
+                  icon: Icons.push_pin,
+                  primary: false,
+                  onPressed: () {
+                    final store = DescTemplateStore(u.db);
+                    _editTemplate(c.channelId, store, store.get(c.channelId));
+                  },
+                ),
+                BigButton(
                   label: S.channelDisconnect,
                   icon: Icons.link_off,
                   danger: true,
@@ -332,6 +343,70 @@ class _ChannelDetailScreenState extends State<ChannelDetailScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _editTemplate(String channelId, DescTemplateStore store, DescTemplate tpl) async {
+    final fixed = TextEditingController(text: tpl.fixed);
+    final links = TextEditingController(text: tpl.links.join('\n'));
+    final tags = TextEditingController(text: tpl.hashtags.map((h) => '#$h').join(' '));
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (d) => AlertDialog(
+        title: const Text(S.tplTitle),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(S.tplHelp, style: TextStyle(color: context.tokens.textSoft)),
+              const SizedBox(height: AppTokens.gapS),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: tpl.isEmpty
+                    ? const StatusBadge(Status.check, S.tplNone)
+                    : const StatusBadge(Status.done, S.tplOn, key: Key('tpl-preview')),
+              ),
+              const SizedBox(height: AppTokens.gapM),
+              TextField(
+                key: const Key('tpl-fixed'),
+                controller: fixed,
+                maxLines: 4,
+                decoration: const InputDecoration(labelText: S.tplFixed),
+              ),
+              const SizedBox(height: AppTokens.gapM),
+              TextField(
+                key: const Key('tpl-links'),
+                controller: links,
+                maxLines: 3,
+                decoration: const InputDecoration(labelText: S.tplLinks),
+              ),
+              const SizedBox(height: AppTokens.gapM),
+              TextField(
+                key: const Key('tpl-tags'),
+                controller: tags,
+                decoration: const InputDecoration(labelText: S.tplTags),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(d, false), child: const Text(S.cancel)),
+          FilledButton(key: const Key('tpl-save'), onPressed: () => Navigator.pop(d, true), child: const Text(S.save)),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    store.save(
+      channelId,
+      DescTemplate(
+        fixed: fixed.text.trim(),
+        links: links.text.split('\n').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
+        hashtags: DescTemplate.cleanTags([tags.text]),
+      ),
+    );
+    if (mounted) {
+      celebrate(context, S.tplSaved);
+      setState(() {});
+    }
   }
 
   Widget _videoTile(YtVideo v, int i) {

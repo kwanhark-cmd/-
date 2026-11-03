@@ -455,6 +455,17 @@ class S {
   static const setTipsAgainDone = '안내를 다시 보여 드릴게요.';
   static String wizStep(int n) => '$n / 4 단계';
   static String dollars(double v, [int digits = 2]) => '${v.toStringAsFixed(digits)}달러';
+  // 추가 기능: 설명 템플릿
+  static const tplTitle = '설명 템플릿';
+  static const tplHelp = '자주 쓰는 문구·링크·해시태그를 저장해 두면, 이 채널에 새로 만드는 영상 설명 끝에 자동으로 붙어요.';
+  static const tplNone = '아직 템플릿이 없어요';
+  static const tplOn = '새 영상에 자동으로 붙어요';
+  static const tplHelpShort = '자주 쓰는 문구·링크·해시태그 저장하기';
+  static const tplMake = '템플릿 만들기';
+  static const tplFixed = '고정 문구 (예: 구독과 좋아요 부탁드려요)';
+  static const tplLinks = '링크 (한 줄에 하나씩)';
+  static const tplTags = '해시태그 (예: #집밥 #요리)';
+  static const tplSaved = '설명 템플릿을 저장했어요. 새 영상 설명에 자동으로 붙어요.';
   static const uiDangerSecond = '정말 할까요? 한 번 더 확인할게요.';
   static const thumbTitle = '썸네일 그림';
   static const thumbNone = '아직 썸네일 그림이 없어요. 문구로 만들거나 직접 만든 그림을 넣어 주세요.';
