@@ -46,8 +46,8 @@ Future<void> runEditsFlow(BuildContext context, UserContext u) async {
               ),
               const Divider(),
               for (final p in proposals) ...[
-                Text('${S.editBefore}: ${p.video.title}', style: const TextStyle(color: Colors.grey)),
-                Text('${S.editAfter}: ${p.after.title}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text('${S.editBefore}: ${p.video.title}', style: TextStyle(color: context.tokens.textSoft)),
+                Text('${S.editAfter}: ${p.after.title}', style: const TextStyle(fontWeight: FontWeight.w800)),
                 if (p.after.tags.join() != p.video.tags.join()) Text(S.edits2(p.after.tags.join(', '))),
                 if (p.after.description != p.video.description) const Text(S.edits3),
                 const Divider(),

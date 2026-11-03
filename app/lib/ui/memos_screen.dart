@@ -58,7 +58,7 @@ class _MemosScreenState extends State<MemosScreen> {
       appBar: pageBar(context, S.voiceMemoTitle),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTokens.gapL),
           children: [
             ButtonWrap(
               children: [
@@ -66,7 +66,7 @@ class _MemosScreenState extends State<MemosScreen> {
                 BigButton(label: S.voiceTypeInstead, icon: Icons.keyboard, primary: false, onPressed: _type),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTokens.gapM),
             if (list.isEmpty) const EmptyHint(S.empty),
             for (final m in list)
               Card(

@@ -84,6 +84,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
   static const double icon3dL = 72;
   static const double depth = 5; // 버튼·타일의 두께 (눌리면 줄어듦)
   static const double tileMaxWidth = 320;
+  static const double micSize = 84;
   static const double contentMaxWidth = 720;
 
   static const fontTitle = 26.0;

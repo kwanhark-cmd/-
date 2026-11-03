@@ -54,25 +54,25 @@ class _ToolsScreenState extends State<ToolsScreen> {
       appBar: pageBar(context, S.toolsTitle),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTokens.gapL),
           children: [
             for (final t in tools)
               Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(AppTokens.gapL),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
                           Icon(Icons.circle, color: _color(t.state, cs), size: 18),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppTokens.gapS),
                           Expanded(child: Text(t.name, style: Theme.of(context).textTheme.titleMedium)),
                         ],
                       ),
                       Text('${t.role} · ${_label(t.state)}', key: Key('tool-state-${t.id.name}')),
                       if (t.detail.isNotEmpty) Text(t.detail),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppTokens.gapS),
                       if (t.state != ToolState.preparing)
                         ButtonWrap(
                           children: [
@@ -112,7 +112,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
                   Text('${S.toolVideoGen}: ${s.videoToolPriority.map(_toolName).join(' → ')}'),
                   Text('${S.toolNarration}: ${s.narrationToolPriority.map(_toolName).join(' → ')}'),
                   Text(S.tool1(S.toolMotion)),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTokens.gapS),
                   BigButton(
                     label: S.tool2,
                     primary: false,
@@ -122,7 +122,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
                       s.videoToolPriority = l;
                     }),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTokens.gapS),
                   BigButton(
                     label: S.tool3,
                     primary: false,
@@ -188,12 +188,12 @@ class _ToolsScreenState extends State<ToolsScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Text(S.tool11),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTokens.gapM),
                 TextField(
                   controller: cid,
                   decoration: const InputDecoration(labelText: S.tool12),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTokens.gapM),
                 TextField(
                   controller: sec,
                   obscureText: true,

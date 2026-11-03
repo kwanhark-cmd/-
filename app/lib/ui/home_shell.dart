@@ -152,7 +152,11 @@ class HomeShellState extends State<HomeShell> {
         depth: 6,
         semanticLabel: S.voiceListen,
         onTap: openVoice,
-        child: SizedBox(width: 84, height: 84, child: Icon(Icons.mic, size: 44, color: tk.onAccent)),
+        child: SizedBox(
+          width: AppTokens.micSize,
+          height: AppTokens.micSize,
+          child: Icon(Icons.mic, size: AppTokens.micSize / 2, color: tk.onAccent),
+        ),
       ),
     );
     if (wide) {

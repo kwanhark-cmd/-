@@ -28,10 +28,10 @@ class _LoginScreenState extends State<LoginScreen> {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 560),
             child: ListView(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(AppTokens.gapXl),
               children: [
                 Text(S.loginTitle, style: Theme.of(context).textTheme.headlineSmall),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTokens.gapL),
                 for (final u in users)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 12),
@@ -42,7 +42,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: () => _askPassword(u),
                     ),
                   ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTokens.gapM),
                 BigButton(
                   key: const Key('new-user'),
                   label: S.loginNewUser,
@@ -122,14 +122,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   controller: name,
                   decoration: const InputDecoration(labelText: S.loginName),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTokens.gapM),
                 TextField(
                   key: const Key('new-password'),
                   controller: pw,
                   obscureText: true,
                   decoration: const InputDecoration(labelText: S.loginPassword),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTokens.gapM),
                 TextField(
                   key: const Key('new-password2'),
                   controller: pw2,
@@ -137,7 +137,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   decoration: const InputDecoration(labelText: S.loginPasswordAgain),
                 ),
                 if (error != null) ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppTokens.gapM),
                   Text(error!, style: TextStyle(color: Theme.of(ctx).colorScheme.error)),
                 ],
               ],

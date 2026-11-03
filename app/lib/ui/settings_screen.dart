@@ -46,7 +46,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final s = u.settings;
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+      padding: const EdgeInsets.fromLTRB(AppTokens.pagePad, AppTokens.gapS, AppTokens.pagePad, AppTokens.bottomSpace),
       children: [
         SectionCard(
           title: S.settingsFontSize,
@@ -55,7 +55,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               FontScalePicker(state: widget.state),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTokens.gapS),
               const Text('${S.settingsLanguage}: ${S.wizardLanguageKo}'),
             ],
           ),
@@ -134,7 +134,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 value: s.quotaDailyLimit,
                 onChanged: (v) => s.quotaDailyLimit = v.toInt(),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTokens.gapM),
               NumberField(
                 label: S.set3(S.settingsEditsPerDay, s.isFirstMonth(u.env.now()) ? S.editsFirstMonth : '0이면 수정 안 함'),
                 value: s.editsPerChannelPerDay,
@@ -186,9 +186,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('${S.appName} ${u.env.appVersion}', key: const Key('version')),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTokens.gapS),
               BigButton(label: S.settingsChangelog, icon: Icons.history, primary: false, onPressed: _changelog),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTokens.gapS),
               const ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: Icon(Icons.phone_iphone),
@@ -199,7 +199,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTokens.gapS),
         ButtonWrap(
           children: [BigButton(label: S.logout, icon: Icons.logout, primary: false, onPressed: widget.state.logout)],
         ),
@@ -216,7 +216,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (u.ai.isPracticeMode) Text(S.set5(S.practiceMode)),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTokens.gapS),
           DropdownButtonFormField<String>(
             initialValue: s.aiProvider,
             decoration: const InputDecoration(labelText: S.settingsAiProvider),
@@ -226,7 +226,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
             onChanged: (v) => setState(() => s.aiProvider = v ?? 'claude'),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTokens.gapM),
           DropdownButtonFormField<String>(
             initialValue: aiModelChoices.containsKey(s.aiModel) ? s.aiModel : 'claude-opus-5-5',
             isExpanded: true,
@@ -234,14 +234,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             items: [for (final e in aiModelChoices.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
             onChanged: (v) => setState(() => s.aiModel = v ?? 'claude-opus-5-5'),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTokens.gapM),
           TextField(
             key: const Key('ai-key'),
             controller: aiKey,
             obscureText: true,
             decoration: InputDecoration(labelText: S.settingsAiKey, helperText: u.ai.hasKey ? S.set7 : S.set8),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTokens.gapS),
           ButtonWrap(
             children: [
               BigButton(
@@ -266,14 +266,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTokens.gapM),
           NumberField(
             label: S.settingsAiLimit,
             value: s.monthlyCostLimitUsd,
             decimal: true,
             onChanged: (v) => s.monthlyCostLimitUsd = v.toDouble(),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTokens.gapS),
           Text('${S.settingsAiUsed}: \$${u.ai.monthCostUsd.toStringAsFixed(3)}'),
           Text(S.set9(u.ai.estimateCost('x' * 1500, 'x' * 1500, expectedOutput: 800).toStringAsFixed(3))),
         ],
@@ -290,12 +290,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(S.settingsGoogleHint),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTokens.gapM),
           TextField(
             controller: googleId,
             decoration: const InputDecoration(labelText: S.settingsGoogleClientId),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTokens.gapM),
           TextField(
             controller: googleSecret,
             obscureText: true,
@@ -342,9 +342,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onChanged: u.env.isDesktop ? (v) => setState(() => s.runnerEnabled = v) : null,
           ),
           _hourPicker(S.settingsRunnerFrom, s.runnerFromHour, (v) => s.runnerFromHour = v),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTokens.gapM),
           _hourPicker(S.settingsRunnerTo, s.runnerToHour, (v) => s.runnerToHour = v),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTokens.gapM),
           ButtonWrap(
             children: [
               if (u.env.isDesktop)

@@ -52,12 +52,12 @@ class _BlogScreenState extends State<BlogScreen> {
               controller: name,
               decoration: const InputDecoration(labelText: S.blogTistoryName),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTokens.gapM),
             TextField(
               controller: url,
               decoration: const InputDecoration(labelText: S.blogTistoryUrl),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTokens.gapM),
             const Text(S.blogTistoryCopyHint),
           ],
         ),
@@ -84,7 +84,7 @@ class _BlogScreenState extends State<BlogScreen> {
   Widget build(BuildContext context) {
     final sites = bs.sites();
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+      padding: const EdgeInsets.fromLTRB(AppTokens.pagePad, AppTokens.gapS, AppTokens.pagePad, AppTokens.bottomSpace),
       children: [
         ButtonWrap(
           children: [
@@ -103,7 +103,7 @@ class _BlogScreenState extends State<BlogScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppTokens.gapM),
         if (sites.isEmpty) const EmptyHint(S.blogNone),
         for (final s in sites)
           Card(
@@ -154,11 +154,11 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
       appBar: pageBar(context, s.title),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTokens.gapL),
           children: [
             if (s.isTistory) const Text(S.blogTistoryCopyHint),
             const Text(S.blogPerDay),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTokens.gapM),
             ButtonWrap(
               children: [
                 BigButton(
@@ -208,7 +208,7 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(style == null ? S.styleEmpty : style.describe()),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTokens.gapS),
                   BigButton(
                     label: S.styleAnalyze,
                     primary: false,
@@ -284,7 +284,7 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
     final done = d.status == 'postedByUser' || d.status == 'publishedByUser';
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppTokens.gapM),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -294,7 +294,7 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
               'draftOnBlogger' => S.blog8,
               _ => S.blog9,
             }),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTokens.gapS),
             ButtonWrap(
               children: [
                 BigButton(

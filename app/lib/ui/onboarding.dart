@@ -32,20 +32,20 @@ class _OnboardingWizardState extends State<OnboardingWizard> {
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 640),
-            child: ListView(padding: const EdgeInsets.all(24), children: [_body(context)]),
+            child: ListView(padding: const EdgeInsets.all(AppTokens.gapXl), children: [_body(context)]),
           ),
         ),
       ),
       bottomNavigationBar: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTokens.gapL),
           child: Row(
             children: [
               if (step > 0)
                 Expanded(
                   child: BigButton(label: S.back, primary: false, onPressed: () => setState(() => step--)),
                 ),
-              if (step > 0) const SizedBox(width: 12),
+              if (step > 0) const SizedBox(width: AppTokens.gapM),
               Expanded(
                 child: BigButton(
                   key: const Key('wizard-next'),
@@ -77,7 +77,7 @@ class _OnboardingWizardState extends State<OnboardingWizard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(S.wizardStep1, style: t.headlineSmall),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTokens.gapL),
             Text(S.wizardLanguage, style: t.titleMedium),
             RadioGroup<String>(
               groupValue: 'ko',
@@ -89,11 +89,11 @@ class _OnboardingWizardState extends State<OnboardingWizard> {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTokens.gapL),
             Text(S.settingsFontSize, style: t.titleMedium),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTokens.gapS),
             FontScalePicker(state: widget.state),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTokens.gapL),
             const Text(S.wiz1),
           ],
         );
@@ -102,9 +102,9 @@ class _OnboardingWizardState extends State<OnboardingWizard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(S.wizardStep2, style: t.headlineSmall),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTokens.gapS),
             const Text(S.wizardPermIntro),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTokens.gapM),
             _perm(Icons.mic, S.permMic, S.permMicWhy, mic, () async {
               final ok = await u.env.speech.initialize();
               setState(() => mic = ok);
@@ -122,9 +122,9 @@ class _OnboardingWizardState extends State<OnboardingWizard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(S.wizardStep3, style: t.headlineSmall),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTokens.gapS),
             const Text(S.wizardAccountIntro),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTokens.gapL),
             BigButton(
               key: const Key('wizard-connect'),
               label: S.wizardConnectNow,
@@ -134,9 +134,9 @@ class _OnboardingWizardState extends State<OnboardingWizard> {
                 if (mounted) setState(() {});
               },
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTokens.gapM),
             Text(S.wiz2(u.youtube.channels().length)),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTokens.gapM),
             BigButton(label: S.skip, primary: false, onPressed: () => setState(() => step++)),
           ],
         );
@@ -145,10 +145,10 @@ class _OnboardingWizardState extends State<OnboardingWizard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(S.wizardStep4, style: t.headlineSmall),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTokens.gapM),
             const PracticeBanner(),
-            const SizedBox(height: 12),
-            const Text(S.wizardPracticeIntro, style: TextStyle(fontSize: 17)),
+            const SizedBox(height: AppTokens.gapM),
+            const Text(S.wizardPracticeIntro, style: TextStyle(fontSize: AppTokens.fontBody)),
           ],
         );
     }
@@ -157,24 +157,24 @@ class _OnboardingWizardState extends State<OnboardingWizard> {
   Widget _perm(IconData icon, String name, String why, bool? state, Future<void> Function() ask) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppTokens.gapM),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 Icon(icon, size: 28),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTokens.gapS),
                 Expanded(child: Text(name, style: Theme.of(context).textTheme.titleMedium)),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppTokens.gapXs),
             Text(why),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTokens.gapS),
             if (state == null)
               BigButton(label: S.permAllow, primary: false, onPressed: ask)
             else
-              Text(state ? S.permAllowed : S.permDenied, style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text(state ? S.permAllowed : S.permDenied, style: const TextStyle(fontWeight: FontWeight.w800)),
           ],
         ),
       ),

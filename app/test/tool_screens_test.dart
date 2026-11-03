@@ -11,6 +11,7 @@ import 'package:channel_biseo/stages.dart';
 import 'package:channel_biseo/ui/produce_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/painting.dart' show debugDisableShadows;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -151,6 +152,8 @@ void main() {
       testWidgets('${shot.name} ${dark ? '어두움' : '밝음'}', (t) async {
         if (!_on) return;
         await _loadFonts();
+        debugDisableShadows = false; // 실제 기기처럼 그림자 그리기
+        addTearDown(() => debugDisableShadows = true);
         t.view.physicalSize = const Size(390 * 3, 844 * 3);
         t.view.devicePixelRatio = 3;
         addTearDown(t.view.reset);

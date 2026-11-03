@@ -42,7 +42,7 @@ class _CornerScreenState extends State<CornerScreen> {
                 controller: name,
                 decoration: InputDecoration(labelText: S.corner1(S.cornerName)),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTokens.gapM),
               DropdownButtonFormField<String>(
                 initialValue: ch,
                 isExpanded: true,
@@ -76,12 +76,12 @@ class _CornerScreenState extends State<CornerScreen> {
   Widget build(BuildContext context) {
     final list = cornerOf(u).corners();
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+      padding: const EdgeInsets.fromLTRB(AppTokens.pagePad, AppTokens.gapS, AppTokens.pagePad, AppTokens.bottomSpace),
       children: [
         const Text(S.corner2),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppTokens.gapM),
         BigButton(key: const Key('corner-new'), label: S.cornerNew, icon: Icons.add, onPressed: _new),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppTokens.gapM),
         if (list.isEmpty) const EmptyHint(S.cornerNone),
         for (final c in list)
           Card(
@@ -146,7 +146,7 @@ class _CornerDetailScreenState extends State<CornerDetailScreen> {
       appBar: pageBar(context, c.name),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTokens.gapL),
           children: [
             ButtonWrap(
               children: [
@@ -226,7 +226,7 @@ class _CornerDetailScreenState extends State<CornerDetailScreen> {
                         ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppTokens.gapM),
                   BigButton(
                     key: const Key('corner-make'),
                     label: S.cornerMake,

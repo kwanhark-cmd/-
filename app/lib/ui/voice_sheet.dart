@@ -88,31 +88,31 @@ class _VoiceSheetState extends State<_VoiceSheet> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppTokens.gapXl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(S.voiceListen, style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTokens.gapS),
             if (status.isNotEmpty) Text(status),
-            if (heard.isNotEmpty) Text(S.voice3(heard), style: const TextStyle(color: Colors.grey)),
+            if (heard.isNotEmpty) Text(S.voice3(heard), style: TextStyle(color: context.tokens.textSoft)),
             if (answer.isNotEmpty) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTokens.gapS),
               Text(
                 answer,
                 key: const Key('voice-answer'),
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                style: const TextStyle(fontSize: AppTokens.fontBody + 1, fontWeight: FontWeight.w600),
               ),
             ],
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTokens.gapL),
             BigButton(
               key: const Key('voice-listen'),
               label: listening ? S.voiceListening : S.voiceListen,
               icon: Icons.mic,
               onPressed: listening ? null : () => busy.run(_listen),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTokens.gapM),
             Row(
               children: [
                 Expanded(
@@ -123,7 +123,7 @@ class _VoiceSheetState extends State<_VoiceSheet> {
                     onSubmitted: (v) => busy.run(() => _run(v)),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTokens.gapS),
                 IconButton.filled(
                   key: const Key('voice-send'),
                   iconSize: 32,
@@ -132,7 +132,7 @@ class _VoiceSheetState extends State<_VoiceSheet> {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTokens.gapM),
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(

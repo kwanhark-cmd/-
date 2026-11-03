@@ -115,7 +115,7 @@ void _stage2() {
             value: s.produceDailyLimit,
             onChanged: (v) => s.produceDailyLimit = v.toInt(),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTokens.gapM),
           DropdownButtonFormField<String>(
             initialValue: s.aiLabelMethod,
             isExpanded: true,
@@ -130,7 +130,7 @@ void _stage2() {
               refresh();
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTokens.gapM),
           BigButton(
             key: const Key('open-tools'),
             label: S.settingsTools,

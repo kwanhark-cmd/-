@@ -428,6 +428,10 @@ class S {
   static const editsTip = '앱이 고친 제목·설명·키워드가 모두 여기에 남아요. 마음에 안 들면 "되돌리기"를 누르면 바로 원래대로 돌아가요.';
   static const editsEmptyHow = '홈에서 "지금 수정 실행하기"를 누르면 앱이 영상 제목·설명·키워드를 다듬어요. 고친 내용은 여기서 언제든 되돌릴 수 있어요.';
   static const editsRevertAllAsk = '오늘 고친 영상을 모두 원래대로 되돌릴까요?';
+  // 제작
+  static const prodTip = '"새로 만들기"를 누르고 채널과 형식만 고르면 제목·설명·키워드·썸네일·대본을 한 번에 만들어 드려요. 유튜브에는 항상 "비공개"로만 올라가요.';
+  static const prodEmptyHow = '"새로 만들기"를 누르고 채널과 형식(쇼츠, 롱폼 등)을 고르면 시작돼요.';
+  static const prodReviewEmpty = '확인을 기다리는 영상이 없어요. 콘텐츠를 만들어 비공개로 올리면 여기에 모여요.';
   static const uiDangerSecond = '정말 할까요? 한 번 더 확인할게요.';
   static const thumbTitle = '썸네일 그림';
   static const thumbNone = '아직 썸네일 그림이 없어요. 문구로 만들거나 직접 만든 그림을 넣어 주세요.';

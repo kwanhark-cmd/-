@@ -47,7 +47,7 @@ Future<Production?> newProductionFlow(
                 items: [for (final x in chans) DropdownMenuItem(value: x.channelId, child: Text(x.title))],
                 onChanged: (v) => setD(() => ch = v ?? ch),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTokens.gapM),
               const Text(S.produceFormat),
               Wrap(
                 spacing: 8,
@@ -62,14 +62,14 @@ Future<Production?> newProductionFlow(
                     ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTokens.gapM),
               TextField(
                 key: const Key('produce-topic'),
                 controller: topic,
                 decoration: const InputDecoration(labelText: S.produceTopic),
               ),
               if (memos.isNotEmpty) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTokens.gapM),
                 DropdownButtonFormField<int?>(
                   initialValue: memoId,
                   isExpanded: true,
@@ -85,7 +85,7 @@ Future<Production?> newProductionFlow(
                   onChanged: (v) => setD(() => memoId = v),
                 ),
               ],
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTokens.gapM),
               Text(S.prod2(productionOf(u).madeToday(), u.settings.produceDailyLimit)),
             ],
           ),
@@ -118,6 +118,63 @@ Future<Production?> newProductionFlow(
   return null;
 }
 
+/// 제작 상태 → 공통 상태 색.
+Status productionStatusColor(ProductionStatus s) => switch (s) {
+  ProductionStatus.draft => Status.progress,
+  ProductionStatus.uploadTomorrow => Status.check,
+  ProductionStatus.uploadedPrivate => Status.check,
+  ProductionStatus.doneByUser => Status.done,
+};
+
+String formatIcon(ContentFormat f) => switch (f) {
+  ContentFormat.shorts => 'fire',
+  ContentFormat.long => 'create',
+  ContentFormat.docu => 'corner',
+  ContentFormat.image => 'picture',
+  ContentFormat.talk => 'chat',
+};
+
+/// 제작 목록 한 줄 (가벼운 평면 카드).
+Widget productionTile(
+  BuildContext context,
+  UserContext u,
+  Production p, {
+  required Key key,
+  required VoidCallback onTap,
+}) {
+  final t = context.tokens;
+  final st = productionStatusColor(p.status);
+  return StripeCard(
+    key: key,
+    status: st,
+    onTap: onTap,
+    child: Row(
+      children: [
+        Icon3D(formatIcon(p.format), size: AppTokens.icon3dS + 8),
+        const SizedBox(width: AppTokens.gapM),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                p.title,
+                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: AppTokens.fontBody),
+              ),
+              Text(
+                '${formatLabel(p.format)} · ${u.youtube.channel(p.channelId)?.title ?? ''}',
+                style: TextStyle(color: t.textSoft),
+              ),
+              const SizedBox(height: AppTokens.gapXs),
+              StatusBadge(st, statusLabel(p.status), shake: p.status == ProductionStatus.uploadedPrivate),
+            ],
+          ),
+        ),
+        Icon(Icons.chevron_right, color: t.textSoft, size: AppTokens.iconM),
+      ],
+    ),
+  );
+}
+
 String statusLabel(ProductionStatus s) => switch (s) {
   ProductionStatus.draft => S.prod3,
   ProductionStatus.uploadTomorrow => S.prod4,
@@ -142,8 +199,13 @@ class _ProduceScreenState extends State<ProduceScreen> {
     final list = ps.list(limit: _limit);
     final review = ps.reviewList().length;
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+      padding: const EdgeInsets.fromLTRB(AppTokens.pagePad, AppTokens.gapS, AppTokens.pagePad, AppTokens.bottomSpace),
       children: [
+        TipBanner(
+          text: S.prodTip,
+          seen: u.settings.tipSeen('produce'),
+          onSeen: () => u.settings.markTipSeen('produce'),
+        ),
         ButtonWrap(
           children: [
             BigButton(
@@ -174,22 +236,30 @@ class _ProduceScreenState extends State<ProduceScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppTokens.gapL),
         Text(S.produceDrafts, style: Theme.of(context).textTheme.titleLarge),
-        if (list.isEmpty) const EmptyHint(S.empty),
-        for (final p in list)
-          Card(
-            child: ListTile(
-              key: Key('production-${p.id}'),
-              title: Text(p.title),
-              subtitle: Text(
-                '${formatLabel(p.format)} · ${u.youtube.channel(p.channelId)?.title ?? ''} · ${statusLabel(p.status)}',
-              ),
-              trailing: const Icon(Icons.chevron_right),
+        if (list.isEmpty)
+          EmptyState(
+            icon: 'create',
+            message: S.prodEmptyHow,
+            actionLabel: S.produceNew,
+            onAction: () async {
+              await newProductionFlow(context, u);
+              if (mounted) setState(() {});
+            },
+          ),
+        for (var i = 0; i < list.length; i++)
+          Appear(
+            index: i,
+            child: productionTile(
+              context,
+              u,
+              list[i],
+              key: Key('production-${list[i].id}'),
               onTap: () async {
                 await Navigator.of(context).push(
                   MaterialPageRoute<void>(
-                    builder: (_) => ProductionDetailScreen(user: u, id: p.id),
+                    builder: (_) => ProductionDetailScreen(user: u, id: list[i].id),
                   ),
                 );
                 if (mounted) setState(() {});
@@ -219,7 +289,7 @@ class _ProductionDetailScreenState extends State<ProductionDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final p = ps.byId(widget.id);
-    if (p == null) return const Scaffold(body: EmptyHint(S.empty));
+    if (p == null) return Scaffold(appBar: pageBar(context, S.navProduce), body: const EmptyHint(S.empty));
     Widget block(String label, String text) => SectionCard(
       title: label,
       trailing: IconButton(tooltip: S.copy, icon: const Icon(Icons.copy), onPressed: () => copyText(context, text)),
@@ -229,10 +299,18 @@ class _ProductionDetailScreenState extends State<ProductionDetailScreen> {
       appBar: pageBar(context, formatLabel(p.format)),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(
+            AppTokens.pagePad,
+            AppTokens.gapS,
+            AppTokens.pagePad,
+            AppTokens.bottomSpace,
+          ),
           children: [
-            Text(statusLabel(p.status), style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: StatusBadge(productionStatusColor(p.status), statusLabel(p.status)),
+            ),
+            const SizedBox(height: AppTokens.gapS),
             block(S.prod6, p.title),
             block(S.chan5, p.description),
             block(S.chan7, p.tags.join(', ')),
@@ -255,7 +333,7 @@ class _ProductionDetailScreenState extends State<ProductionDetailScreen> {
                   else
                     const Text(S.thumbNone),
                   if (p.extra['thumbError'] != null) const Text(S.thumbUploadFailed),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppTokens.gapS),
                   ButtonWrap(
                     children: [
                       BigButton(
@@ -287,9 +365,9 @@ class _ProductionDetailScreenState extends State<ProductionDetailScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(p.hasVideo ? S.prod8(p.videoSource == 'own' ? '내가 만든 영상' : '힉스필드') : S.prod9),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTokens.gapS),
                     const Text(S.prod10),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTokens.gapS),
                     ButtonWrap(
                       children: [
                         BigButton(
@@ -325,7 +403,7 @@ class _ProductionDetailScreenState extends State<ProductionDetailScreen> {
                   primary: false,
                   onPressed: () => u.env.launchUrl(Uri.parse(p.studioUrl)),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTokens.gapM),
                 BigButton(
                   key: const Key('mark-done'),
                   label: S.produceMarkPublished,
@@ -338,13 +416,13 @@ class _ProductionDetailScreenState extends State<ProductionDetailScreen> {
               ],
             ] else
               const Text(S.prod11),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppTokens.gapM),
             BigButton(
               label: S.delete,
               icon: Icons.delete_outline,
               danger: true,
               onPressed: () async {
-                if (await confirm(context, S.prod12, yes: S.delete, danger: true)) {
+                if (await confirmDanger(context, S.prod12)) {
                   ps.delete(p.id);
                   if (context.mounted) Navigator.pop(context);
                 }
@@ -373,18 +451,18 @@ class _ProductionDetailScreenState extends State<ProductionDetailScreen> {
                 controller: t,
                 decoration: const InputDecoration(labelText: S.prod6),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTokens.gapM),
               TextField(
                 controller: d,
                 maxLines: 6,
                 decoration: const InputDecoration(labelText: S.chan5),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTokens.gapM),
               TextField(
                 controller: k,
                 decoration: const InputDecoration(labelText: S.prod13),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTokens.gapM),
               TextField(
                 controller: th,
                 decoration: const InputDecoration(labelText: S.produceThumbnail),
@@ -471,9 +549,9 @@ class _ProductionDetailScreenState extends State<ProductionDetailScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(S.produceUploadConfirm, style: TextStyle(fontSize: 18)),
-                const SizedBox(height: 12),
-                const Text(S.produceAiLabelCheck, style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text(S.produceUploadConfirm, style: TextStyle(fontSize: AppTokens.fontBody + 1)),
+                const SizedBox(height: AppTokens.gapM),
+                const Text(S.produceAiLabelCheck, style: TextStyle(fontWeight: FontWeight.w800)),
                 RadioGroup<String>(
                   groupValue: method,
                   onChanged: (v) => setD(() => method = v ?? method),
@@ -509,7 +587,11 @@ class _ProductionDetailScreenState extends State<ProductionDetailScreen> {
       );
       if (!mounted || st == null) return;
       final msg = st == ProductionStatus.uploadedPrivate ? S.produceUploaded : S.produceDeferred;
-      toast(context, msg);
+      if (st == ProductionStatus.uploadedPrivate) {
+        celebrate(context, msg);
+      } else {
+        toast(context, msg);
+      }
       if (u.settings.ttsEnabled) await u.env.speaker.speak(msg);
     } on ProductionBlocked catch (e) {
       if (mounted) toast(context, e.message);
@@ -536,22 +618,23 @@ class _ReviewScreenState extends State<ReviewScreen> {
       appBar: pageBar(context, S.produceReviewList),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTokens.gapL),
           children: [
             const Text(S.prod17),
-            const SizedBox(height: 12),
-            if (list.isEmpty) const EmptyHint(S.empty),
-            for (final p in list)
-              Card(
-                child: ListTile(
-                  key: Key('review-${p.id}'),
-                  title: Text(p.title),
-                  subtitle: Text('${u.youtube.channel(p.channelId)?.title ?? ''} · ${statusLabel(p.status)}'),
-                  trailing: const Icon(Icons.chevron_right),
+            const SizedBox(height: AppTokens.gapM),
+            if (list.isEmpty) const EmptyState(icon: 'party', message: S.prodReviewEmpty),
+            for (var i = 0; i < list.length; i++)
+              Appear(
+                index: i,
+                child: productionTile(
+                  context,
+                  u,
+                  list[i],
+                  key: Key('review-${list[i].id}'),
                   onTap: () async {
                     await Navigator.of(context).push(
                       MaterialPageRoute<void>(
-                        builder: (_) => ProductionDetailScreen(user: u, id: p.id),
+                        builder: (_) => ProductionDetailScreen(user: u, id: list[i].id),
                       ),
                     );
                     if (mounted) setState(() {});
