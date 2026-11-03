@@ -685,7 +685,7 @@ class _TipBannerState extends State<TipBanner> {
         margin: const EdgeInsets.only(bottom: AppTokens.gapL),
         padding: const EdgeInsets.all(AppTokens.gapL),
         decoration: BoxDecoration(
-          color: t.tonal,
+          color: t.tileBg(Hue.slate),
           borderRadius: BorderRadius.circular(AppTokens.radius),
           border: t.highContrast ? Border.all(color: t.border, width: 2) : null,
         ),
@@ -700,7 +700,7 @@ class _TipBannerState extends State<TipBanner> {
                 Expanded(
                   child: Text(
                     widget.text,
-                    style: TextStyle(color: t.onTonal, fontSize: AppTokens.fontBody),
+                    style: TextStyle(color: t.onTile(Hue.slate), fontSize: AppTokens.fontBody),
                   ),
                 ),
               ],
@@ -709,7 +709,10 @@ class _TipBannerState extends State<TipBanner> {
             Align(
               alignment: Alignment.centerRight,
               child: FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: t.primary, foregroundColor: t.onPrimary),
+                style: FilledButton.styleFrom(
+                  backgroundColor: t.onTile(Hue.slate),
+                  foregroundColor: t.tileBg(Hue.slate),
+                ),
                 onPressed: () {
                   widget.onSeen();
                   setState(() => hidden = true);
