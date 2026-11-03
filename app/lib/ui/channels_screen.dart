@@ -11,7 +11,9 @@ import 'common.dart';
 import 'edits_screen.dart';
 
 /// 채널 등록: 주소 입력 + "구글로 연결". 연습 모드에서는 가짜 로그인 창.
-Future<void> connectGoogleFlow(BuildContext context, UserContext u) async {
+Future<void> connectGoogleFlow(BuildContext callerContext, UserContext u) async {
+  final context = alive(callerContext);
+  if (context == null) return;
   final url = TextEditingController();
   final go = await showDialog<bool>(
     context: context,
@@ -47,8 +49,9 @@ Future<void> connectGoogleFlow(BuildContext context, UserContext u) async {
       ],
     ),
   );
-  if (go != true || !context.mounted) return;
+  if (go != true) return;
   try {
+    // ignore: use_build_context_synchronously — 도우미가 alive() 로 살아 있는 화면을 다시 찾는다
     final rows = await runWithProgress(context, S.channelConnectGoogle, (cancel, p) async {
       final r = await u.youtube.connectGoogle(channelUrl: url.text);
       for (var i = 0; i < r.length; i++) {
@@ -61,9 +64,25 @@ Future<void> connectGoogleFlow(BuildContext context, UserContext u) async {
       }
       return r;
     });
-    if (context.mounted && rows != null) toast(context, S.channelAdded(rows.length));
+    if (rows == null) return;
+    final empty = rows.where((r) => u.youtube.videoTotal(r.channelId) == 0).length;
+    // ignore: use_build_context_synchronously — 도우미가 alive() 로 살아 있는 화면을 다시 찾는다
+    toast(context, empty == 0 ? S.channelAdded(rows.length) : S.chanAddedSomeEmpty(rows.length, empty));
+  } on NoChannelsFailure {
+    // 오류가 아니라 안내: 이 계정에는 채널이 없다
+    // ignore: use_build_context_synchronously — 도우미가 alive() 로 살아 있는 화면을 다시 찾는다
+    final again = await confirm(context, S.chanNoChannelAccount, yes: S.chanOtherAccount, no: S.close);
+    // ignore: use_build_context_synchronously — 도우미가 alive() 로 살아 있는 화면을 다시 찾는다
+    if (again) await connectGoogleFlow(context, u);
   } catch (e) {
-    if (context.mounted) await showFailure(context, e, onRetry: () => connectGoogleFlow(context, u));
+    await showFailure(
+      // ignore: use_build_context_synchronously — 도우미가 alive() 로 살아 있는 화면을 다시 찾는다
+      context,
+      e,
+      where: '구글 연결',
+      onRetry: () => connectGoogleFlow(context, u),
+      onReconnect: () => connectGoogleFlow(context, u),
+    );
   }
 }
 

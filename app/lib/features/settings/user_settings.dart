@@ -25,6 +25,10 @@ class UserSettings {
   bool get onboardingDone => _get('onboardingDone', false);
   set onboardingDone(bool v) => db.setSetting('onboardingDone', v);
 
+  /// 실제 채널이 연결된 뒤에도 연습용 가짜 채널을 보여 줄지
+  bool get showPracticeData => _get('showPracticeData', false);
+  set showPracticeData(bool v) => db.setSetting('showPracticeData', v);
+
   // 보기 (화면 개선)
   /// 'system' | 'light' | 'dark'
   String get themeMode => _get('themeMode', 'system');

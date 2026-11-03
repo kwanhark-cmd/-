@@ -128,6 +128,17 @@ class YouTubeService {
 
   /// 구글로 연결 (실제) 또는 연습 계정 연결. 연결된 계정의 채널을 모두 등록한다.
   /// [channelUrl] 을 넣으면 그 채널이 계정에 있는지 확인해 주소를 저장한다.
+  /// 단계 이름을 붙여 실패를 기록하고 다시 던진다 (로그인 / 연결 정보(토큰) / 채널 목록 / 영상 목록).
+  Future<T> step<T>(String stage, Future<T> Function() f) async {
+    try {
+      return await f();
+    } catch (e, st) {
+      final fail = toFailure(e);
+      logger?.error('구글 연결 실패 [$stage]: ${fail.kind.name} ${fail.detail}', e, st);
+      throw AppFailure(fail.kind, '[$stage] ${fail.detail}');
+    }
+  }
+
   Future<List<ChannelRow>> connectGoogle({String channelUrl = '', bool mock = false}) async {
     final useMock = mock || isPracticeMode;
     int accountId;
@@ -141,7 +152,7 @@ class YouTubeService {
     } else {
       final flow = oauth;
       if (flow == null) throw AppFailure(FailureKind.notConnected, 'no oauth');
-      final t = await flow.authorize(await googleConfig());
+      final t = await step('로그인', () async => flow.authorize(await googleConfig()));
       accountId = db.insert('INSERT INTO accounts(provider, label, connected_at, status, mock) VALUES(?,?,?,?,0)', [
         'google',
         '구글 계정',
@@ -153,8 +164,12 @@ class YouTubeService {
     final acct = account(accountId)!;
     try {
       quota.reserve(QuotaCost.list);
-      final chans = await withRetry(() async => _apiFor(acct).myChannels(await _token(acct)));
-      if (chans.isEmpty) throw AppFailure(FailureKind.notFound, 'no channels');
+      final token = await step('연결 정보(토큰)', () => _token(acct));
+      final chans = await step('채널 목록', () => withRetry(() => _apiFor(acct).myChannels(token)));
+      if (chans.isEmpty) {
+        logger?.error('구글 연결 [채널 목록]: 이 계정에는 채널이 없음');
+        throw NoChannelsFailure();
+      }
       final rows = <ChannelRow>[];
       for (final c in chans) {
         if (channelUrl.isNotEmpty && _sameChannel(channelUrl, c)) c.url = channelUrl.trim();
@@ -276,8 +291,22 @@ class YouTubeService {
     lastSynced: r['last_synced'] as String?,
   );
 
-  List<ChannelRow> channels() =>
-      db.select('SELECT * FROM channels ORDER BY title').map((r) => _row(Map<String, dynamic>.from(r))).toList();
+  /// 실제(가짜가 아닌) 구글 계정에 연결된 채널이 하나라도 있는가.
+  bool get hasRealChannel =>
+      db.select('SELECT 1 FROM channels c JOIN accounts a ON a.id = c.account_id WHERE a.mock = 0 LIMIT 1').isNotEmpty;
+
+  /// 실제 구글 계정이 정상 연결되어 있는가.
+  bool get googleConnected => accounts().any((a) => !a.mock && a.status == 'ok');
+
+  /// 채널 목록. 실제 채널이 하나라도 있으면 연습용 가짜 채널은 숨긴다 (설정 → "연습 자료 보기" 로 다시 보기).
+  List<ChannelRow> channels() {
+    final hideMock = hasRealChannel && !settings.showPracticeData;
+    final sql = hideMock
+        ? 'SELECT c.* FROM channels c LEFT JOIN accounts a ON a.id = c.account_id '
+              'WHERE a.mock IS NULL OR a.mock = 0 ORDER BY c.title'
+        : 'SELECT * FROM channels ORDER BY title';
+    return db.select(sql).map((r) => _row(Map<String, dynamic>.from(r))).toList();
+  }
 
   ChannelRow? channel(String channelId) {
     final r = db.select('SELECT * FROM channels WHERE channel_id = ?', [channelId]);
@@ -346,6 +375,18 @@ class YouTubeService {
   // ---------------- 유튜브에서 새로 불러오기 ----------------
   /// 백그라운드 작업. 진행률을 알려 주고 취소할 수 있다. 한도가 모자라면 멈추고 다음 날 이어서.
   Future<int> syncChannel(String channelId, {CancelToken? cancel, Progress? progress}) async {
+    try {
+      return await _syncChannel(channelId, cancel: cancel, progress: progress);
+    } catch (e, st) {
+      final fail = toFailure(e);
+      if (fail.kind != FailureKind.cancelled) {
+        logger?.error('영상 불러오기 실패 [영상 목록]: ${fail.kind.name} ${fail.detail}', e, st);
+      }
+      rethrow;
+    }
+  }
+
+  Future<int> _syncChannel(String channelId, {CancelToken? cancel, Progress? progress}) async {
     final c = channel(channelId);
     if (c == null) throw AppFailure(FailureKind.notFound, 'channel');
     final acct = account(c.accountId);
@@ -458,7 +499,7 @@ class YouTubeService {
   }
 
   // ---------------- 통계 ----------------
-  int totalViews() => db.select('SELECT COALESCE(SUM(view_count),0) AS s FROM channels').first['s'] as int;
+  int totalViews() => channels().fold<int>(0, (s, c) => s + c.viewCount);
 
   /// [days] 일 전 대비 늘어난 조회수 (기록이 없으면 0).
   int viewsDelta(int days) {
@@ -501,4 +542,9 @@ class YouTubeService {
   }
 
   List<ConnectedAccount> brokenAccounts() => accounts().where((a) => a.status != 'ok').toList();
+}
+
+/// 연결한 구글 계정에 유튜브 채널이 하나도 없을 때.
+class NoChannelsFailure extends AppFailure {
+  NoChannelsFailure() : super(FailureKind.notFound, 'no channels');
 }

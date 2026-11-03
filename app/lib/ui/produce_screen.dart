@@ -16,11 +16,13 @@ ProductionService productionOf(UserContext u) => u.extensions['production']! as 
 
 /// 새 콘텐츠 만들기 창. 만든 콘텐츠를 돌려준다.
 Future<Production?> newProductionFlow(
-  BuildContext context,
+  BuildContext callerContext,
   UserContext u, {
   String? channelId,
   ContentFormat? format,
 }) async {
+  final context = alive(callerContext);
+  if (context == null) return null;
   final chans = u.youtube.channels();
   if (chans.isEmpty) {
     toast(context, S.channelNone);

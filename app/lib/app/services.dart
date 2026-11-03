@@ -174,5 +174,11 @@ class UserContext {
   /// 연습 모드 표시 여부 (유튜브 또는 AI 중 하나라도 실제 연결이 아니면).
   bool get isPracticeMode => youtube.isPracticeMode || ai.isPracticeMode;
 
+  /// 구글 연결 상태 (실제 계정이 정상 연결됨)
+  bool get googleConnected => youtube.googleConnected;
+
+  /// 인공지능 연결 상태 (열쇠가 있고 이번 달 한도 안)
+  bool get aiConnected => ai.hasKey && !ai.overLimit;
+
   void close() => db.close();
 }

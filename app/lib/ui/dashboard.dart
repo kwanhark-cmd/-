@@ -5,6 +5,7 @@ import '../core/db.dart';
 import '../core/strings.dart';
 import '../features/youtube/trending.dart';
 import 'common.dart';
+import 'connection_status.dart';
 import 'edits_screen.dart';
 import 'home_shell.dart';
 
@@ -93,7 +94,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final t = context.tokens;
     final today = dayKey(u.env.now());
     final quotaLeft = u.quota.remaining;
     final quotaLimit = u.settings.quotaDailyLimit;
@@ -192,10 +192,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(S.dash6(u.user.name), style: Theme.of(context).textTheme.headlineSmall),
-                    Text(
-                      S.dashHelloSub,
-                      style: TextStyle(color: t.textSoft, fontSize: AppTokens.fontBody),
-                    ),
+                    const SizedBox(height: AppTokens.gapXs),
+                    // 연결 상태 (구글·인공지능 따로). 누르면 설정으로.
+                    ConnectionBadges(user: u, onTap: () => shell.goTo('settings')),
                   ],
                 ),
               ),

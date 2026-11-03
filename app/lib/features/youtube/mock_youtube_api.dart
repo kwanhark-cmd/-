@@ -6,9 +6,21 @@ import 'youtube_api.dart';
 
 /// 연습 모드와 테스트에서 쓰는 가짜 유튜브. 실제 유튜브에는 아무 영향이 없다.
 class MockYouTubeApi implements YouTubeApi {
-  MockYouTubeApi({int videosPerChannel = 24, int bigChannelVideos = 120}) {
+  MockYouTubeApi({int videosPerChannel = 24, int bigChannelVideos = 120, bool emptyChannel = false}) {
     _seed(videosPerChannel, bigChannelVideos);
+    if (emptyChannel) {
+      // 영상이 하나도 없는 채널 (테스트용)
+      channels['UC_mock_empty'] = YtChannel(
+        channelId: 'UC_mock_empty',
+        title: '새로 만든 빈 채널',
+        uploadsPlaylist: 'UUUC_mock_empty',
+      );
+      uploads['UUUC_mock_empty'] = [];
+    }
   }
+
+  /// 테스트용: 채널이 하나도 없는 구글 계정처럼 동작.
+  bool noChannels = false;
 
   final Map<String, YtChannel> channels = {};
   final Map<String, YtVideo> videos = {};
@@ -70,6 +82,7 @@ class MockYouTubeApi implements YouTubeApi {
   @override
   Future<List<YtChannel>> myChannels(String token) async {
     _maybeFail();
+    if (noChannels) return [];
     return channels.values.map((c) {
       final total = (uploads[c.uploadsPlaylist] ?? const []).fold<int>(0, (s, id) => s + (videos[id]?.viewCount ?? 0));
       return YtChannel(

@@ -159,12 +159,14 @@ class ButtonWrap extends StatelessWidget {
 }
 
 Future<bool> confirm(
-  BuildContext context,
+  BuildContext callerContext,
   String message, {
   String yes = S.yes,
   String no = S.no,
   bool danger = false,
 }) async {
+  final context = alive(callerContext);
+  if (context == null) return false;
   final r = await showDialog<bool>(
     context: context,
     builder: (c) {
@@ -191,11 +193,13 @@ Future<bool> confirm(
 /// 위험한 동작(삭제·초기화·전체 되돌리기)은 두 번 확인한다.
 Future<bool> confirmDanger(BuildContext context, String first, {String yes = S.delete}) async {
   if (!await confirm(context, first, yes: S.next, no: S.cancel, danger: true)) return false;
-  if (!context.mounted) return false;
+  // ignore: use_build_context_synchronously — alive() 가 살아 있는 화면을 다시 찾는다
   return confirm(context, S.uiDangerSecond, yes: yes, no: S.cancel, danger: true);
 }
 
-void toast(BuildContext context, String message) {
+void toast(BuildContext callerContext, String message) {
+  final context = alive(callerContext);
+  if (context == null) return;
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
     ..showSnackBar(
@@ -206,15 +210,21 @@ void toast(BuildContext context, String message) {
     );
 }
 
-/// 오류를 쉬운 말로 보여 주고, 다음 행동 버튼(다시 시도 / 다시 연결 / 설정 열기)을 준다.
+/// 오류를 쉬운 말로 보여 주고, 다음 행동 버튼(다시 시도 / 다시 연결 / 설정 열기)과
+/// "문제 신고 파일 만들기" 버튼을 준다. 창을 띄울 때마다 원인과 단계([where])를 로그에 남긴다.
+/// 다음 행동은 창이 닫힌 뒤 살아 있는 화면에서 실행된다 (사라진 화면으로 창을 띄우지 않음).
 Future<void> showFailure(
-  BuildContext context,
+  BuildContext callerContext,
   Object error, {
   VoidCallback? onRetry,
   VoidCallback? onReconnect,
   VoidCallback? onSettings,
+  String where = '',
 }) async {
   final f = toFailure(error);
+  UiHooks.logError?.call('실패 창${where.isEmpty ? '' : ' [$where]'}: ${f.kind.name} ${f.detail}');
+  final context = alive(callerContext);
+  if (context == null) return;
   if (f.kind == FailureKind.cancelled) {
     toast(context, S.progressCancelled);
     return;
@@ -231,70 +241,106 @@ Future<void> showFailure(
     case NextAction.none:
       action = null;
   }
+  VoidCallback? after;
   await showDialog<void>(
     context: context,
     builder: (c) => AlertDialog(
       icon: const Mascot(MascotMood.warning, size: 72),
-      content: Text(f.userMessage, style: const TextStyle(fontSize: AppTokens.fontBody + 1)),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(f.userMessage, style: const TextStyle(fontSize: AppTokens.fontBody + 1)),
+          if (UiHooks.makeReport != null) ...[
+            const SizedBox(height: AppTokens.gapM),
+            TextButton.icon(
+              key: const Key('report-from-error'),
+              icon: const Icon(Icons.bug_report),
+              label: const Text(S.reportFromError),
+              onPressed: () async {
+                final path = await UiHooks.makeReport!();
+                if (c.mounted) Navigator.pop(c);
+                // ignore: use_build_context_synchronously — alive() 가 살아 있는 화면을 다시 찾는다
+                if (path != null) toast(context, S.reportMade(path));
+              },
+            ),
+          ],
+        ],
+      ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(c), child: const Text(S.close)),
         if (action != null)
           FilledButton(
+            key: const Key('failure-action'),
             onPressed: () {
+              after = action;
               Navigator.pop(c);
-              action!();
             },
             child: Text(S.nextActionLabel(f.nextAction)),
           ),
       ],
     ),
   );
+  // 창이 완전히 닫힌 뒤 실행 (그 사이 화면이 바뀌어도 각 기능이 살아 있는 화면을 찾아 씀)
+  after?.call();
 }
 
 /// 긴 작업을 진행률 + 취소 버튼과 함께 실행. 화면은 멈추지 않는다.
 Future<T?> runWithProgress<T>(
-  BuildContext context,
+  BuildContext callerContext,
   String title,
   Future<T> Function(CancelToken cancel, void Function(double, String) progress) task,
 ) async {
+  final context = alive(callerContext);
+  if (context == null) return null;
   final cancel = CancelToken();
   final p = ValueNotifier<(double, String)>((0, S.working));
+  BuildContext? dialogContext;
   final dialog = showDialog<void>(
     context: context,
     barrierDismissible: false,
-    builder: (c) => AlertDialog(
-      title: Text(title),
-      content: ValueListenableBuilder<(double, String)>(
-        valueListenable: p,
-        builder: (_, v, _) => Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Mascot(MascotMood.working, size: 72),
-            const SizedBox(height: AppTokens.gapM),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-              child: LinearProgressIndicator(value: v.$1 <= 0 ? null : v.$1, minHeight: 14),
-            ),
-            const SizedBox(height: AppTokens.gapM),
-            Text(v.$2, style: const TextStyle(fontSize: AppTokens.fontBody)),
-          ],
+    builder: (c) {
+      dialogContext = c;
+      return AlertDialog(
+        title: Text(title),
+        content: ValueListenableBuilder<(double, String)>(
+          valueListenable: p,
+          builder: (_, v, _) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Mascot(MascotMood.working, size: 72),
+              const SizedBox(height: AppTokens.gapM),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+                child: LinearProgressIndicator(value: v.$1 <= 0 ? null : v.$1, minHeight: 14),
+              ),
+              const SizedBox(height: AppTokens.gapM),
+              Text(v.$2, style: const TextStyle(fontSize: AppTokens.fontBody)),
+            ],
+          ),
         ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            cancel.cancel();
-            p.value = (p.value.$1, S.progressCancelled);
-          },
-          child: const Text(S.progressCancel),
-        ),
-      ],
-    ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              cancel.cancel();
+              p.value = (p.value.$1, S.progressCancelled);
+            },
+            child: const Text(S.progressCancel),
+          ),
+        ],
+      );
+    },
   );
   try {
     return await task(cancel, (f, m) => p.value = (f, m));
   } finally {
-    if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
+    // 진행 창 자신의 context 로 닫는다 (원래 화면이 사라져도 창이 남지 않게)
+    final dc = dialogContext;
+    if (dc != null && dc.mounted) {
+      Navigator.of(dc).pop();
+    } else if (context.mounted) {
+      Navigator.of(context, rootNavigator: true).pop();
+    }
     await dialog;
     p.dispose();
   }
@@ -302,7 +348,8 @@ Future<T?> runWithProgress<T>(
 
 Future<void> copyText(BuildContext context, String text) async {
   await Clipboard.setData(ClipboardData(text: text));
-  if (context.mounted) toast(context, S.copied);
+  // ignore: use_build_context_synchronously — alive() 가 살아 있는 화면을 다시 찾는다
+  toast(context, S.copied);
 }
 
 /// 간단한 빈 화면 안내 (시작 버튼이 필요하면 EmptyState 를 쓴다).

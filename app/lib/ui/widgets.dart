@@ -6,6 +6,24 @@ import 'package:flutter/services.dart';
 import '../core/strings.dart';
 import 'theme.dart';
 
+/// 앱 전체 화면 길잡이 열쇠. 원래 화면이 사라졌을 때 살아 있는 화면으로 창을 띄우는 데 쓴다.
+final appNavigatorKey = GlobalKey<NavigatorState>();
+
+/// 살아 있는 context 를 돌려준다. [c] 가 사라졌으면 앱 맨 위 화면, 그것도 없으면 null.
+BuildContext? alive(BuildContext? c) {
+  if (c != null && c.mounted) return c;
+  return appNavigatorKey.currentState?.overlay?.context;
+}
+
+/// 화면 공통 기능에서 쓰는 연결점 (로그인하면 채워짐).
+class UiHooks {
+  /// 실패 창을 띄울 때마다 원인을 남기는 로그.
+  static void Function(String message)? logError;
+
+  /// "문제 신고 파일 만들기" — 만든 파일 경로를 돌려준다.
+  static Future<String?> Function()? makeReport;
+}
+
 /// 진동·소리 피드백 설정 (로그인한 사용자 설정을 따라 바뀜).
 class UiPrefs {
   static bool haptics = true;
@@ -704,7 +722,9 @@ class _TipBannerState extends State<TipBanner> {
 }
 
 /// 완료 알림: 마스코트 축하 + 움직이는 체크 (화면을 막지 않는 아래쪽 알림).
-void celebrate(BuildContext context, String message, {SnackBarAction? action}) {
+void celebrate(BuildContext callerContext, String message, {SnackBarAction? action}) {
+  final context = alive(callerContext);
+  if (context == null) return;
   final t = context.tokens;
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()

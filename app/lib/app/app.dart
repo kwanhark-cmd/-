@@ -31,6 +31,15 @@ class AppState extends ChangeNotifier {
     }
     user = ctx;
     UiPrefs.haptics = ctx.settings.haptics;
+    UiHooks.logError = (m) => env.logger.error(m);
+    UiHooks.makeReport = () async {
+      try {
+        return ctx.maintenance.writeReport(env.documentsDir);
+      } catch (e) {
+        env.logger.error('문제 신고 파일 만들기 실패', e);
+        return null;
+      }
+    };
     UiPrefs.sound = ctx.settings.clickSound;
     env.logger.info('로그인 #${u.id}');
     notifyListeners();
@@ -114,6 +123,7 @@ class ChannelBiseoApp extends StatelessWidget {
       builder: (context, _) {
         return MaterialApp(
           title: S.appName,
+          navigatorKey: appNavigatorKey,
           debugShowCheckedModeBanner: false,
           theme: buildAppTheme(tokensFor(state, Brightness.light), Brightness.light),
           darkTheme: buildAppTheme(tokensFor(state, Brightness.dark), Brightness.dark),

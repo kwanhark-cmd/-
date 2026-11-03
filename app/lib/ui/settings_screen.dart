@@ -10,6 +10,7 @@ import '../features/ai/ai_service.dart';
 import '../features/settings/maintenance.dart';
 import '../features/youtube/youtube_service.dart';
 import 'common.dart';
+import 'connection_status.dart';
 import 'memos_screen.dart';
 import 'onboarding.dart';
 
@@ -48,6 +49,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(AppTokens.pagePad, AppTokens.gapS, AppTokens.pagePad, AppTokens.bottomSpace),
       children: [
+        // 맨 위: 연결 상태 + 문제 신고 (찾기 쉽게)
+        ConnectionStatusCard(user: u),
+        const SizedBox(height: AppTokens.gapM),
+        BigButton(
+          key: const Key('report-top'),
+          label: S.setReportTop,
+          icon: Icons.bug_report,
+          primary: false,
+          onPressed: () => busy.run(_report),
+        ),
+        if (u.youtube.hasRealChannel)
+          SwitchListTile(
+            key: const Key('show-practice'),
+            contentPadding: EdgeInsets.zero,
+            title: const Text(S.setShowPractice),
+            subtitle: const Text(S.setShowPracticeSub),
+            value: u.settings.showPracticeData,
+            onChanged: (v) {
+              u.settings.showPracticeData = v;
+              widget.state.refresh();
+              setState(() {});
+            },
+          ),
+        const SizedBox(height: AppTokens.gapS),
         SectionCard(
           title: S.setViewTitle,
           icon3d: 'sparkles',
@@ -306,6 +331,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onPressed: () async {
                   await u.ai.setKey(aiKey.text);
                   aiKey.clear();
+                  widget.state.refresh(); // 홈의 연결 상태도 바로 바뀌게
                   if (mounted) {
                     toast(context, S.settingsAiKeySaved);
                     setState(() {});

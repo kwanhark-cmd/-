@@ -7,7 +7,9 @@ import '../features/edits/edit_service.dart';
 import 'common.dart';
 
 /// "지금 수정 실행": 제안을 먼저 보여 주고, 확인하면 적용.
-Future<void> runEditsFlow(BuildContext context, UserContext u) async {
+Future<void> runEditsFlow(BuildContext callerContext, UserContext u) async {
+  final context = alive(callerContext);
+  if (context == null) return;
   if (u.youtube.channels().isEmpty) {
     toast(context, S.channelNone);
     return;
@@ -73,7 +75,13 @@ Future<void> runEditsFlow(BuildContext context, UserContext u) async {
 }
 
 /// 일괄 수정 미리보기 (전체 화면): 영상마다 수정 전/후를 보여 주고 체크한 것만 돌려준다.
-Future<List<EditProposal>?> showBatchPreview(BuildContext context, UserContext u, List<EditProposal> proposals) {
+Future<List<EditProposal>?> showBatchPreview(
+  BuildContext callerContext,
+  UserContext u,
+  List<EditProposal> proposals,
+) async {
+  final context = alive(callerContext);
+  if (context == null) return null;
   return showDialog<List<EditProposal>>(
     context: context,
     builder: (c) => Dialog.fullscreen(

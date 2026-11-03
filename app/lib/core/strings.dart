@@ -508,6 +508,25 @@ class S {
   static const thumbCompareHelp = '문구와 색이 다른 썸네일 2개를 만들었어요. 마음에 드는 것을 눌러 주세요.';
   static String thumbChoice(String ab) => '$ab안';
   static const thumbChosen = '고른 썸네일을 저장했어요. 올릴 때 함께 올라가요.';
+  // 긴급 수정
+  static const reportFromError = '문제 신고 파일 만들기';
+  static String reportMade(String path) => '문제 신고 파일을 만들었어요: $path';
+  static const chanNoChannelAccount = '이 구글 계정에는 아직 유튜브 채널이 없어요. 채널을 가진 다른 구글 계정으로 연결해 주세요. (유튜브에서 채널을 먼저 만들어도 돼요)';
+  static const chanOtherAccount = '다른 계정으로 연결';
+  static String chanAddedSomeEmpty(int n, int empty) => '채널 $n개를 등록했어요. 그중 $empty개는 아직 영상이 없는 채널이에요.';
+  // 연결 상태 (연습 모드 띠 대신)
+  static const connTitle = '연결 상태';
+  static const connGoogleOn = '구글: 연결됨';
+  static const connGoogleOff = '구글: 아직 연결 안 됨';
+  static const connAiOn = '인공지능: 연결됨';
+  static const connAiOff = '인공지능: 아직 연결 안 됨';
+  static const connAiOver = '인공지능: 이번 달 한도 도달';
+  static const connPracticeHint = '가짜 자료로 연습하고 있어요. 실제 유튜브에는 아무것도 바뀌지 않아요.';
+  static const connHowTo = '연결하러 가기';
+  static const connPracticeShort = '가짜 자료로 연습 중';
+  static const setShowPractice = '연습 자료 보기';
+  static const setShowPracticeSub = '실제 채널을 연결하면 연습용 가짜 채널은 자동으로 숨겨져요. 다시 보고 싶을 때 켜세요.';
+  static const setReportTop = '문제가 생겼나요? 문제 신고 파일 만들기';
   static const uiDangerSecond = '정말 할까요? 한 번 더 확인할게요.';
   static const thumbTitle = '썸네일 그림';
   static const thumbNone = '아직 썸네일 그림이 없어요. 문구로 만들거나 직접 만든 그림을 넣어 주세요.';

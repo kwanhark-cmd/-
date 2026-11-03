@@ -27,7 +27,9 @@ class HomeShell extends StatefulWidget {
 class HomeShellState extends State<HomeShell> {
   int index = 0;
   Timer? _ticker;
-  int _refresh = 0;
+
+  /// 한 번이라도 연 탭 (열어 둔 탭은 화면과 스크롤 위치를 그대로 유지).
+  final Set<String> _opened = {};
 
   UserContext get u => widget.user;
 
@@ -60,8 +62,9 @@ class HomeShellState extends State<HomeShell> {
           await u.env.speaker.speak(b.spoken);
         }
       }
-      await u.runner.tick();
-      if (mounted) setState(() => _refresh++);
+      final ran = await u.runner.tick();
+      // 화면을 새로 만들지 않고 내용만 다시 그린다 (스크롤 위치 유지)
+      if (mounted && ran) setState(() {});
     } catch (e, st) {
       u.env.logger.error(S.shell1, e, st);
     }
@@ -110,7 +113,10 @@ class HomeShellState extends State<HomeShell> {
     }
   }
 
-  void refreshAll() => setState(() => _refresh++);
+  /// 내용만 다시 그린다. 화면을 새로 만들지 않으므로 보던 위치가 그대로 남는다.
+  void refreshAll() {
+    if (mounted) setState(() {});
+  }
 
   bool hasTab(String id) => tabs.any((t) => t.id == id);
 
@@ -125,10 +131,10 @@ class HomeShellState extends State<HomeShell> {
   Widget build(BuildContext context) {
     final list = tabs;
     if (index >= list.length) index = 0;
+    _opened.add(list[index].id);
     final wide = MediaQuery.sizeOf(context).width >= 840;
     final body = Column(
       children: [
-        if (u.isPracticeMode) const PracticeBanner(),
         if (u.runner.running)
           Material(
             color: Theme.of(context).colorScheme.secondaryContainer,
@@ -139,7 +145,21 @@ class HomeShellState extends State<HomeShell> {
               trailing: TextButton(onPressed: u.runner.cancel, child: const Text(S.progressCancel)),
             ),
           ),
-        Expanded(child: list[index].builder(ValueKey('${list[index].id}-$_refresh'))),
+        Expanded(
+          // 연 적 있는 탭은 계속 살려 두어 메뉴를 오가도 보던 위치가 남는다.
+          child: IndexedStack(
+            index: index,
+            children: [
+              for (var i = 0; i < list.length; i++)
+                (i == index || _opened.contains(list[i].id))
+                    ? KeyedSubtree(
+                        key: PageStorageKey('tab-${list[i].id}'),
+                        child: list[i].builder(ValueKey('tab-${list[i].id}')),
+                      )
+                    : const SizedBox.shrink(),
+            ],
+          ),
+        ),
       ],
     );
     final tk = context.tokens;
