@@ -69,6 +69,7 @@ flutter:
   assets:
     - assets/fonts/NotoSansKR-OFL.txt
     - CHANGELOG.md
+    - assets/icons3d/
   fonts:
     - family: NotoSansKR
       fonts:

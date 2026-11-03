@@ -25,6 +25,23 @@ class UserSettings {
   bool get onboardingDone => _get('onboardingDone', false);
   set onboardingDone(bool v) => db.setSetting('onboardingDone', v);
 
+  // 보기 (화면 개선)
+  /// 'system' | 'light' | 'dark'
+  String get themeMode => _get('themeMode', 'system');
+  set themeMode(String v) => db.setSetting('themeMode', v);
+  bool get highContrast => _get('highContrast', false);
+  set highContrast(bool v) => db.setSetting('highContrast', v);
+  bool get reduceMotion => _get('reduceMotion', false);
+  set reduceMotion(bool v) => db.setSetting('reduceMotion', v);
+  bool get haptics => _get('haptics', true);
+  set haptics(bool v) => db.setSetting('haptics', v);
+  bool get clickSound => _get('clickSound', false);
+  set clickSound(bool v) => db.setSetting('clickSound', v);
+  List<String> get seenTips => (db.getSetting<List<dynamic>>('seenTips') ?? const []).cast<String>();
+  bool tipSeen(String id) => seenTips.contains(id);
+  void markTipSeen(String id) => db.setSetting('seenTips', {...seenTips, id}.toList());
+  void resetTips() => db.setSetting('seenTips', <String>[]);
+
   // 처음 사용한 날 (첫 한 달 수정 제한에 사용)
   String? get firstUseDay => db.getSetting<String>('firstUseDay');
   void ensureFirstUseDay(DateTime now) {

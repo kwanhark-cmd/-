@@ -6,6 +6,8 @@ import '../features/accounts/local_accounts.dart';
 import '../ui/home_shell.dart';
 import '../ui/login_screen.dart';
 import '../ui/onboarding.dart';
+import '../ui/theme.dart';
+import '../ui/widgets.dart';
 import 'services.dart';
 
 /// 앱 전체 상태: 누가 로그인했는지, 글씨 크기.
@@ -28,6 +30,8 @@ class AppState extends ChangeNotifier {
       await p(ctx);
     }
     user = ctx;
+    UiPrefs.haptics = ctx.settings.haptics;
+    UiPrefs.sound = ctx.settings.clickSound;
     env.logger.info('로그인 #${u.id}');
     notifyListeners();
   }
@@ -66,19 +70,37 @@ class AppState extends ChangeNotifier {
   }
 
   void refresh() => notifyListeners();
+
+  // ---- 보기 설정 (로그인 전에는 마지막 값을 기억) ----
+  T _view<T>(String key, T Function() fromUser, T def) =>
+      user != null ? fromUser() : (env.accounts.db.getSetting<T>('last_$key') ?? def);
+
+  String get themeMode => _view('themeMode', () => user!.settings.themeMode, 'system');
+  bool get highContrast => _view('highContrast', () => user!.settings.highContrast, false);
+  bool get reduceMotion => _view('reduceMotion', () => user!.settings.reduceMotion, false);
+
+  void setView({String? themeMode, bool? highContrast, bool? reduceMotion}) {
+    final s = user?.settings;
+    if (themeMode != null) {
+      s?.themeMode = themeMode;
+      env.accounts.db.setSetting('last_themeMode', themeMode);
+    }
+    if (highContrast != null) {
+      s?.highContrast = highContrast;
+      env.accounts.db.setSetting('last_highContrast', highContrast);
+    }
+    if (reduceMotion != null) {
+      s?.reduceMotion = reduceMotion;
+      env.accounts.db.setSetting('last_reduceMotion', reduceMotion);
+    }
+    notifyListeners();
+  }
 }
 
-ThemeData buildTheme(Brightness b) {
-  final cs = ColorScheme.fromSeed(seedColor: const Color(0xFFD32F2F), brightness: b);
-  return ThemeData(
-    colorScheme: cs,
-    fontFamily: 'NotoSansKR',
-    useMaterial3: true,
-    visualDensity: VisualDensity.comfortable,
-    inputDecorationTheme: const InputDecorationTheme(border: OutlineInputBorder()),
-    listTileTheme: const ListTileThemeData(minVerticalPadding: 12),
-    textTheme: const TextTheme(bodyMedium: TextStyle(fontSize: 16), bodyLarge: TextStyle(fontSize: 17)),
-  );
+AppTokens tokensFor(AppState s, Brightness b, {bool platformReduceMotion = false}) {
+  final rm = s.reduceMotion || platformReduceMotion;
+  if (s.highContrast) return AppTokens.contrast(darkMode: b == Brightness.dark, reduceMotion: rm);
+  return b == Brightness.dark ? AppTokens.dark(reduceMotion: rm) : AppTokens.light(reduceMotion: rm);
 }
 
 class ChannelBiseoApp extends StatelessWidget {
@@ -93,8 +115,14 @@ class ChannelBiseoApp extends StatelessWidget {
         return MaterialApp(
           title: S.appName,
           debugShowCheckedModeBanner: false,
-          theme: buildTheme(Brightness.light),
-          darkTheme: buildTheme(Brightness.dark),
+          theme: buildAppTheme(tokensFor(state, Brightness.light), Brightness.light),
+          darkTheme: buildAppTheme(tokensFor(state, Brightness.dark), Brightness.dark),
+          themeMode: switch (state.themeMode) {
+            'light' => ThemeMode.light,
+            'dark' => ThemeMode.dark,
+            _ => ThemeMode.system,
+          },
+          themeAnimationDuration: state.reduceMotion ? Duration.zero : const Duration(milliseconds: 250),
           locale: const Locale('ko', 'KR'),
           supportedLocales: const [Locale('ko', 'KR')],
           localizationsDelegates: GlobalMaterialLocalizations.delegates,

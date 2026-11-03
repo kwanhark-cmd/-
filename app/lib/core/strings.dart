@@ -383,6 +383,15 @@ class S {
   static String num(int n) => _num(n);
 
   // ---- 화면별 문구 ----
+  // 화면 개선 (공통 위젯)
+  static const uiOk = '넉넉해요';
+  static const uiProgress = '쓰는 중';
+  static const uiLow = '얼마 안 남았어요';
+  static const uiEmptyGauge = '다 썼어요';
+  static const uiEmptyTitle = '아직 없어요';
+  static const uiTipOk = '알겠어요';
+  static const uiHome = '처음 화면으로';
+  static const uiDangerSecond = '정말 할까요? 한 번 더 확인할게요.';
   static const thumbTitle = '썸네일 그림';
   static const thumbNone = '아직 썸네일 그림이 없어요. 문구로 만들거나 직접 만든 그림을 넣어 주세요.';
   static const thumbMake = '썸네일 문구로 그림 만들기';
