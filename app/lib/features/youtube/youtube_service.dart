@@ -439,6 +439,16 @@ class YouTubeService {
     }
   }
 
+  /// 썸네일 그림 올리기 (한도 50). 실패해도 업로드 자체는 성공으로 둔다(호출하는 쪽에서 처리).
+  Future<void> setThumbnail(String channelId, String videoId, File png) async {
+    final c = channel(channelId);
+    final acct = c == null ? null : account(c.accountId);
+    if (acct == null) throw AppFailure(FailureKind.notConnected, 'account');
+    quota.reserve(QuotaCost.thumbnail);
+    final token = await _token(acct);
+    await withRetry(() => _apiFor(acct).setThumbnail(token, videoId, png));
+  }
+
   // ---------------- 통계 ----------------
   int totalViews() => db.select('SELECT COALESCE(SUM(view_count),0) AS s FROM channels').first['s'] as int;
 

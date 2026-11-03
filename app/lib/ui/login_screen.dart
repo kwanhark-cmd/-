@@ -60,22 +60,37 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _askPassword(LocalUser u) async {
     final c = TextEditingController();
+    var auto = false;
     final pw = await showDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(S.loginAs(u.name)),
-        content: TextField(
-          key: const Key('login-password'),
-          controller: c,
-          obscureText: true,
-          autofocus: true,
-          decoration: const InputDecoration(labelText: S.loginPassword),
-          onSubmitted: (v) => Navigator.pop(ctx, v),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setD) => AlertDialog(
+          title: Text(S.loginAs(u.name)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                key: const Key('login-password'),
+                controller: c,
+                obscureText: true,
+                autofocus: true,
+                decoration: const InputDecoration(labelText: S.loginPassword),
+                onSubmitted: (v) => Navigator.pop(ctx, v),
+              ),
+              CheckboxListTile(
+                key: const Key('auto-login'),
+                contentPadding: EdgeInsets.zero,
+                value: auto,
+                title: const Text(S.autoLogin),
+                onChanged: (v) => setD(() => auto = v ?? false),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text(S.cancel)),
+            FilledButton(onPressed: () => Navigator.pop(ctx, c.text), child: const Text(S.loginButton)),
+          ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text(S.cancel)),
-          FilledButton(onPressed: () => Navigator.pop(ctx, c.text), child: const Text(S.loginButton)),
-        ],
       ),
     );
     if (pw == null || !mounted) return;
@@ -84,6 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
       toast(context, S.loginWrong);
       return;
     }
+    await widget.state.setAutoLogin(ok, auto);
     await busy.run(() => widget.state.login(ok));
   }
 

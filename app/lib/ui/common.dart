@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../core/failure.dart';
 import '../core/retry.dart';
+import '../app/services.dart';
 import '../core/strings.dart';
 
 /// 크고 단순한 버튼. 글씨가 커져도 잘리지 않게 여러 줄로 감싼다.
@@ -316,5 +317,28 @@ class _NumberFieldState extends State<NumberField> {
       final n = widget.decimal ? double.tryParse(v) : int.tryParse(v);
       if (n != null) widget.onChanged(n);
     },
+  );
+}
+
+/// AI 를 쓰는 작업 전에 예상 비용을 보여 주고 확인한다. 연습 모드(비용 0)면 묻지 않는다.
+Future<bool> confirmAiCost(
+  BuildContext context,
+  UserContext u, {
+  int calls = 1,
+  int input = 3000,
+  int output = 1200,
+}) async {
+  if (u.ai.isPracticeMode || calls <= 0) return true;
+  final one = u.ai.estimateCost('x' * (input ~/ 2), 'x' * (input ~/ 2), expectedOutput: output);
+  final est = one * calls;
+  return confirm(
+    context,
+    S.aiCostConfirm(
+      est.toStringAsFixed(3),
+      u.ai.monthCostUsd.toStringAsFixed(2),
+      u.settings.monthlyCostLimitUsd.toStringAsFixed(0),
+    ),
+    yes: S.next,
+    no: S.cancel,
   );
 }

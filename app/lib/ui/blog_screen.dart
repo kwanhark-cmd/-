@@ -363,6 +363,8 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
       ),
     );
     if (ok != true || !mounted) return;
+    if (!await confirmAiCost(context, u, calls: 1, output: 3000)) return;
+    if (!mounted) return;
     try {
       await runWithProgress(context, S.blogNewPost, (c, p) => bs.newPost(s.id, topic: topic.text));
       if (mounted) toast(context, s.isTistory ? S.blogTistoryCopyHint : S.blogDraftSaved);

@@ -64,7 +64,9 @@ Future<void> main() async {
     );
     log.info('앱 시작 ${env.appVersion} ${env.platformName}');
     registerStages();
-    runApp(ChannelBiseoApp(state: AppState(env)));
+    final state = AppState(env);
+    await state.tryAutoLogin();
+    runApp(ChannelBiseoApp(state: state));
   }, (e, st) => logger?.error('앱 오류', e, st));
 }
 

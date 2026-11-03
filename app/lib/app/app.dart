@@ -32,7 +32,28 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  static const autoLoginKey = 'app/autoLogin';
+
+  /// 자동 로그인: 보안 저장소에 사용자 번호만 둔다 (비밀번호는 저장하지 않음).
+  Future<void> setAutoLogin(LocalUser u, bool on) =>
+      on ? env.secrets.write(autoLoginKey, '${u.id}') : env.secrets.delete(autoLoginKey);
+
+  Future<bool> tryAutoLogin() async {
+    try {
+      final id = int.tryParse(await env.secrets.read(autoLoginKey) ?? '');
+      if (id == null) return false;
+      final found = env.accounts.list().where((x) => x.id == id);
+      if (found.isEmpty) return false;
+      await login(found.first);
+      return true;
+    } catch (e) {
+      env.logger.warn('자동 로그인 실패: $e');
+      return false;
+    }
+  }
+
   void logout() {
+    env.secrets.delete(autoLoginKey);
     user?.close();
     user = null;
     notifyListeners();

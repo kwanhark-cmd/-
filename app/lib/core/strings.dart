@@ -383,6 +383,17 @@ class S {
   static String num(int n) => _num(n);
 
   // ---- 화면별 문구 ----
+  static const thumbTitle = '썸네일 그림';
+  static const thumbNone = '아직 썸네일 그림이 없어요. 문구로 만들거나 직접 만든 그림을 넣어 주세요.';
+  static const thumbMake = '썸네일 문구로 그림 만들기';
+  static const thumbAttach = '내 썸네일 그림 넣기';
+  static const thumbUploadFailed = '영상은 올렸지만 썸네일은 올리지 못했어요. 유튜브 스튜디오에서 직접 넣어 주세요. (채널 인증이 안 된 경우 생길 수 있어요)';
+  static String aiCostConfirm(String est, String used, String limit) =>
+      '이 작업의 예상 AI 비용은 약 \$$est 이에요. (이번 달 사용 \$$used / 한도 \$$limit) 진행할까요?';
+  static const voiceEngine = '음성 인식·읽어주기 서비스';
+  static const voiceEngineDevice = '기기 내장 (무료, 기본)';
+  static const voiceEngineExternal = '외부 음성 서비스 (준비 중)';
+  static const autoLogin = '이 기기에서 다음부터 자동으로 들어가기';
   static String join2(Object? a, Object? b) => '$a$b';
   static const prodPracticeCredits = '\n(지금은 연습 모드라 실제 크레딧은 쓰지 않아요)';
   static String videoLine(int views, String privacy, int tagCount) =>

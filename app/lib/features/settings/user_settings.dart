@@ -43,6 +43,10 @@ class UserSettings {
   set ttsEnabled(bool v) => db.setSetting('ttsEnabled', v);
   double get ttsRate => _getD('ttsRate', 0.5);
   set ttsRate(double v) => db.setSetting('ttsRate', v.clamp(0.1, 1.0));
+
+  /// 'device'(기기 내장, 기본) | 'external'(외부 음성 서비스, 준비 중)
+  String get voiceEngine => _get('voiceEngine', 'device');
+  set voiceEngine(String v) => db.setSetting('voiceEngine', v);
   bool get briefingEnabled => _get('briefingEnabled', false);
   set briefingEnabled(bool v) => db.setSetting('briefingEnabled', v);
   int get briefingHour => _getI('briefingHour', 8);

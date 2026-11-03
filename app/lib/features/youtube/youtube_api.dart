@@ -20,6 +20,9 @@ abstract class YouTubeApi {
   /// 항상 "비공개(private)" 로만 올린다. 돌려주는 값은 새 영상 ID.
   /// 실제 유튜브는 토큰이 가리키는 채널에 올라간다 ([channelId] 는 가짜 유튜브에서만 사용).
   Future<String> uploadPrivate(String token, String channelId, File file, UploadMeta meta);
+
+  /// 내 영상의 썸네일 그림 바꾸기 (한도 50). 유튜브 계정 인증이 안 된 채널은 실패할 수 있다.
+  Future<void> setThumbnail(String token, String videoId, File png);
 }
 
 /// YouTube Data API v3 실제 연결.
@@ -128,6 +131,16 @@ class RealYouTubeApi implements YouTubeApi {
       title: (sn['title'] as String?) ?? meta.title,
       description: (sn['description'] as String?) ?? meta.description,
       tags: ((sn['tags'] as List<dynamic>?) ?? meta.tags).map((e) => '$e').toList(),
+    );
+  }
+
+  @override
+  Future<void> setThumbnail(String token, String videoId, File png) async {
+    await http_.send(
+      'POST',
+      Uri.parse('https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId=$videoId'),
+      headers: {..._h(token), 'content-type': 'image/png'},
+      body: await png.readAsBytes(),
     );
   }
 

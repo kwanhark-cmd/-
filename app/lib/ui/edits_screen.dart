@@ -12,6 +12,9 @@ Future<void> runEditsFlow(BuildContext context, UserContext u) async {
     toast(context, S.channelNone);
     return;
   }
+  final calls = u.youtube.channels().fold<int>(0, (s, c) => s + u.edits.remainingToday(c.channelId));
+  if (!await confirmAiCost(context, u, calls: calls, output: 800)) return;
+  if (!context.mounted) return;
   try {
     final proposals = await runWithProgress(context, S.editsPreviewTitle, (cancel, p) async {
       final all = <EditProposal>[];

@@ -245,6 +245,16 @@ class _ChannelDetailScreenState extends State<ChannelDetailScreen> {
                   for (final v in _videos)
                     ListTile(
                       contentPadding: EdgeInsets.zero,
+                      leading: v.thumbnailUrl.isEmpty
+                          ? const Icon(Icons.smart_display)
+                          : SizedBox(
+                              width: 96,
+                              child: Image.network(
+                                v.thumbnailUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, _, _) => const Icon(Icons.smart_display),
+                              ),
+                            ),
                       title: Text(v.title),
                       subtitle: Text(S.videoLine(v.viewCount, v.privacy, v.tags.length)),
                       onTap: () => _showVideo(v),
@@ -272,6 +282,8 @@ class _ChannelDetailScreenState extends State<ChannelDetailScreen> {
   );
 
   Future<void> _analyze(ChannelRow c) async {
+    if (!await confirmAiCost(context, u, calls: 1, input: 4000, output: 800)) return;
+    if (!mounted) return;
     try {
       final card = await runWithProgress(context, S.styleAnalyze, (cancel, p) async {
         if (u.youtube.videoTotal(c.channelId) == 0) {

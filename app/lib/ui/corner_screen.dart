@@ -333,6 +333,8 @@ class _CornerDetailScreenState extends State<CornerDetailScreen> {
   }
 
   Future<void> _make(Corner c) async {
+    if (!await confirmAiCost(context, u, calls: formats.length, output: 3000)) return;
+    if (!mounted) return;
     try {
       final r = await runWithProgress(context, S.cornerMake, (cancel, p) => cs.make(c.id, formats: formats.toList()));
       if (r != null && mounted) {

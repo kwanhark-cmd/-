@@ -82,6 +82,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onChangeEnd: (v) => u.env.speaker.setRate(v),
                 ),
               ),
+              DropdownButtonFormField<String>(
+                initialValue: s.voiceEngine,
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: S.voiceEngine),
+                items: const [
+                  DropdownMenuItem(value: 'device', child: Text(S.voiceEngineDevice)),
+                  DropdownMenuItem(value: 'external', enabled: false, child: Text(S.voiceEngineExternal)),
+                ],
+                onChanged: (v) => setState(() => s.voiceEngine = v ?? 'device'),
+              ),
               SwitchListTile(
                 title: const Text(S.settingsBriefingOn),
                 value: s.briefingEnabled,

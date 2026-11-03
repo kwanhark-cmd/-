@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../app/services.dart';
@@ -5,6 +7,7 @@ import '../core/failure.dart';
 import '../core/strings.dart';
 import '../features/ai/brain.dart';
 import '../features/production/production_service.dart';
+import '../features/production/thumbnail.dart';
 import 'common.dart';
 import 'tools_screen.dart';
 
@@ -99,6 +102,8 @@ Future<Production?> newProductionFlow(
     ),
   );
   if (go != true || !context.mounted) return null;
+  if (!await confirmAiCost(context, u, calls: 1, output: 3000)) return null;
+  if (!context.mounted) return null;
   try {
     return await runWithProgress(
       context,
@@ -236,6 +241,44 @@ class _ProductionDetailScreenState extends State<ProductionDetailScreen> {
             ButtonWrap(
               children: [BigButton(label: S.edit, icon: Icons.edit, primary: false, onPressed: () => _edit(p))],
             ),
+            SectionCard(
+              title: S.thumbTitle,
+              icon: Icons.image,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (p.hasThumb)
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 220),
+                      child: Image.file(File(p.thumbPath), key: ValueKey(p.thumbPath), fit: BoxFit.contain),
+                    )
+                  else
+                    const Text(S.thumbNone),
+                  if (p.extra['thumbError'] != null) const Text(S.thumbUploadFailed),
+                  const SizedBox(height: 8),
+                  ButtonWrap(
+                    children: [
+                      BigButton(
+                        key: const Key('make-thumb'),
+                        label: S.thumbMake,
+                        icon: Icons.brush,
+                        primary: false,
+                        onPressed: () => busy.run(() async {
+                          await ps.makeThumbnail(p.id, (t, seed) => renderThumbnail(t, seed: seed));
+                          if (mounted) setState(() {});
+                        }),
+                      ),
+                      BigButton(
+                        label: S.thumbAttach,
+                        icon: Icons.add_photo_alternate,
+                        primary: false,
+                        onPressed: () => busy.run(() => _attachThumb(p)),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
             if (p.isUploadable) ...[
               SectionCard(
                 title: S.prod7,
@@ -363,6 +406,17 @@ class _ProductionDetailScreenState extends State<ProductionDetailScreen> {
       tags: k.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
       thumbnailText: th.text,
     );
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _attachThumb(Production p) async {
+    final path = await u.env.pickFile?.call(ProductionService.imageExtensions);
+    if (path == null) return;
+    try {
+      ps.attachThumbnail(p.id, path);
+    } catch (e) {
+      if (mounted) await showFailure(context, e);
+    }
     if (mounted) setState(() {});
   }
 

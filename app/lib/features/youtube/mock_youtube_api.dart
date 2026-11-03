@@ -130,6 +130,18 @@ class MockYouTubeApi implements YouTubeApi {
     return id;
   }
 
+  final Map<String, String> thumbnails = {};
+
+  /// 테스트용: 썸네일 올리기만 실패시키기 (예: 인증 안 된 채널).
+  bool failThumbnail = false;
+
+  @override
+  Future<void> setThumbnail(String token, String videoId, File png) async {
+    _maybeFail();
+    if (failThumbnail) throw AppFailure(FailureKind.permissionRevoked, 'thumbnail not allowed');
+    thumbnails[videoId] = png.path;
+  }
+
   /// 테스트용: 사용자가 유튜브에서 직접 내용을 바꾼 상황.
   void externalEdit(String videoId, String title) {
     videos[videoId] = videos[videoId]!.copyWith(title: title);

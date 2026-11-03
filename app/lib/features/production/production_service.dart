@@ -59,6 +59,8 @@ class Production {
   int? get cornerId => row['corner_id'] as int?;
   Map<String, dynamic> get extra => jsonDecode(row['extra_json'] as String) as Map<String, dynamic>;
   bool get hasVideo => videoPath.isNotEmpty && File(videoPath).existsSync();
+  String get thumbPath => '${extra['thumb'] ?? ''}';
+  bool get hasThumb => thumbPath.isNotEmpty && File(thumbPath).existsSync();
 
   /// 사진·이미지 게시물은 영상 업로드가 아니라 커뮤니티 게시물이라 사용자가 직접 올린다.
   bool get isUploadable => format != ContentFormat.image;
@@ -284,6 +286,36 @@ class ProductionService {
     ]);
   }
 
+  // ---------------- 썸네일 그림 ----------------
+  static const imageExtensions = ['png', 'jpg', 'jpeg'];
+
+  void _setExtra(int id, Map<String, dynamic> add) {
+    final pr = byId(id)!;
+    db.execute('UPDATE productions SET extra_json = ? WHERE id = ?', [
+      jsonEncode({...pr.extra, ...add}),
+      id,
+    ]);
+  }
+
+  /// 썸네일 문구로 그림 만들기 (그리는 함수는 화면에서 넣어 준다: [render]).
+  Future<String> makeThumbnail(int id, Future<List<int>> Function(String text, int seed) render) async {
+    final pr = byId(id)!;
+    final f = File(p.join(mediaDir, 'thumb_$id.png'));
+    f.parent.createSync(recursive: true);
+    await f.writeAsBytes(await render(pr.thumbnailText, id));
+    _setExtra(id, {'thumb': f.path});
+    return f.path;
+  }
+
+  /// 사용자가 만든 썸네일 그림 넣기.
+  void attachThumbnail(int id, String path) {
+    final ext = p.extension(path).replaceFirst('.', '').toLowerCase();
+    if (!File(path).existsSync() || !imageExtensions.contains(ext)) {
+      throw AppFailure(FailureKind.invalidInput, 'bad image');
+    }
+    _setExtra(id, {'thumb': path});
+  }
+
   // ---------------- 업로드 (항상 비공개) ----------------
   /// [userConfirmed] 는 화면(과 음성)에서 사용자가 "올리기" 를 확인했을 때만 true.
   /// 자동 작업 실행기는 이 함수를 부르지 않는다.
@@ -312,6 +344,16 @@ class ProductionService {
         ),
       );
       db.execute('UPDATE productions SET uploaded_video_id=?, description=? WHERE id=?', [vid, desc, id]);
+      if (pr.hasThumb) {
+        try {
+          await youtube.setThumbnail(pr.channelId, vid, File(pr.thumbPath));
+          _setExtra(id, {'thumbUploaded': true});
+        } on AppFailure catch (e) {
+          // 썸네일만 실패한 경우: 영상은 올라갔으니 안내만 (유튜브 스튜디오에서 직접 넣을 수 있음)
+          _setExtra(id, {'thumbUploaded': false, 'thumbError': e.userMessage});
+          logger?.warn('썸네일 올리기 실패: ${e.kind.name}');
+        }
+      }
       _setStatus(id, ProductionStatus.uploadedPrivate);
       return ProductionStatus.uploadedPrivate;
     } on AppFailure catch (e) {
