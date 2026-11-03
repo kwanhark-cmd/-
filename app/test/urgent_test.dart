@@ -49,6 +49,13 @@ Future<void> scrollDown(WidgetTester t, double by) async {
   await t.pumpAndSettle();
 }
 
+Future<void> tapKey(WidgetTester t, String key) async {
+  await t.ensureVisible(find.byKey(Key(key)));
+  await t.pumpAndSettle();
+  await t.tap(find.byKey(Key(key)));
+  await t.pumpAndSettle();
+}
+
 Future<void> openTab(WidgetTester t, IconData icon) async {
   await t.tap(find.byIcon(icon).last);
   await t.pumpAndSettle();
@@ -113,8 +120,7 @@ void main() {
       final (k, _, u) = await start(t, connect: false);
       await openTab(t, Icons.video_library);
       k.mockYt.failNext.addAll([FailureKind.network, FailureKind.network, FailureKind.network]);
-      await t.tap(find.byKey(const Key('add-channel')));
-      await t.pumpAndSettle();
+      await tapKey(t, 'add-channel');
       await t.tap(find.byKey(const Key('connect-google')));
       await t.pumpAndSettle();
       expect(find.byKey(const Key('failure-action')), findsOneWidget);
@@ -174,8 +180,7 @@ void main() {
       final (k, _, _) = await start(t, connect: false);
       await openTab(t, Icons.video_library);
       k.mockYt.failNext.add(FailureKind.permissionRevoked);
-      await t.tap(find.byKey(const Key('add-channel')));
-      await t.pumpAndSettle();
+      await tapKey(t, 'add-channel');
       await t.tap(find.byKey(const Key('connect-google')));
       await t.pumpAndSettle();
       final log = k.logger.recentLines().join('\n');
@@ -199,8 +204,7 @@ void main() {
       final yt = MockYouTubeApi()..noChannels = true;
       final (_, _, u) = await start(t, yt: yt, connect: false);
       await openTab(t, Icons.video_library);
-      await t.tap(find.byKey(const Key('add-channel')));
-      await t.pumpAndSettle();
+      await tapKey(t, 'add-channel');
       await t.tap(find.byKey(const Key('connect-google')));
       await t.pumpAndSettle();
       expect(find.textContaining('아직 유튜브 채널이 없어요'), findsOneWidget);
@@ -218,8 +222,7 @@ void main() {
     testWidgets('영상이 0개인 채널: 등록은 되고 안내', (t) async {
       final (_, _, u) = await start(t, yt: MockYouTubeApi(emptyChannel: true), connect: false);
       await openTab(t, Icons.video_library);
-      await t.tap(find.byKey(const Key('add-channel')));
-      await t.pumpAndSettle();
+      await tapKey(t, 'add-channel');
       await t.tap(find.byKey(const Key('connect-google')));
       await t.pumpAndSettle();
       expect(find.textContaining('아직 영상이 없는 채널'), findsOneWidget);
@@ -283,8 +286,7 @@ void main() {
       expect(find.byKey(const Key('report-top')).hitTestable(), findsOneWidget);
       await openTab(t, Icons.video_library);
       k.mockYt.failNext.add(FailureKind.permissionRevoked);
-      await t.tap(find.byKey(const Key('add-channel')));
-      await t.pumpAndSettle();
+      await tapKey(t, 'add-channel');
       await t.tap(find.byKey(const Key('connect-google')));
       await t.pumpAndSettle();
       await t.tap(find.byKey(const Key('report-from-error')));

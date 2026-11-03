@@ -110,82 +110,70 @@ class _DashboardScreenState extends State<DashboardScreen> {
     var i = 0;
     Widget ap(Widget w) => i < 3 ? Appear(index: i++, child: w) : w;
 
-    final tiles = <Widget>[
+    final views = u.youtube.totalViews();
+    final reviewN = DashboardScreen.tileCounts['review']?.call(u);
+    final produceN = DashboardScreen.tileCounts['produce']?.call(u);
+
+    // 중간 크기 (2열): 채널(파랑) · 제작(보라) — 숫자 카드
+    final mainTiles = <Widget>[
       if (shell.hasTab('channels'))
-        Tile3D(
+        HueTile(
           key: const Key('tile-channels'),
+          hue: Hue.blue,
           icon: 'chart',
           fallback: Icons.video_library,
           title: S.dashTileChannels,
-          subtitle: S.dashTileChannelsSub,
+          value: '$chans',
+          caption: chans == 0 ? S.dashNoChannel : S.dashViews(S.num(views)),
           onTap: () => shell.goTo('channels'),
-          badge: broken
-              ? const StatusBadge(Status.problem, S.dashBroken, shake: true)
-              : StatusBadge(chans == 0 ? Status.check : Status.done, chans == 0 ? S.dashNoChannel : S.dash4(chans)),
+          badge: broken ? const StatusBadge(Status.problem, S.dashBroken, shake: true) : null,
         ),
       if (shell.hasTab('produce'))
-        Tile3D(
+        HueTile(
           key: const Key('tile-produce'),
+          hue: Hue.purple,
           icon: 'create',
           fallback: Icons.movie_creation,
           title: S.dashTileProduce,
-          subtitle: S.dashTileProduceSub,
+          value: produceN == null ? null : '$produceN',
+          caption: produceN == null ? S.dashTileProduceSub : S.dashMaking,
           onTap: () => shell.goTo('produce'),
         ),
-      if (DashboardScreen.tileCounts.containsKey('review'))
-        Tile3D(
+    ];
+    // 작은 타일 (2열): 확인 대기(노랑) · 블로그(주황)
+    final smallTiles = <Widget>[
+      if (reviewN != null)
+        HueTile(
           key: const Key('tile-review'),
+          hue: Hue.yellow,
           icon: 'review',
           fallback: Icons.fact_check,
           title: S.dashTileReview,
-          subtitle: S.dashTileReviewSub,
-          onTap: () async {
-            shell.goTo('review');
-          },
-          badge: () {
-            final n = DashboardScreen.tileCounts['review']!(u);
-            return n > 0
-                ? StatusBadge(Status.check, S.dash5(n), shake: true)
-                : const StatusBadge(Status.done, S.dashNothingWaiting);
-          }(),
+          compact: true,
+          caption: reviewN > 0 ? S.dash5(reviewN) : S.dashNothingWaiting,
+          onTap: () => shell.goTo('review'),
         ),
       if (shell.hasTab('blog'))
-        Tile3D(
+        HueTile(
           key: const Key('tile-blog'),
+          hue: Hue.orange,
           icon: 'blog',
           fallback: Icons.rss_feed,
           title: S.dashTileBlog,
-          subtitle: S.dashTileBlogSub,
+          compact: true,
+          caption: S.dashTileBlogShort,
           onTap: () => shell.goTo('blog'),
         ),
-      if (shell.hasTab('corner'))
-        Tile3D(
-          key: const Key('tile-corner'),
-          icon: 'corner',
-          fallback: Icons.auto_stories,
-          title: S.dashTileCorner,
-          subtitle: S.dashTileCornerSub,
-          onTap: () => shell.goTo('corner'),
-        ),
-      Tile3D(
-        key: const Key('tile-settings'),
-        icon: 'settings',
-        fallback: Icons.settings,
-        title: S.dashTileSettings,
-        subtitle: S.dashTileSettingsSub,
-        onTap: () => shell.goTo('settings'),
-      ),
     ];
 
     // 화면에 보이는 것만 그리는 목록 (빠르게 열리도록).
-    final wide = MediaQuery.sizeOf(context).width >= 700;
     return ListView(
       padding: const EdgeInsets.fromLTRB(AppTokens.pagePad, AppTokens.gapS, AppTokens.pagePad, AppTokens.bottomSpace),
       children: [
         ap(
           Row(
             children: [
-              const Mascot(MascotMood.hello, size: 88),
+              const Mascot(MascotMood.hello, size: 72),
               const SizedBox(width: AppTokens.gapM),
               Expanded(
                 child: Column(
@@ -201,68 +189,69 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
         ),
-        const SizedBox(height: AppTokens.gapM),
+        const SizedBox(height: AppTokens.gapL),
+        // 가장 중요한 것: 오늘 할 일 (가득 찬 폭, 가장 큼)
         ap(_todayCard(todo)),
         const SizedBox(height: AppTokens.gapL),
-        ap(
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(AppTokens.gapL),
-              child: Wrap(
-                alignment: WrapAlignment.spaceEvenly,
-                spacing: AppTokens.gapXl,
-                runSpacing: AppTokens.gapL,
+        // 작은 띠: 사용량·비용 (큰 숫자) + 오늘 수정·자동 작업
+        SoftCard(
+          key: const Key('usage-strip'),
+          padding: const EdgeInsets.all(AppTokens.gapL),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TwoUp(
+                gap: AppTokens.gapXl,
+                minWidth: 240,
+                equalHeight: false,
                 children: [
-                  RingGauge(
-                    value: quotaRatio,
+                  MeterCell(
                     label: S.homeQuota,
-                    center: '${S.num(quotaLeft)}\n/ ${S.num(quotaLimit)}',
+                    value: S.num(quotaLeft),
+                    of: '/ ${S.num(quotaLimit)}',
+                    ratio: quotaRatio,
                     status: gaugeStatus(quotaRatio),
                   ),
-                  RingGauge(
-                    value: costLeft,
+                  MeterCell(
                     label: S.homeCost,
-                    center: '${S.dollars(cost)}\n/ ${S.dollars(limit, 0)}',
+                    value: S.dollars(cost),
+                    of: '/ ${S.dollars(limit, 0)}',
+                    ratio: costLeft,
                     status: gaugeStatus(costLeft),
                   ),
                 ],
               ),
-            ),
-          ),
-        ),
-        const SizedBox(height: AppTokens.gapS),
-        ap(
-          Wrap(
-            spacing: AppTokens.gapS,
-            runSpacing: AppTokens.gapS,
-            children: [
-              StatusBadge(edits > 0 ? Status.done : Status.progress, '${S.homeTodayEdits} ${S.home1(edits)}'),
-              StatusBadge(
-                s.runnerEnabled ? Status.progress : Status.check,
-                s.runnerEnabled ? S.homeRunnerOn(s.runnerFromHour, s.runnerToHour) : S.homeRunnerOff,
+              const SizedBox(height: AppTokens.gapM),
+              Wrap(
+                spacing: AppTokens.gapS,
+                runSpacing: AppTokens.gapS,
+                children: [
+                  StatusBadge(edits > 0 ? Status.done : Status.progress, '${S.homeTodayEdits} ${S.home1(edits)}'),
+                  StatusBadge(
+                    s.runnerEnabled ? Status.progress : Status.check,
+                    s.runnerEnabled ? S.homeRunnerOn(s.runnerFromHour, s.runnerToHour) : S.homeRunnerOff,
+                  ),
+                ],
               ),
             ],
           ),
         ),
-        const SizedBox(height: AppTokens.gapL),
-        if (wide)
-          LayoutBuilder(
-            builder: (context, c) {
-              final w = (c.maxWidth - AppTokens.gapM) / 2;
-              return Wrap(
-                spacing: AppTokens.gapM,
-                runSpacing: AppTokens.gapM,
-                children: [for (final tile in tiles) SizedBox(width: w, child: tile)],
-              );
-            },
-          )
-        else
-          for (final tile in tiles)
-            Padding(
-              padding: const EdgeInsets.only(bottom: AppTokens.gapM),
-              child: tile,
-            ),
-        const SizedBox(height: AppTokens.gapS),
+        if (mainTiles.isNotEmpty) ap(TwoUp(children: mainTiles)),
+        if (smallTiles.isNotEmpty) ...[const SizedBox(height: AppTokens.gapL), TwoUp(children: smallTiles)],
+        if (shell.hasTab('corner')) ...[
+          const SizedBox(height: AppTokens.gapL),
+          HueTile(
+            key: const Key('tile-corner'),
+            hue: Hue.green,
+            icon: 'corner',
+            fallback: Icons.auto_stories,
+            title: S.dashTileCorner,
+            compact: true,
+            caption: S.dashTileCornerSub,
+            onTap: () => shell.goTo('corner'),
+          ),
+        ],
+        const SizedBox(height: AppTokens.cardGap),
         ?_trendingCard(),
         for (final card in DashboardScreen.extraCards) ap(card(u, shell)),
         ap(
@@ -360,49 +349,67 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  /// 오늘 할 일: 홈에서 가장 크고 눈에 띄는 카드 (상태 색으로 채움, 테두리 없음).
   Widget _todayCard(TodayTask? todo) {
     final t = context.tokens;
     final st = todo?.status ?? Status.done;
-    return Container(
+    final hue = AppTokens.hueOfStatus(st);
+    final fg = t.onTile(hue);
+    return SoftCard(
       key: const Key('today-card'),
-      decoration: BoxDecoration(
-        color: t.card,
-        borderRadius: BorderRadius.circular(AppTokens.radius),
-        border: Border.all(color: t.statusColor(st), width: 3),
-        boxShadow: t.raised(),
-      ),
-      padding: const EdgeInsets.all(AppTokens.gapL),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon3D(todo?.icon3d ?? 'party', size: AppTokens.icon3dM),
-              const SizedBox(width: AppTokens.gapM),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(S.dashTodayTitle, style: Theme.of(context).textTheme.titleLarge),
-                    const SizedBox(height: AppTokens.gapXs),
-                    StatusBadge(st, todo == null ? S.dashAllDone : S.dashTodo, shake: todo != null),
-                  ],
+      color: t.tileBg(hue),
+      margin: EdgeInsets.zero,
+      padding: const EdgeInsets.all(AppTokens.gapXl),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 200),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        S.dashTodayTitle,
+                        style: TextStyle(fontSize: AppTokens.fontTitle, fontWeight: FontWeight.w900, color: fg),
+                      ),
+                      const SizedBox(height: AppTokens.gapS),
+                      // 색 카드 위에서는 뒤집은 배지 (같은 색끼리 묻히지 않게)
+                      StatusBadge(
+                        st,
+                        todo == null ? S.dashAllDone : S.dashTodo,
+                        shake: todo != null,
+                        colors: (fg, t.tileBg(hue)),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppTokens.gapM),
+                Icon3D(todo?.icon3d ?? 'party', size: 96),
+              ],
+            ),
+            const SizedBox(height: AppTokens.gapL),
+            Text(
+              todo?.title ?? S.dashAllDoneSub,
+              style: TextStyle(fontSize: AppTokens.fontBody + 3, fontWeight: FontWeight.w600, color: fg, height: 1.4),
+            ),
+            if (todo != null) ...[
+              const SizedBox(height: AppTokens.gapL),
+              SizedBox(
+                width: double.infinity,
+                child: BigButton(
+                  key: const Key('today-action'),
+                  label: todo.action,
+                  icon: Icons.arrow_forward,
+                  onPressed: todo.onTap,
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: AppTokens.gapM),
-          Text(todo?.title ?? S.dashAllDoneSub, style: const TextStyle(fontSize: AppTokens.fontBody + 1)),
-          if (todo != null) ...[
-            const SizedBox(height: AppTokens.gapM),
-            BigButton(
-              key: const Key('today-action'),
-              label: todo.action,
-              icon: Icons.arrow_forward,
-              onPressed: todo.onTap,
-            ),
           ],
-        ],
+        ),
       ),
     );
   }

@@ -144,19 +144,22 @@ class Icon3D extends StatelessWidget {
 
 /// 상태 배지: 색 + 아이콘 + 글자 (색만으로 뜻을 전하지 않음).
 class StatusBadge extends StatelessWidget {
-  const StatusBadge(this.status, this.label, {super.key, this.shake = false});
+  const StatusBadge(this.status, this.label, {super.key, this.shake = false, this.colors});
   final Status status;
   final String label;
   final bool shake;
 
+  /// (바탕, 글자) — 같은 상태 색 카드 위에 놓일 때 뒤집어 쓰기
+  final (Color, Color)? colors;
+
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
-    final fg = t.onStatusFor(status);
+    final fg = colors?.$2 ?? t.onStatusFor(status);
     final badge = Container(
       padding: const EdgeInsets.symmetric(horizontal: AppTokens.gapS + 2, vertical: AppTokens.gapXs),
       decoration: BoxDecoration(
-        color: t.statusColor(status),
+        color: colors?.$1 ?? t.statusColor(status),
         borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
       ),
       child: Row(
@@ -679,12 +682,12 @@ class _TipBannerState extends State<TipBanner> {
     final t = context.tokens;
     return Appear(
       child: Container(
-        margin: const EdgeInsets.only(bottom: AppTokens.gapM),
-        padding: const EdgeInsets.all(AppTokens.gapM),
+        margin: const EdgeInsets.only(bottom: AppTokens.gapL),
+        padding: const EdgeInsets.all(AppTokens.gapL),
         decoration: BoxDecoration(
           color: t.tonal,
           borderRadius: BorderRadius.circular(AppTokens.radius),
-          border: Border.all(color: t.primary, width: 2),
+          border: t.highContrast ? Border.all(color: t.border, width: 2) : null,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -915,6 +918,260 @@ class ChoiceWrap<T> extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// 채운 카드: 바탕보다 한 단계 밝은 색 + 부드러운 그림자. 테두리는 쓰지 않음 (선택·상태 표시에만).
+class SoftCard extends StatelessWidget {
+  const SoftCard({
+    super.key,
+    required this.child,
+    this.padding = const EdgeInsets.all(AppTokens.gapL + 4),
+    this.color,
+    this.onTap,
+    this.border,
+    this.margin = const EdgeInsets.only(bottom: AppTokens.cardGap),
+  });
+  final Widget child;
+  final EdgeInsets padding;
+  final Color? color;
+  final VoidCallback? onTap;
+  final BorderSide? border;
+  final EdgeInsets margin;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final side = border ?? (t.highContrast ? BorderSide(color: t.border, width: 2) : BorderSide.none);
+    return Container(
+      margin: margin,
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(AppTokens.radiusCard), boxShadow: t.soft()),
+      child: Material(
+        color: color ?? t.card,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTokens.radiusCard), side: side),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap == null
+              ? null
+              : () {
+                  UiPrefs.tap();
+                  onTap!();
+                },
+          child: Padding(padding: padding, child: child),
+        ),
+      ),
+    );
+  }
+}
+
+/// 영역 색 타일 (홈의 중간 크기, 2열): 큰 3D 아이콘 + 이름 + 큰 숫자(있으면) + 설명/배지.
+class HueTile extends StatelessWidget {
+  const HueTile({
+    super.key,
+    required this.hue,
+    required this.icon,
+    required this.title,
+    required this.onTap,
+    this.value,
+    this.caption,
+    this.badge,
+    this.fallback = Icons.apps,
+    this.compact = false,
+  });
+  final Hue hue;
+  final String icon;
+  final String title;
+  final VoidCallback onTap;
+
+  /// 큰 숫자 (숫자 카드). 없으면 설명만.
+  final String? value;
+  final String? caption;
+  final Widget? badge;
+  final IconData fallback;
+
+  /// 작은 타일 (한 줄 높이)
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final fg = t.onTile(hue);
+    final semantic = [title, ?value, ?caption].join('. ');
+    final iconSize = compact ? AppTokens.icon3dS + 4 : AppTokens.icon3dL + 8;
+    final body = compact
+        ? Row(
+            children: [
+              Icon3D(icon, size: iconSize, fallback: fallback),
+              const SizedBox(width: AppTokens.gapM),
+              Expanded(child: _texts(fg)),
+            ],
+          )
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon3D(icon, size: iconSize, fallback: fallback),
+              const SizedBox(height: AppTokens.gapM),
+              _texts(fg),
+            ],
+          );
+    return Press3D(
+      color: t.tileBg(hue),
+      onTap: onTap,
+      radius: AppTokens.radiusCard,
+      semanticLabel: semantic,
+      child: Padding(padding: EdgeInsets.all(compact ? AppTokens.gapL : AppTokens.gapL + 4), child: body),
+    );
+  }
+
+  Widget _texts(Color fg) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Text(
+        title,
+        style: TextStyle(
+          fontSize: compact ? AppTokens.fontBody + 2 : AppTokens.fontSection,
+          fontWeight: FontWeight.w800,
+          color: fg,
+        ),
+      ),
+      if (value != null)
+        Text(
+          value!,
+          style: TextStyle(fontSize: AppTokens.fontHero, fontWeight: FontWeight.w900, color: fg, height: 1.15),
+        ),
+      if (caption != null)
+        Text(
+          caption!,
+          style: TextStyle(fontSize: AppTokens.fontSmall, color: fg, fontWeight: FontWeight.w500),
+        ),
+      if (badge != null) ...[const SizedBox(height: AppTokens.gapS), badge!],
+    ],
+  );
+}
+
+/// 두 개를 나란히 (같은 높이). 화면이 좁거나 글씨가 아주 크면 위아래로.
+class TwoUp extends StatelessWidget {
+  const TwoUp({
+    super.key,
+    required this.children,
+    this.gap = AppTokens.gapL,
+    this.minWidth = 330,
+    this.equalHeight = true,
+  });
+
+  /// 두 칸 높이 맞추기 (줄어드는 글자가 있는 칸에는 끄기)
+  final bool equalHeight;
+  final List<Widget> children;
+  final double gap;
+
+  /// 이 폭(글씨 배율로 나눈 값)보다 좁으면 위아래로
+  final double minWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    if (children.length == 1) return children.first;
+    final scale = MediaQuery.textScalerOf(context).scale(1);
+    return LayoutBuilder(
+      builder: (context, c) {
+        final roomy = c.maxWidth / scale >= minWidth;
+        if (!roomy) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var i = 0; i < children.length; i++) ...[if (i > 0) SizedBox(height: gap), children[i]],
+            ],
+          );
+        }
+        final row = Row(
+          crossAxisAlignment: equalHeight ? CrossAxisAlignment.stretch : CrossAxisAlignment.start,
+          children: [
+            for (var i = 0; i < children.length; i++) ...[
+              if (i > 0) SizedBox(width: gap),
+              Expanded(child: children[i]),
+            ],
+          ],
+        );
+        return equalHeight ? IntrinsicHeight(child: row) : row;
+      },
+    );
+  }
+}
+
+/// 작은 수치 띠의 한 칸: 이름 + 큰 숫자 + 얇은 막대.
+class MeterCell extends StatelessWidget {
+  const MeterCell({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.of,
+    required this.ratio,
+    required this.status,
+  });
+  final String label;
+  final String value;
+  final String of;
+  final double ratio;
+  final Status status;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final r = ratio.clamp(0.0, 1.0);
+    return Semantics(
+      label: '$label $value $of',
+      child: ExcludeSemantics(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                label,
+                style: TextStyle(fontSize: AppTokens.fontSmall, color: t.textSoft, fontWeight: FontWeight.w600),
+              ),
+            ),
+            const SizedBox(height: AppTokens.gapXs),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: value,
+                      style: TextStyle(fontSize: AppTokens.fontHero, fontWeight: FontWeight.w900, color: t.text),
+                    ),
+                    TextSpan(
+                      text: ' $of',
+                      style: TextStyle(fontSize: AppTokens.fontSmall, color: t.textSoft, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: AppTokens.gapS),
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: r),
+              duration: t.normal,
+              curve: Curves.easeOutCubic,
+              builder: (_, x, _) => ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: LinearProgressIndicator(
+                  value: x,
+                  minHeight: 10,
+                  color: t.statusColor(status),
+                  backgroundColor: t.tonal,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

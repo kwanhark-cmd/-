@@ -17,6 +17,30 @@ enum Status {
   problem,
 }
 
+/// 기능 영역별 색 (홈 타일·설정 묶음). 같은 영역은 앱 어디서나 같은 색.
+enum Hue {
+  /// 채널
+  blue,
+
+  /// 제작
+  purple,
+
+  /// 확인 대기
+  yellow,
+
+  /// 블로그
+  orange,
+
+  /// 내 코너
+  green,
+
+  /// 위험·문제
+  red,
+
+  /// 그 밖 (설정·자료 관리)
+  slate,
+}
+
 /// 앱의 모든 색·크기·간격·둥글기·그림자·움직임 시간. 화면은 이 값만 쓴다.
 @immutable
 class AppTokens extends ThemeExtension<AppTokens> {
@@ -75,6 +99,10 @@ class AppTokens extends ThemeExtension<AppTokens> {
   static const double gapM = 12;
   static const double gapL = 16;
   static const double gapXl = 24;
+
+  /// 카드와 카드 사이 (예전 16의 1.5배)
+  static const double cardGap = 24;
+  static const double radiusCard = 22;
   static const double pagePad = 16;
   static const double bottomSpace = 120; // 마이크 버튼에 가리지 않게
   static const double iconS = 24;
@@ -87,6 +115,8 @@ class AppTokens extends ThemeExtension<AppTokens> {
   static const double micSize = 84;
   static const double contentMaxWidth = 720;
 
+  /// 큰 숫자 (게이지·통계). 글씨 단계: hero 34 > title 26 > section 21 > body 17 > small 15
+  static const fontHero = 34.0;
   static const fontTitle = 26.0;
   static const fontSection = 21.0;
   static const fontBody = 17.0;
@@ -108,6 +138,71 @@ class AppTokens extends ThemeExtension<AppTokens> {
   List<BoxShadow> pressedShadow() => [
     BoxShadow(color: shadowColor.withValues(alpha: 0.22), blurRadius: 4, offset: const Offset(0, 1)),
   ];
+
+  /// 채운 카드의 부드러운 그림자 (테두리 대신). 어두운 모드에서도 보이게 조금 진하게.
+  List<BoxShadow> soft() => highContrast
+      ? const []
+      : [
+          BoxShadow(
+            color: shadowColor.withValues(alpha: background.computeLuminance() < 0.2 ? 0.45 : 0.10),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ];
+
+  /// 영역 색 타일 바탕. 밝은 모드는 파스텔, 어두운 모드는 중간 채도 (어두운 바탕 위 어두운 상자 금지).
+  Color tileBg(Hue h) {
+    if (highContrast) return card;
+    final dark = background.computeLuminance() < 0.2;
+    return switch (h) {
+      Hue.blue => dark ? const Color(0xFF2F5EAE) : const Color(0xFFDCEAFF),
+      Hue.purple => dark ? const Color(0xFF6A45B8) : const Color(0xFFEDE3FF),
+      Hue.yellow => dark ? const Color(0xFFD9A514) : const Color(0xFFFFF1BF),
+      Hue.orange => dark ? const Color(0xFFB04E14) : const Color(0xFFFFE4D1),
+      Hue.green => dark ? const Color(0xFF237447) : const Color(0xFFD9F4E3),
+      Hue.red => dark ? const Color(0xFFB3261E) : const Color(0xFFFFE0DE),
+      Hue.slate => dark ? const Color(0xFF4A5280) : const Color(0xFFE6E9F4),
+    };
+  }
+
+  /// 영역 색 타일 위 글자색 (대비 4.5:1 이상, 테스트로 확인).
+  Color onTile(Hue h) {
+    if (highContrast) return text;
+    final dark = background.computeLuminance() < 0.2;
+    if (dark) return h == Hue.yellow ? const Color(0xFF1F1600) : const Color(0xFFFFFFFF);
+    return switch (h) {
+      Hue.blue => const Color(0xFF0B3577),
+      Hue.purple => const Color(0xFF41197F),
+      Hue.yellow => const Color(0xFF574000),
+      Hue.orange => const Color(0xFF7A2E00),
+      Hue.green => const Color(0xFF0D4A2C),
+      Hue.red => const Color(0xFF7F1010),
+      Hue.slate => const Color(0xFF262B45),
+    };
+  }
+
+  /// 영역 색 아이콘 칩 (설정 묶음 머리 등): 진한 바탕 + 흰 아이콘.
+  Color hueStrong(Hue h) {
+    if (highContrast) return text;
+    return switch (h) {
+      Hue.blue => const Color(0xFF2563EB),
+      Hue.purple => const Color(0xFF7C3AED),
+      Hue.yellow => const Color(0xFF946200),
+      Hue.orange => const Color(0xFFC2410C),
+      Hue.green => const Color(0xFF15803D),
+      Hue.red => const Color(0xFFB91C1C),
+      Hue.slate => const Color(0xFF475070),
+    };
+  }
+
+  Color onHueStrong(Hue h) => highContrast ? background : const Color(0xFFFFFFFF);
+
+  static Hue hueOfStatus(Status s) => switch (s) {
+    Status.done => Hue.green,
+    Status.progress => Hue.blue,
+    Status.check => Hue.yellow,
+    Status.problem => Hue.red,
+  };
 
   List<BoxShadow> flat() => [
     BoxShadow(color: shadowColor.withValues(alpha: 0.08), blurRadius: 4, offset: const Offset(0, 1)),
@@ -171,7 +266,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
     danger: const Color(0xFFB91C1C),
     onStatusDark: const Color(0xFF1F2328),
     background: const Color(0xFF12131C),
-    card: const Color(0xFF1E2030),
+    card: const Color(0xFF242739),
     text: const Color(0xFFECEDF5),
     textSoft: const Color(0xFFB9BCCF),
     border: const Color(0xFF3A3E57),
@@ -371,10 +466,13 @@ ThemeData buildAppTheme(AppTokens t, Brightness b) {
     ),
     cardTheme: CardThemeData(
       color: t.card,
-      elevation: t.highContrast ? 0 : 1,
-      shadowColor: t.shadowColor.withValues(alpha: 0.2),
-      shape: shape,
-      margin: const EdgeInsets.symmetric(vertical: AppTokens.gapS),
+      elevation: t.highContrast ? 0 : 3,
+      shadowColor: t.shadowColor.withValues(alpha: b == Brightness.dark ? 0.6 : 0.18),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTokens.radiusCard),
+        side: t.highContrast ? BorderSide(color: t.border, width: 2) : BorderSide.none,
+      ),
+      margin: const EdgeInsets.symmetric(vertical: AppTokens.cardGap / 2),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(

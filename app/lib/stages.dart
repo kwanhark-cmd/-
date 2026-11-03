@@ -90,6 +90,8 @@ void _stage2() {
 
   ChannelsScreen.waitingCount = (u, ch) => productionOf(u).reviewList().where((p) => p.channelId == ch).length;
   DashboardScreen.tileCounts['review'] = (u) => productionOf(u).reviewList().length;
+  DashboardScreen.tileCounts['produce'] = (u) =>
+      productionOf(u).list(statuses: [ProductionStatus.draft, ProductionStatus.uploadTomorrow], limit: 500).length;
   DashboardScreen.todaySources.add((u, shell) {
     final n = productionOf(u).reviewList().length;
     if (n == 0) return null;

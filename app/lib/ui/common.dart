@@ -103,48 +103,154 @@ class PracticeBanner extends StatelessWidget {
   }
 }
 
-/// 제목이 있는 묶음 카드.
+/// 제목이 있는 묶음 카드 (채운 카드, 테두리 없음).
+/// [SettingsGroup] 안에서는 카드 없이 제목 + 내용만 (상자 안의 상자가 되지 않게).
 class SectionCard extends StatelessWidget {
-  const SectionCard({super.key, required this.title, required this.child, this.icon, this.trailing, this.icon3d});
+  const SectionCard({
+    super.key,
+    required this.title,
+    required this.child,
+    this.icon,
+    this.trailing,
+    this.icon3d,
+    this.hue,
+  });
   final String title;
   final Widget child;
   final IconData? icon;
   final String? icon3d;
   final Widget? trailing;
 
+  /// 아이콘 칩 색 (영역 색)
+  final Hue? hue;
+
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppTokens.gapL),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    final inGroup = _InGroup.of(context);
+    final h = hue ?? Hue.slate;
+    final head = Row(
+      children: [
+        if (icon3d != null) ...[
+          Icon3D(icon3d!, size: inGroup ? AppTokens.iconM + 4 : AppTokens.icon3dS),
+          const SizedBox(width: AppTokens.gapS + 2),
+        ] else if (icon != null) ...[
+          Container(
+            padding: const EdgeInsets.all(AppTokens.gapS - 2),
+            decoration: BoxDecoration(
+              color: t.hueStrong(h),
+              borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+            ),
+            child: Icon(icon, color: t.onHueStrong(h)),
+          ),
+          const SizedBox(width: AppTokens.gapS + 2),
+        ],
+        Expanded(
+          child: Text(
+            title,
+            style: inGroup ? Theme.of(context).textTheme.titleMedium : Theme.of(context).textTheme.titleLarge,
+          ),
+        ),
+        ?trailing,
+      ],
+    );
+    final body = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        head,
+        const SizedBox(height: AppTokens.gapM),
+        child,
+      ],
+    );
+    if (inGroup) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppTokens.gapM),
+        child: body,
+      );
+    }
+    return SoftCard(child: body);
+  }
+}
+
+class _InGroup extends InheritedWidget {
+  const _InGroup({required super.child});
+  static bool of(BuildContext c) => c.dependOnInheritedWidgetOfExactType<_InGroup>() != null;
+  @override
+  bool updateShouldNotify(_InGroup oldWidget) => false;
+}
+
+/// 설정 묶음 카드: 색 머리(큰 아이콘 + 이름) 아래에 여러 항목을 구분선으로 나눠 담는다.
+class SettingsGroup extends StatelessWidget {
+  const SettingsGroup({
+    super.key,
+    required this.title,
+    required this.hue,
+    required this.icon,
+    required this.children,
+    this.subtitle,
+  });
+  final String title;
+  final String? subtitle;
+  final Hue hue;
+  final IconData icon;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final fg = t.onTile(hue);
+    return SoftCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            color: t.tileBg(hue),
+            padding: const EdgeInsets.fromLTRB(AppTokens.gapL + 4, AppTokens.gapL, AppTokens.gapL, AppTokens.gapL),
+            child: Row(
               children: [
-                if (icon3d != null) ...[
-                  Icon3D(icon3d!, size: AppTokens.icon3dS),
-                  const SizedBox(width: AppTokens.gapS),
-                ] else if (icon != null) ...[
-                  Container(
-                    padding: const EdgeInsets.all(AppTokens.gapS - 2),
-                    decoration: BoxDecoration(
-                      color: t.tonal,
-                      borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-                    ),
-                    child: Icon(icon, color: t.onTonal),
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: t.hueStrong(hue),
+                    borderRadius: BorderRadius.circular(AppTokens.radius),
+                    boxShadow: t.highContrast ? null : t.flat(),
                   ),
-                  const SizedBox(width: AppTokens.gapS + 2),
-                ],
-                Expanded(child: Text(title, style: Theme.of(context).textTheme.titleLarge)),
-                ?trailing,
+                  child: Icon(icon, color: t.onHueStrong(hue), size: AppTokens.iconM),
+                ),
+                const SizedBox(width: AppTokens.gapM),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(fontSize: AppTokens.fontTitle - 2, fontWeight: FontWeight.w900, color: fg),
+                      ),
+                      if (subtitle != null)
+                        Text(
+                          subtitle!,
+                          style: TextStyle(fontSize: AppTokens.fontSmall, color: fg),
+                        ),
+                    ],
+                  ),
+                ),
               ],
             ),
-            const SizedBox(height: AppTokens.gapM),
-            child,
-          ],
-        ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppTokens.gapL + 4, AppTokens.gapS, AppTokens.gapL + 4, AppTokens.gapL),
+            child: _InGroup(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (var i = 0; i < children.length; i++) ...[if (i > 0) const Divider(height: 1), children[i]],
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

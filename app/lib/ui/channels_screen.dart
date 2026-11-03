@@ -160,56 +160,137 @@ class _ChannelsScreenState extends State<ChannelsScreen> {
     );
   }
 
+  /// 채널 카드: 왼쪽 상태 색 띠 + 큰 썸네일(160 이상) + 이름·배지 + 숫자 3개를 아이콘과 한 줄로.
+  /// 테두리는 연결이 끊겼을 때만 (상태 표시).
   Widget _channelCard(AppTokens t, ChannelRow c, bool broken, int waiting) {
     final status = broken ? Status.problem : Status.done;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppTokens.gapS - 2),
-      child: StripeCard(
-        key: Key('channel-${c.channelId}'),
-        status: status,
-        thick: true,
-        onTap: () => _open(c.channelId),
+    final thumb = thumbFor(u, c.channelId);
+    final scale = MediaQuery.textScalerOf(context).scale(1);
+    Widget stat(IconData icon, String v, String label) => Semantics(
+      label: '$label $v',
+      child: ExcludeSemantics(
         child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-              child: SizedBox(
-                width: 76,
-                height: 76,
-                child: thumbFor(u, c.channelId).isNotEmpty
-                    ? Image.network(
-                        thumbFor(u, c.channelId),
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => const Icon3D('video', size: 76),
-                      )
-                    : const Icon3D('video', size: 76),
-              ),
+            Icon(icon, size: 22, color: t.hueStrong(Hue.blue)),
+            const SizedBox(width: AppTokens.gapXs),
+            Text(
+              v,
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: AppTokens.fontBody + 1, color: t.text),
             ),
-            const SizedBox(width: AppTokens.gapM),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(c.title, style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: AppTokens.gapXs),
-                  Text(
-                    '${S.subscribers(c.subscriberCount)} · ${S.videoCount(c.videoCount)} · ${S.views(c.viewCount)}',
-                    style: TextStyle(color: t.textSoft),
-                  ),
-                  const SizedBox(height: AppTokens.gapS),
-                  Wrap(
-                    spacing: AppTokens.gapS,
-                    runSpacing: AppTokens.gapS,
-                    children: [
-                      StatusBadge(status, broken ? S.dashBroken : S.chanConnected),
-                      if (waiting > 0) StatusBadge(Status.check, S.dash5(waiting), shake: true),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right, color: t.textSoft, size: AppTokens.iconM),
           ],
+        ),
+      ),
+    );
+    final thumbBox = ClipRRect(
+      borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+      child: Container(
+        width: 160,
+        height: 90,
+        color: t.tileBg(Hue.blue),
+        alignment: Alignment.center,
+        child: thumb.isNotEmpty
+            ? Image.network(
+                thumb,
+                width: 160,
+                height: 90,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => const Icon3D('video', size: 64),
+              )
+            : const Icon3D('video', size: 64),
+      ),
+    );
+    final head = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          c.title,
+          style: TextStyle(fontSize: AppTokens.fontSection, fontWeight: FontWeight.w800, color: t.text),
+        ),
+        const SizedBox(height: AppTokens.gapS),
+        Wrap(
+          spacing: AppTokens.gapS,
+          runSpacing: AppTokens.gapS,
+          children: [
+            StatusBadge(status, broken ? S.dashBroken : S.chanConnected, shake: broken),
+            if (waiting > 0) StatusBadge(Status.check, S.dash5(waiting), shake: true),
+          ],
+        ),
+      ],
+    );
+    // 좁은 화면·아주 큰 글씨: 썸네일 위, 내용 아래
+    final narrow = MediaQuery.sizeOf(context).width / scale < 440;
+    return Container(
+      key: Key('channel-${c.channelId}'),
+      margin: const EdgeInsets.only(bottom: AppTokens.gapL),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(AppTokens.radiusCard), boxShadow: t.soft()),
+      child: Material(
+        color: t.card,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTokens.radiusCard),
+          side: broken
+              ? BorderSide(color: t.danger, width: 3)
+              : (t.highContrast ? BorderSide(color: t.border, width: 2) : BorderSide.none),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () {
+            UiPrefs.tap();
+            _open(c.channelId);
+          },
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(width: 10, color: t.statusColor(status)),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppTokens.gapL),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (narrow) ...[
+                          thumbBox,
+                          const SizedBox(height: AppTokens.gapM),
+                          head,
+                        ] else
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              thumbBox,
+                              const SizedBox(width: AppTokens.gapL),
+                              Expanded(child: head),
+                            ],
+                          ),
+                        const SizedBox(height: AppTokens.gapM),
+                        // 숫자 3개: 한 줄 (넘치면 글씨를 줄여 맞춤)
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Row(
+                            children: [
+                              stat(Icons.people_alt, S.num(c.subscriberCount), S.chanStatSubs),
+                              const SizedBox(width: AppTokens.gapL),
+                              stat(Icons.play_circle_fill, S.num(c.videoCount), S.chanStatVideos),
+                              const SizedBox(width: AppTokens.gapL),
+                              stat(Icons.visibility, S.num(c.viewCount), S.chanStatViews),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: AppTokens.gapS),
+                    child: Icon(Icons.chevron_right, color: t.textSoft, size: AppTokens.iconM),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

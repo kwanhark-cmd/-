@@ -413,6 +413,9 @@ class S {
   static const dashTileReviewSub = '비공개로 올린 영상 확인하기';
   static const dashTileBlog = '블로그';
   static const dashTileBlogSub = '구글 블로그·티스토리 글 관리';
+  static const dashTileBlogShort = '글 쓰고 관리하기';
+  static String dashViews(String n) => '채널 · 조회수 $n';
+  static const dashMaking = '만드는 중';
   static const dashTileCorner = '내 코너';
   static const dashTileCornerSub = '내 이야기로 콘텐츠 만들기';
   static const dashTileSettings = '설정';
@@ -420,7 +423,7 @@ class S {
   static String dash7(int n) => '비공개로 올린 영상 $n개가 확인을 기다려요. 보고 괜찮으면 유튜브에서 공개해 주세요.';
   static const dashReviewNow = '지금 확인하기';
   // 채널
-  static const chanTip = '채널 카드를 누르면 영상 목록과 채널 스타일 카드를 볼 수 있어요. 테두리가 초록이면 잘 연결된 것, 빨강이면 다시 연결이 필요해요.';
+  static const chanTip = '채널 카드를 누르면 영상 목록과 채널 스타일 카드를 볼 수 있어요. 왼쪽 띠가 초록이면 잘 연결된 것, 빨강이면 다시 연결이 필요해요.';
   static const chanEmptyHow = '"채널 등록"을 누르고 구글 계정으로 연결하면 내 채널이 모두 나타나요. 계정이 없어도 연습 계정으로 미리 써 볼 수 있어요.';
   static const chanConnected = '연결됨';
   static const chanNoVideos = '"새로 불러오기"를 누르면 유튜브에서 영상 목록을 가져와요.';
@@ -511,6 +514,24 @@ class S {
   // 긴급 수정
   static const reportFromError = '문제 신고 파일 만들기';
   static String reportMade(String path) => '문제 신고 파일을 만들었어요: $path';
+
+  static const chanStatSubs = '구독자';
+  static const chanStatVideos = '영상';
+  static const chanStatViews = '조회수';
+
+  // 설정 묶음
+  static const grpAccount = '계정 연결';
+  static const grpAccountSub = '유튜브·구글 블로그 연결 준비';
+  static const grpAi = '인공지능';
+  static const grpAiSub = '연결 열쇠·모델·한 달 비용 한도';
+  static const grpAuto = '자동 작업';
+  static const grpAutoSub = '밤에 하는 일·하루 한도';
+  static const grpView = '보기와 듣기';
+  static const grpViewSub = '글씨·밝기·움직임·음성';
+  static const grpData = '자료 관리';
+  static const grpDataSub = '백업·되살리기·버전';
+  static const grpDanger = '모두 지우기';
+  static const grpDangerSub = '이 사용자의 모든 자료를 지워요. 지운 뒤에는 되살릴 수 없어요.';
 
   // 업데이트
   static const updCheck = '업데이트 확인';

@@ -156,7 +156,7 @@ void main() {
         if (!_on) return;
         await _loadFonts();
         debugDisableShadows = false; // 실제 기기처럼 그림자 그리기
-        t.view.physicalSize = const Size(390 * 3, 844 * 3);
+        t.view.physicalSize = Size(390 * 3, double.parse(Platform.environment['SHOTS_H'] ?? '844') * 3);
         t.view.devicePixelRatio = 3;
         addTearDown(t.view.reset);
         final (k, s) = await _prepare(t);

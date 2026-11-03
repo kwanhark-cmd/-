@@ -81,184 +81,274 @@ class _SettingsScreenState extends State<SettingsScreen> {
               setState(() {});
             },
           ),
-        const SizedBox(height: AppTokens.gapS),
-        SectionCard(
-          title: S.setViewTitle,
-          icon3d: 'sparkles',
+        const SizedBox(height: AppTokens.cardGap),
+        SettingsGroup(
+          title: S.grpAccount,
+          subtitle: S.grpAccountSub,
+          hue: Hue.blue,
+          icon: Icons.link,
+          children: [_googleSection()],
+        ),
+        SettingsGroup(
+          title: S.grpAi,
+          subtitle: S.grpAiSub,
+          hue: Hue.purple,
+          icon: Icons.auto_awesome,
+          children: [_aiSection()],
+        ),
+        SettingsGroup(
+          title: S.grpAuto,
+          subtitle: S.grpAutoSub,
+          hue: Hue.green,
+          icon: Icons.schedule,
+          children: [
+            _runnerSection(),
+            SectionCard(
+              title: S.set2,
+              icon3d: 'video',
+              child: Column(
+                children: [
+                  NumberField(
+                    label: S.settingsQuotaLimit,
+                    value: s.quotaDailyLimit,
+                    onChanged: (v) => s.quotaDailyLimit = v.toInt(),
+                  ),
+                  const SizedBox(height: AppTokens.gapM),
+                  NumberField(
+                    label: S.set3(
+                      S.settingsEditsPerDay,
+                      s.isFirstMonth(u.env.now()) ? S.editsFirstMonth : '0이면 수정 안 함',
+                    ),
+                    value: s.editsPerChannelPerDay,
+                    onChanged: (v) => s.editsPerChannelPerDay = v.toInt(),
+                  ),
+                ],
+              ),
+            ),
+            for (final sec in SettingsScreen.extraSections) sec(context, u, _refresh),
+          ],
+        ),
+        SettingsGroup(
+          title: S.grpView,
+          subtitle: S.grpViewSub,
+          hue: Hue.orange,
+          icon: Icons.palette,
+          children: [
+            SectionCard(
+              title: S.setViewTitle,
+              icon3d: 'sparkles',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(S.settingsFontSize, style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: AppTokens.gapS),
+                  FontScalePicker(state: widget.state),
+                  const SizedBox(height: AppTokens.gapL),
+                  Text(S.setBrightness, style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: AppTokens.gapS),
+                  ChoiceWrap<String>(
+                    key: const Key('theme-mode'),
+                    options: const [
+                      ('system', S.setBrightAuto),
+                      ('light', S.setBrightLight),
+                      ('dark', S.setBrightDark),
+                    ],
+                    value: widget.state.themeMode,
+                    onChanged: (v) => widget.state.setView(themeMode: v),
+                  ),
+                  const SizedBox(height: AppTokens.gapS),
+                  SwitchListTile(
+                    key: const Key('high-contrast'),
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text(S.setHighContrast),
+                    subtitle: const Text(S.setHighContrastSub),
+                    value: widget.state.highContrast,
+                    onChanged: (v) => widget.state.setView(highContrast: v),
+                  ),
+                  SwitchListTile(
+                    key: const Key('reduce-motion'),
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text(S.setReduceMotion),
+                    subtitle: const Text(S.setReduceMotionSub),
+                    value: widget.state.reduceMotion,
+                    onChanged: (v) => widget.state.setView(reduceMotion: v),
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text(S.setHaptics),
+                    value: s.haptics,
+                    onChanged: (v) => setState(() {
+                      s.haptics = v;
+                      UiPrefs.haptics = v;
+                    }),
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text(S.setSound),
+                    value: s.clickSound,
+                    onChanged: (v) => setState(() {
+                      s.clickSound = v;
+                      UiPrefs.sound = v;
+                    }),
+                  ),
+                  const SizedBox(height: AppTokens.gapS),
+                  BigButton(
+                    label: S.setTipsAgain,
+                    icon: Icons.lightbulb,
+                    primary: false,
+                    onPressed: () {
+                      s.resetTips();
+                      toast(context, S.setTipsAgainDone);
+                    },
+                  ),
+                  const SizedBox(height: AppTokens.gapS),
+                  const Text('${S.settingsLanguage}: ${S.wizardLanguageKo}'),
+                ],
+              ),
+            ),
+            SectionCard(
+              title: S.settingsVoice,
+              icon3d: 'mic',
+              child: Column(
+                children: [
+                  SwitchListTile(
+                    title: const Text(S.settingsVoice),
+                    value: s.ttsEnabled,
+                    onChanged: (v) => setState(() => s.ttsEnabled = v),
+                  ),
+                  ListTile(
+                    title: const Text(S.settingsVoiceRate),
+                    subtitle: Slider(
+                      value: s.ttsRate,
+                      min: 0.1,
+                      max: 1.0,
+                      divisions: 9,
+                      label: s.ttsRate.toStringAsFixed(1),
+                      onChanged: (v) => setState(() => s.ttsRate = v),
+                      onChangeEnd: (v) => u.env.speaker.setRate(v),
+                    ),
+                  ),
+                  DropdownButtonFormField<String>(
+                    initialValue: s.voiceEngine,
+                    isExpanded: true,
+                    decoration: const InputDecoration(labelText: S.voiceEngine),
+                    items: const [
+                      DropdownMenuItem(value: 'device', child: Text(S.voiceEngineDevice)),
+                      DropdownMenuItem(value: 'external', enabled: false, child: Text(S.voiceEngineExternal)),
+                    ],
+                    onChanged: (v) => setState(() => s.voiceEngine = v ?? 'device'),
+                  ),
+                  SwitchListTile(
+                    title: const Text(S.settingsBriefingOn),
+                    value: s.briefingEnabled,
+                    onChanged: (v) => setState(() => s.briefingEnabled = v),
+                  ),
+                  ListTile(
+                    title: const Text(S.settingsBriefingTime),
+                    subtitle: Text(S.set1(s.briefingHour, s.briefingMinute.toString().padLeft(2, '0'))),
+                    trailing: const Icon(Icons.schedule),
+                    onTap: () async {
+                      final t = await showTimePicker(
+                        context: context,
+                        initialTime: TimeOfDay(hour: s.briefingHour, minute: s.briefingMinute),
+                      );
+                      if (t != null) {
+                        setState(() {
+                          s.briefingHour = t.hour;
+                          s.briefingMinute = t.minute;
+                        });
+                      }
+                    },
+                  ),
+                  ListTile(
+                    title: const Text(S.voiceMemoTitle),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () =>
+                        Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => MemosScreen(user: u))),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        SettingsGroup(
+          title: S.grpData,
+          subtitle: S.grpDataSub,
+          hue: Hue.slate,
+          icon: Icons.folder,
+          children: [
+            SectionCard(
+              title: S.set4,
+              icon3d: 'folder',
+              child: ButtonWrap(
+                children: [
+                  BigButton(
+                    label: S.settingsBackup,
+                    icon: Icons.save_alt,
+                    primary: false,
+                    onPressed: () => busy.run(_backup),
+                  ),
+                  BigButton(
+                    label: S.settingsRestore,
+                    icon: Icons.restore,
+                    primary: false,
+                    onPressed: () => busy.run(_restore),
+                  ),
+                  BigButton(
+                    key: const Key('report'),
+                    label: S.settingsReport,
+                    icon: Icons.bug_report,
+                    primary: false,
+                    onPressed: () => busy.run(_report),
+                  ),
+                ],
+              ),
+            ),
+            SectionCard(
+              title: S.settingsVersion,
+              icon3d: 'robot',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('${S.appName} ${u.env.appVersion}', key: const Key('version')),
+                  const SizedBox(height: AppTokens.gapS),
+                  BigButton(label: S.settingsChangelog, icon: Icons.history, primary: false, onPressed: _changelog),
+                  const SizedBox(height: AppTokens.gapS),
+                  const ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.phone_iphone),
+                    title: Text(S.settingsIphone),
+                    subtitle: Text(S.settingsIphoneHint),
+                    enabled: false,
+                  ),
+                ],
+              ),
+            ),
+            ButtonWrap(
+              children: [
+                BigButton(label: S.logout, icon: Icons.logout, primary: false, onPressed: widget.state.logout),
+              ],
+            ),
+          ],
+        ),
+        // 되돌릴 수 없는 일은 따로 빨간 카드에
+        SoftCard(
+          key: const Key('danger-card'),
+          color: context.tokens.tileBg(Hue.red),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(S.settingsFontSize, style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: AppTokens.gapS),
-              FontScalePicker(state: widget.state),
-              const SizedBox(height: AppTokens.gapL),
-              Text(S.setBrightness, style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: AppTokens.gapS),
-              ChoiceWrap<String>(
-                key: const Key('theme-mode'),
-                options: const [('system', S.setBrightAuto), ('light', S.setBrightLight), ('dark', S.setBrightDark)],
-                value: widget.state.themeMode,
-                onChanged: (v) => widget.state.setView(themeMode: v),
-              ),
-              const SizedBox(height: AppTokens.gapS),
-              SwitchListTile(
-                key: const Key('high-contrast'),
-                contentPadding: EdgeInsets.zero,
-                title: const Text(S.setHighContrast),
-                subtitle: const Text(S.setHighContrastSub),
-                value: widget.state.highContrast,
-                onChanged: (v) => widget.state.setView(highContrast: v),
-              ),
-              SwitchListTile(
-                key: const Key('reduce-motion'),
-                contentPadding: EdgeInsets.zero,
-                title: const Text(S.setReduceMotion),
-                subtitle: const Text(S.setReduceMotionSub),
-                value: widget.state.reduceMotion,
-                onChanged: (v) => widget.state.setView(reduceMotion: v),
-              ),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text(S.setHaptics),
-                value: s.haptics,
-                onChanged: (v) => setState(() {
-                  s.haptics = v;
-                  UiPrefs.haptics = v;
-                }),
-              ),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text(S.setSound),
-                value: s.clickSound,
-                onChanged: (v) => setState(() {
-                  s.clickSound = v;
-                  UiPrefs.sound = v;
-                }),
-              ),
-              const SizedBox(height: AppTokens.gapS),
-              BigButton(
-                label: S.setTipsAgain,
-                icon: Icons.lightbulb,
-                primary: false,
-                onPressed: () {
-                  s.resetTips();
-                  toast(context, S.setTipsAgainDone);
-                },
-              ),
-              const SizedBox(height: AppTokens.gapS),
-              const Text('${S.settingsLanguage}: ${S.wizardLanguageKo}'),
-            ],
-          ),
-        ),
-        SectionCard(
-          title: S.settingsVoice,
-          icon3d: 'mic',
-          child: Column(
-            children: [
-              SwitchListTile(
-                title: const Text(S.settingsVoice),
-                value: s.ttsEnabled,
-                onChanged: (v) => setState(() => s.ttsEnabled = v),
-              ),
-              ListTile(
-                title: const Text(S.settingsVoiceRate),
-                subtitle: Slider(
-                  value: s.ttsRate,
-                  min: 0.1,
-                  max: 1.0,
-                  divisions: 9,
-                  label: s.ttsRate.toStringAsFixed(1),
-                  onChanged: (v) => setState(() => s.ttsRate = v),
-                  onChangeEnd: (v) => u.env.speaker.setRate(v),
+              Text(
+                S.grpDanger,
+                style: TextStyle(
+                  fontSize: AppTokens.fontSection,
+                  fontWeight: FontWeight.w900,
+                  color: context.tokens.onTile(Hue.red),
                 ),
               ),
-              DropdownButtonFormField<String>(
-                initialValue: s.voiceEngine,
-                isExpanded: true,
-                decoration: const InputDecoration(labelText: S.voiceEngine),
-                items: const [
-                  DropdownMenuItem(value: 'device', child: Text(S.voiceEngineDevice)),
-                  DropdownMenuItem(value: 'external', enabled: false, child: Text(S.voiceEngineExternal)),
-                ],
-                onChanged: (v) => setState(() => s.voiceEngine = v ?? 'device'),
-              ),
-              SwitchListTile(
-                title: const Text(S.settingsBriefingOn),
-                value: s.briefingEnabled,
-                onChanged: (v) => setState(() => s.briefingEnabled = v),
-              ),
-              ListTile(
-                title: const Text(S.settingsBriefingTime),
-                subtitle: Text(S.set1(s.briefingHour, s.briefingMinute.toString().padLeft(2, '0'))),
-                trailing: const Icon(Icons.schedule),
-                onTap: () async {
-                  final t = await showTimePicker(
-                    context: context,
-                    initialTime: TimeOfDay(hour: s.briefingHour, minute: s.briefingMinute),
-                  );
-                  if (t != null) {
-                    setState(() {
-                      s.briefingHour = t.hour;
-                      s.briefingMinute = t.minute;
-                    });
-                  }
-                },
-              ),
-              ListTile(
-                title: const Text(S.voiceMemoTitle),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => MemosScreen(user: u))),
-              ),
-            ],
-          ),
-        ),
-        _aiSection(),
-        _googleSection(),
-        SectionCard(
-          title: S.set2,
-          icon3d: 'video',
-          child: Column(
-            children: [
-              NumberField(
-                label: S.settingsQuotaLimit,
-                value: s.quotaDailyLimit,
-                onChanged: (v) => s.quotaDailyLimit = v.toInt(),
-              ),
+              const SizedBox(height: AppTokens.gapXs),
+              Text(S.grpDangerSub, style: TextStyle(color: context.tokens.onTile(Hue.red))),
               const SizedBox(height: AppTokens.gapM),
-              NumberField(
-                label: S.set3(S.settingsEditsPerDay, s.isFirstMonth(u.env.now()) ? S.editsFirstMonth : '0이면 수정 안 함'),
-                value: s.editsPerChannelPerDay,
-                onChanged: (v) => s.editsPerChannelPerDay = v.toInt(),
-              ),
-            ],
-          ),
-        ),
-        _runnerSection(),
-        for (final sec in SettingsScreen.extraSections) sec(context, u, _refresh),
-        SectionCard(
-          title: S.set4,
-          icon3d: 'folder',
-          child: ButtonWrap(
-            children: [
-              BigButton(
-                label: S.settingsBackup,
-                icon: Icons.save_alt,
-                primary: false,
-                onPressed: () => busy.run(_backup),
-              ),
-              BigButton(
-                label: S.settingsRestore,
-                icon: Icons.restore,
-                primary: false,
-                onPressed: () => busy.run(_restore),
-              ),
-              BigButton(
-                key: const Key('report'),
-                label: S.settingsReport,
-                icon: Icons.bug_report,
-                primary: false,
-                onPressed: () => busy.run(_report),
-              ),
               BigButton(
                 key: const Key('reset'),
                 label: S.settingsReset,
@@ -268,30 +358,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ],
           ),
-        ),
-        SectionCard(
-          title: S.settingsVersion,
-          icon3d: 'robot',
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('${S.appName} ${u.env.appVersion}', key: const Key('version')),
-              const SizedBox(height: AppTokens.gapS),
-              BigButton(label: S.settingsChangelog, icon: Icons.history, primary: false, onPressed: _changelog),
-              const SizedBox(height: AppTokens.gapS),
-              const ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Icon(Icons.phone_iphone),
-                title: Text(S.settingsIphone),
-                subtitle: Text(S.settingsIphoneHint),
-                enabled: false,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppTokens.gapS),
-        ButtonWrap(
-          children: [BigButton(label: S.logout, icon: Icons.logout, primary: false, onPressed: widget.state.logout)],
         ),
       ],
     );
