@@ -35,7 +35,7 @@ class BigButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = context.tokens;
     final bg = danger ? t.danger : (primary ? t.accent : t.tonal);
-    final fg = danger ? const Color(0xFFFFFFFF) : (primary ? t.onAccent : t.onTonal);
+    final fg = danger ? t.onDanger : (primary ? t.onAccent : t.onTonal);
     return ConstrainedBox(
       constraints: const BoxConstraints(minWidth: 120),
       child: Press3D(
@@ -177,7 +177,7 @@ Future<bool> confirm(
         actions: [
           TextButton(onPressed: () => Navigator.pop(c, false), child: Text(no)),
           FilledButton(
-            style: danger ? FilledButton.styleFrom(backgroundColor: t.danger, foregroundColor: Colors.white) : null,
+            style: danger ? FilledButton.styleFrom(backgroundColor: t.danger, foregroundColor: t.onDanger) : null,
             onPressed: () => Navigator.pop(c, true),
             child: Text(yes),
           ),

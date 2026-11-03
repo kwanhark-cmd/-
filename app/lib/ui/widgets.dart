@@ -716,7 +716,7 @@ void celebrate(BuildContext context, String message, {SnackBarAction? action}) {
           children: [
             const Mascot(MascotMood.celebrate, size: 48),
             const SizedBox(width: AppTokens.gapS),
-            _AnimatedCheck(color: Colors.white, reduce: t.reduceMotion),
+            _AnimatedCheck(color: t.onStatusFor(Status.done), reduce: t.reduceMotion),
             const SizedBox(width: AppTokens.gapS),
             Expanded(
               child: Text(

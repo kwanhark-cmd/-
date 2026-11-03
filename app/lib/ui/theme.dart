@@ -225,6 +225,9 @@ class AppTokens extends ThemeExtension<AppTokens> {
           highContrast: true,
         );
 
+  /// 빨강(위험) 버튼 위 글자색: 보통 흰색, 고대비 어두운 모드(밝은 빨강)에서는 검정.
+  Color get onDanger => danger.computeLuminance() > 0.35 ? const Color(0xFF000000) : const Color(0xFFFFFFFF);
+
   /// 상태 색 위에 올라가는 글자색 (흰색 또는 짙은색) — 고대비 모드에서는 밝은 상태색에 검정.
   Color onStatusFor(Status s) {
     if (highContrast && background.computeLuminance() < 0.5) return const Color(0xFF000000);
@@ -277,7 +280,7 @@ ThemeData buildAppTheme(AppTokens t, Brightness b) {
     secondary: t.accent,
     onSecondary: t.onAccent,
     error: t.danger,
-    onError: const Color(0xFFFFFFFF),
+    onError: t.onDanger,
     surface: t.card,
     onSurface: t.text,
     onSurfaceVariant: t.textSoft,
@@ -289,7 +292,7 @@ ThemeData buildAppTheme(AppTokens t, Brightness b) {
     tertiaryContainer: t.warning,
     onTertiaryContainer: t.onStatusDark,
     errorContainer: t.danger,
-    onErrorContainer: const Color(0xFFFFFFFF),
+    onErrorContainer: t.onDanger,
   );
   final shape = RoundedRectangleBorder(
     borderRadius: BorderRadius.circular(AppTokens.radius),
