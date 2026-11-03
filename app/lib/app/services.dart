@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
@@ -13,6 +14,7 @@ import '../features/ai/brain.dart';
 import '../features/edits/edit_service.dart';
 import '../features/runner/job_runner.dart';
 import '../features/runner/notifier.dart';
+import '../features/settings/app_look.dart';
 import '../features/settings/maintenance.dart';
 import '../features/settings/user_settings.dart';
 import '../features/update/update_service.dart';
@@ -48,7 +50,13 @@ class AppEnv {
     this.pickDirectory,
     this.installUpdate,
     this.osName = '',
+    this.setLauncherIcon,
+    this.pinShortcut,
   });
+
+  /// 안드로이드 홈 화면 아이콘 바꾸기 / 바로가기 만들기 (다른 운영체제는 null)
+  final Future<void> Function(String iconId)? setLauncherIcon;
+  final Future<bool> Function(String label, Uint8List png)? pinShortcut;
 
   /// 내려받은 업데이트 설치 시작 (실제 앱만). 테스트에서는 가짜.
   final Future<void> Function(File installer)? installUpdate;
@@ -117,6 +125,7 @@ class UserContext {
   late final JobQueue jobs;
   late final JobRunner runner;
   late final Maintenance maintenance;
+  late final AppLook look;
 
   /// 다른 단계(2~4단계)가 기능을 붙이는 곳.
   final Map<String, Object> extensions = {};
@@ -200,6 +209,14 @@ class UserContext {
       now: now,
       isDesktop: env.isDesktop,
       logger: env.logger,
+      appName: () => look.displayName,
+    );
+    look = AppLook(
+      settings: settings,
+      userDir: env.accounts.userDir(user.id),
+      logger: env.logger,
+      setLauncherIcon: env.setLauncherIcon,
+      pinShortcut: env.pinShortcut,
     );
     maintenance = Maintenance(
       db: db,

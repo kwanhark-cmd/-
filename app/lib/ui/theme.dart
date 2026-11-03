@@ -41,6 +41,9 @@ enum Hue {
   slate,
 }
 
+/// 앱 꾸미기 → 색 묶음. 주요색·강조색·보조 버튼 색만 바뀌고 상태 색(초록·파랑·노랑·빨강)은 그대로.
+enum ColorTheme { basic, ocean, forest, sunset }
+
 /// 앱의 모든 색·크기·간격·둥글기·그림자·움직임 시간. 화면은 이 값만 쓴다.
 @immutable
 class AppTokens extends ThemeExtension<AppTokens> {
@@ -319,6 +322,50 @@ class AppTokens extends ThemeExtension<AppTokens> {
           reduceMotion: reduceMotion,
           highContrast: true,
         );
+
+  /// 색 묶음 적용 (고대비 모드에서는 쓰지 않음: 대비가 우선)
+  AppTokens withPalette(ColorTheme p) {
+    if (p == ColorTheme.basic || highContrast) return this;
+    final dark = background.computeLuminance() < 0.2;
+    // (주요색, 주요색 위 글자, 강조색, 강조색 위 글자, 보조 바탕, 보조 글자) — 대비는 테스트로 확인
+    final c = switch ((p, dark)) {
+      (ColorTheme.ocean, false) => (0xFF0B5C8C, 0xFFFFFFFF, 0xFF0F766E, 0xFFFFFFFF, 0xFFDCEFF7, 0xFF0B4566),
+      (ColorTheme.ocean, true) => (0xFF7CC4F0, 0xFF062033, 0xFF0F766E, 0xFFFFFFFF, 0xFF1E3A4C, 0xFFD6EEFA),
+      (ColorTheme.forest, false) => (0xFF2E6B3A, 0xFFFFFFFF, 0xFFB45309, 0xFFFFFFFF, 0xFFE1F0E3, 0xFF1F4D29),
+      (ColorTheme.forest, true) => (0xFF8FD19E, 0xFF0E2A15, 0xFFB45309, 0xFFFFFFFF, 0xFF22392A, 0xFFDDF2E2),
+      (ColorTheme.sunset, false) => (0xFF7B2D8E, 0xFFFFFFFF, 0xFFBE185D, 0xFFFFFFFF, 0xFFF3E2F7, 0xFF5A1F68),
+      (ColorTheme.sunset, true) => (0xFFD7A6E6, 0xFF2E0F38, 0xFFBE185D, 0xFFFFFFFF, 0xFF3A2445, 0xFFF3DDF8),
+      _ => (
+        primary.toARGB32(),
+        onPrimary.toARGB32(),
+        accent.toARGB32(),
+        onAccent.toARGB32(),
+        tonal.toARGB32(),
+        onTonal.toARGB32(),
+      ),
+    };
+    return AppTokens(
+      primary: Color(c.$1),
+      onPrimary: Color(c.$2),
+      accent: Color(c.$3),
+      onAccent: Color(c.$4),
+      tonal: Color(c.$5),
+      onTonal: Color(c.$6),
+      success: success,
+      progress: progress,
+      warning: warning,
+      danger: danger,
+      onStatusDark: onStatusDark,
+      background: background,
+      card: card,
+      text: text,
+      textSoft: textSoft,
+      border: border,
+      shadowColor: shadowColor,
+      reduceMotion: reduceMotion,
+      highContrast: highContrast,
+    );
+  }
 
   /// 빨강(위험) 버튼 위 글자색: 보통 흰색, 고대비 어두운 모드(밝은 빨강)에서는 검정.
   Color get onDanger => danger.computeLuminance() > 0.35 ? const Color(0xFF000000) : const Color(0xFFFFFFFF);

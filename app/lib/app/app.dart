@@ -88,6 +88,10 @@ class AppState extends ChangeNotifier {
   bool get highContrast => _view('highContrast', () => user!.settings.highContrast, false);
   bool get reduceMotion => _view('reduceMotion', () => user!.settings.reduceMotion, false);
 
+  /// 앱 꾸미기 (사용자별). 로그인 전에는 기본값.
+  ColorTheme get colorTheme => ColorTheme.values.asNameMap()[user?.settings.colorTheme] ?? ColorTheme.basic;
+  String get displayName => user?.look.displayName ?? S.appName;
+
   void setView({String? themeMode, bool? highContrast, bool? reduceMotion}) {
     final s = user?.settings;
     if (themeMode != null) {
@@ -109,8 +113,12 @@ class AppState extends ChangeNotifier {
 AppTokens tokensFor(AppState s, Brightness b, {bool platformReduceMotion = false}) {
   final rm = s.reduceMotion || platformReduceMotion;
   if (s.highContrast) return AppTokens.contrast(darkMode: b == Brightness.dark, reduceMotion: rm);
-  return b == Brightness.dark ? AppTokens.dark(reduceMotion: rm) : AppTokens.light(reduceMotion: rm);
+  final base = b == Brightness.dark ? AppTokens.dark(reduceMotion: rm) : AppTokens.light(reduceMotion: rm);
+  return base.withPalette(s.colorTheme);
 }
+
+/// 창·최근 앱 목록에 보이는 이름
+String displayName(AppState s) => s.displayName;
 
 class ChannelBiseoApp extends StatelessWidget {
   const ChannelBiseoApp({super.key, required this.state});
@@ -122,7 +130,7 @@ class ChannelBiseoApp extends StatelessWidget {
       listenable: state,
       builder: (context, _) {
         return MaterialApp(
-          title: S.appName,
+          title: displayName(state),
           navigatorKey: appNavigatorKey,
           debugShowCheckedModeBanner: false,
           theme: buildAppTheme(tokensFor(state, Brightness.light), Brightness.light),

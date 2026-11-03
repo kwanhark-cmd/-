@@ -181,7 +181,7 @@ class HomeShellState extends State<HomeShell> {
     );
     if (wide) {
       return Scaffold(
-        appBar: AppBar(title: Text('${S.appName} — ${u.user.name}')),
+        appBar: AppBar(title: Text('${u.look.displayName} — ${u.user.name}')),
         floatingActionButton: mic,
         body: SafeArea(
           child: Row(
@@ -202,7 +202,13 @@ class HomeShellState extends State<HomeShell> {
       );
     }
     return Scaffold(
-      appBar: AppBar(title: Text(list[index].label)),
+      // 홈 화면 제목 = 앱 꾸미기의 앱 이름
+      appBar: AppBar(
+        title: Text(
+          list[index].id == 'home' ? u.look.displayName : list[index].label,
+          key: list[index].id == 'home' ? const Key('home-app-name') : null,
+        ),
+      ),
       floatingActionButton: mic,
       body: SafeArea(child: body),
       bottomNavigationBar: NavigationBar(

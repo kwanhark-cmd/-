@@ -568,6 +568,42 @@ class S {
   static const gsPic1Caption = '왼쪽 아래 "고급"을 눌러요';
   static const gsPic2Caption = '아래에 생긴 "…(으)로 이동"을 눌러요';
 
+  // 앱 꾸미기
+  static const lookTitle = '앱 꾸미기';
+  static const lookName = '앱 이름';
+  static const lookNameHelp = '홈·창 제목·알림에 쓰여요. 비우면 기본 이름.';
+  static const lookNameSaved = '앱 이름을 바꿨어요.';
+  static const lookIcon = '아이콘';
+  static String lookIconName(String id) => switch (id) {
+    'blue' => '파랑 아이콘',
+    'purple' => '보라 아이콘',
+    'green' => '초록 아이콘',
+    'orange' => '주황 아이콘',
+    'pink' => '분홍 아이콘',
+    _ => '아이콘',
+  };
+  static const lookIconCustom = '내 그림으로 아이콘 만들기';
+  static const lookIconCustomDone = '내 그림을 아이콘으로 정했어요.';
+  static const lookColor = '색 묶음';
+  static const lookColorBasic = '기본';
+  static const lookColorOcean = '바다';
+  static const lookColorForest = '숲';
+  static const lookColorSunset = '노을';
+  static const lookColorContrastNote = '또렷하게 보기(고대비)를 켜면 색 묶음 대신 대비가 가장 큰 색을 써요.';
+  static const lookAndroidNote =
+      '기본 아이콘 5가지는 휴대폰 홈 화면 아이콘도 바로 바뀌어요 (휴대폰에 따라 잠깐 뒤에 바뀌어요). 내 그림·내 이름은 "홈 화면에 바로가기 만들기"로 홈 화면에 놓을 수 있어요.';
+  static const lookDesktopNote = '컴퓨터에서는 앱 안에 바로 적용돼요. 바탕화면 바로가기 아이콘도 바꾸려면 아이콘 파일을 저장한 뒤 안내대로 하세요.';
+  static const lookShortcut = '홈 화면에 바로가기 만들기';
+  static const lookShortcutAsked = '홈 화면에 놓을지 묻는 창이 뜨면 "추가"를 눌러 주세요.';
+  static const lookShortcutUnsupported = '이 휴대폰은 바로가기 만들기를 지원하지 않아요.';
+  static const lookIconFile = '아이콘 파일 저장 (바로가기용)';
+  static const lookIconFileDone = '아이콘 파일을 저장했어요';
+  static const lookGuideWindows =
+      '바탕화면의 "채널관리비서" 바로가기를 오른쪽 클릭 → 속성 → "아이콘 변경" → 찾아보기 → 위 .ico 파일 → 확인. 이름은 바로가기를 오른쪽 클릭 → "이름 바꾸기".';
+  static const lookGuideMac =
+      '위 그림 파일을 열어 "편집 → 모두 선택 → 복사" 한 뒤, 응용 프로그램 폴더의 앱을 클릭하고 "파일 → 정보 가져오기" → 왼쪽 위 작은 아이콘을 클릭하고 "붙여넣기". Dock 에서도 바뀌어요.';
+  static const lookGuideOther = '바탕화면 바로가기의 아이콘을 위 그림 파일로 바꿔 주세요.';
+
   // 설정 묶음
   static const grpAccount = '계정 연결';
   static const grpAccountSub = '유튜브·구글 블로그 연결 준비';

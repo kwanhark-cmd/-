@@ -32,6 +32,7 @@ class TestKit {
     this.aiProviders,
     List<String> speech = const [],
     MockYouTubeApi? yt,
+    this.android = false,
   }) : clock = TestClock(start),
        secrets = MemorySecretStore(),
        speaker = FakeSpeaker(),
@@ -70,11 +71,24 @@ class TestKit {
     mockYouTube: mockYt,
     aiProviders: aiProviders,
     pickFile: (_) async => pickResult,
+    osName: android ? 'android' : 'windows',
+    setLauncherIcon: android ? (id) async => launcherIcons.add(id) : null,
+    pinShortcut: android
+        ? (label, png) async {
+            shortcuts.add((label, png.length));
+            return true;
+          }
+        : null,
     pickDirectory: () async => null,
   );
 
   /// 파일 고르기 창에서 고른 것처럼 돌려줄 경로.
   String? pickResult;
+
+  /// 안드로이드 흉내: 홈 화면 아이콘 바꾸기·바로가기 기록
+  final bool android;
+  final List<String> launcherIcons = [];
+  final List<(String, int)> shortcuts = [];
 
   Future<UserContext> user([String name = '테스트']) async {
     final u = env.accounts.create(name, '1234');

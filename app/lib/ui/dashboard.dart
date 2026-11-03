@@ -173,7 +173,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ap(
           Row(
             children: [
-              const Mascot(MascotMood.hello, size: 72),
+              // 앱 꾸미기에서 고른 아이콘·이름
+              AppIconView(look: u.look, size: 72),
               const SizedBox(width: AppTokens.gapM),
               Expanded(
                 child: Column(

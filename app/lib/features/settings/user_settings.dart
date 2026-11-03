@@ -25,6 +25,19 @@ class UserSettings {
   bool get onboardingDone => _get('onboardingDone', false);
   set onboardingDone(bool v) => db.setSetting('onboardingDone', v);
 
+  // 앱 꾸미기
+  /// 앱 이름 (빈 값이면 기본 이름)
+  String get appDisplayName => _get('appDisplayName', '');
+  set appDisplayName(String v) => db.setSetting('appDisplayName', v.trim());
+
+  /// 아이콘: 'blue' | 'purple' | 'green' | 'orange' | 'pink' | 'custom'
+  String get appIcon => _get('appIcon', 'blue');
+  set appIcon(String v) => db.setSetting('appIcon', v);
+
+  /// 'basic' | 'ocean' | 'forest' | 'sunset'
+  String get colorTheme => _get('colorTheme', 'basic');
+  set colorTheme(String v) => db.setSetting('colorTheme', v);
+
   /// 실제 채널이 연결된 뒤에도 연습용 가짜 채널을 보여 줄지
   bool get showPracticeData => _get('showPracticeData', false);
   set showPracticeData(bool v) => db.setSetting('showPracticeData', v);

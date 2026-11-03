@@ -1,9 +1,12 @@
+import 'dart:io';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../core/strings.dart';
+import '../features/settings/app_look.dart';
 import 'theme.dart';
 
 /// 앱 전체 화면 길잡이 열쇠. 원래 화면이 사라졌을 때 살아 있는 화면으로 창을 띄우는 데 쓴다.
@@ -1177,4 +1180,71 @@ class MeterCell extends StatelessWidget {
       ),
     );
   }
+}
+
+/// 앱 아이콘 그림: 색 바탕 + 흰 원 + 마스코트, 또는 사용자가 고른 그림.
+class AppIconView extends StatelessWidget {
+  const AppIconView({super.key, required this.look, this.size = 72, this.iconId});
+  final AppLook look;
+  final double size;
+
+  /// 미리보기용 (지정하면 이 아이콘으로 그림)
+  final String? iconId;
+
+  @override
+  Widget build(BuildContext context) {
+    final id = iconId ?? look.iconId;
+    final radius = BorderRadius.circular(size * 0.24);
+    if (id == 'custom' && look.hasCustomIcon) {
+      return ClipRRect(
+        borderRadius: radius,
+        child: Image.file(
+          File(look.customIconPath),
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) => AppIconView(look: look, size: size, iconId: 'blue'),
+        ),
+      );
+    }
+    final color = Color(AppLook.iconColors[id] ?? AppLook.iconColors['blue']!);
+    return ExcludeSemantics(
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: CustomPaint(painter: AppIconPainter(color)),
+      ),
+    );
+  }
+}
+
+/// 아이콘 그리기 (화면·PNG 파일 공용).
+class AppIconPainter extends CustomPainter {
+  AppIconPainter(this.color);
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size s) {
+    final r = RRect.fromRectAndRadius(Offset.zero & s, Radius.circular(s.width * 0.24));
+    canvas.drawRRect(r, Paint()..color = color);
+    canvas.drawCircle(Offset(s.width / 2, s.height / 2), s.width * 0.38, Paint()..color = const Color(0xFFFFFFFF));
+    canvas.save();
+    canvas.translate(s.width * 0.17, s.height * 0.15);
+    MascotPainter(MascotMood.hello).paint(canvas, Size(s.width * 0.66, s.height * 0.66));
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(AppIconPainter old) => old.color != color;
+}
+
+/// 아이콘을 PNG 로 (안드로이드 바로가기, 컴퓨터 바로가기용 아이콘 파일).
+Future<Uint8List> renderAppIconPng(AppLook look, {int size = 256}) async {
+  if (look.iconId == 'custom' && look.hasCustomIcon) return File(look.customIconPath).readAsBytesSync();
+  final rec = ui.PictureRecorder();
+  final canvas = Canvas(rec);
+  AppIconPainter(Color(look.iconColor)).paint(canvas, Size(size.toDouble(), size.toDouble()));
+  final img = await rec.endRecording().toImage(size, size);
+  final data = await img.toByteData(format: ui.ImageByteFormat.png);
+  return data!.buffer.asUint8List();
 }

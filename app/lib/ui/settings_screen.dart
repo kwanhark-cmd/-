@@ -9,6 +9,7 @@ import '../core/strings.dart';
 import '../features/ai/ai_service.dart';
 import '../features/settings/maintenance.dart';
 import 'common.dart';
+import 'app_look_section.dart';
 import 'connection_status.dart';
 import 'google_setup_screen.dart';
 import 'memos_screen.dart';
@@ -134,6 +135,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           hue: Hue.orange,
           icon: Icons.palette,
           children: [
+            AppLookSection(state: widget.state, user: u),
             SectionCard(
               title: S.setViewTitle,
               icon3d: 'sparkles',

@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart' as p;
@@ -19,6 +20,9 @@ import 'features/update/installer.dart';
 import 'features/voice/voice_io.dart';
 import 'stages.dart';
 import 'ui/common.dart';
+
+/// 안드로이드 앱 꾸미기 (MainActivity.kt)
+const _look = MethodChannel('channel_biseo/look');
 
 Future<void> main() async {
   AppLogger? logger;
@@ -64,6 +68,10 @@ Future<void> main() async {
       pickDirectory: () => FilePicker.getDirectoryPath(),
       installUpdate: UpdateInstaller(log).install,
       osName: Platform.operatingSystem,
+      setLauncherIcon: Platform.isAndroid ? (id) => _look.invokeMethod<void>('setLauncherIcon', {'id': id}) : null,
+      pinShortcut: Platform.isAndroid
+          ? (label, png) async => await _look.invokeMethod<bool>('pinShortcut', {'label': label, 'png': png}) ?? false
+          : null,
     );
     log.info('앱 시작 ${env.appVersion} ${env.platformName}');
     registerStages();

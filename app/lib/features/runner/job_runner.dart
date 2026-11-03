@@ -89,7 +89,8 @@ class JobRunner {
     required this.now,
     required this.isDesktop,
     this.logger,
-  });
+    String Function()? appName,
+  }) : appName = appName ?? (() => S.appName);
 
   final UserSettings settings;
   final JobQueue queue;
@@ -100,6 +101,9 @@ class JobRunner {
   final DateTime Function() now;
   final bool isDesktop;
   final AppLogger? logger;
+
+  /// 알림 제목 (앱 꾸미기의 이름)
+  final String Function() appName;
 
   /// 다른 단계에서 작업 종류를 추가한다 (예: 'blogEdits').
   final Map<String, JobHandler> handlers = {};
@@ -139,7 +143,7 @@ class JobRunner {
     var editsDone = 0, deferred = 0;
     settings.lastRunnerDay = dayKey(now());
     _set(0, S.runnerStarting);
-    await notifier.show(S.appName, S.runnerStarting);
+    await notifier.show(appName(), S.runnerStarting);
     queue.log(S.runnerStarting);
     try {
       final chans = youtube.channels();
@@ -152,7 +156,7 @@ class JobRunner {
           await youtube.syncChannel(c.channelId, cancel: cancel);
           if (ai.overLimit && !ai.isPracticeMode) {
             queue.log(S.runnerCostStop);
-            await notifier.show(S.appName, S.runnerCostStop);
+            await notifier.show(appName(), S.runnerCostStop);
             break;
           }
           final plan = await edits.plan(c.channelId, cancel: cancel);
@@ -170,7 +174,7 @@ class JobRunner {
           }
           if (e.kind == FailureKind.costLimit) {
             queue.log(S.runnerCostStop);
-            await notifier.show(S.appName, S.runnerCostStop);
+            await notifier.show(appName(), S.runnerCostStop);
             break;
           }
           // 오류는 기록하고 다음 채널 계속
@@ -221,7 +225,7 @@ class JobRunner {
     } finally {
       final msg = cancel.isCancelled ? S.progressCancelled : S.runnerDone(editsDone, deferred);
       queue.log(msg);
-      await notifier.show(S.appName, msg);
+      await notifier.show(appName(), msg);
       running = false;
       _set(1, msg);
     }
