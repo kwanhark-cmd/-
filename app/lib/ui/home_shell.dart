@@ -31,6 +31,10 @@ class HomeShellState extends State<HomeShell> {
   /// 한 번이라도 연 탭 (열어 둔 탭은 화면과 스크롤 위치를 그대로 유지).
   final Set<String> _opened = {};
 
+  /// 열어 둔 탭 위젯. 보이지 않는 탭은 같은 위젯을 다시 써서 다시 그리지 않는다 (메뉴 전환을 빠르게).
+  /// 보이는 탭은 매번 새로 그리고, 자료가 바뀌면([refreshAll]) 모두 새로 그린다.
+  final Map<String, Widget> _built = {};
+
   UserContext get u => widget.user;
 
   @override
@@ -64,7 +68,7 @@ class HomeShellState extends State<HomeShell> {
       }
       final ran = await u.runner.tick();
       // 화면을 새로 만들지 않고 내용만 다시 그린다 (스크롤 위치 유지)
-      if (mounted && ran) setState(() {});
+      if (mounted && ran) refreshAll();
     } catch (e, st) {
       u.env.logger.error(S.shell1, e, st);
     }
@@ -115,8 +119,11 @@ class HomeShellState extends State<HomeShell> {
 
   /// 내용만 다시 그린다. 화면을 새로 만들지 않으므로 보던 위치가 그대로 남는다.
   void refreshAll() {
+    _built.clear();
     if (mounted) setState(() {});
   }
+
+  Widget _tab(AppTab t) => KeyedSubtree(key: PageStorageKey('tab-${t.id}'), child: t.builder(ValueKey('tab-${t.id}')));
 
   bool hasTab(String id) => tabs.any((t) => t.id == id);
 
@@ -152,10 +159,7 @@ class HomeShellState extends State<HomeShell> {
             children: [
               for (var i = 0; i < list.length; i++)
                 (i == index || _opened.contains(list[i].id))
-                    ? KeyedSubtree(
-                        key: PageStorageKey('tab-${list[i].id}'),
-                        child: list[i].builder(ValueKey('tab-${list[i].id}')),
-                      )
+                    ? (i == index ? _built[list[i].id] = _tab(list[i]) : _built[list[i].id] ??= _tab(list[i]))
                     : const SizedBox.shrink(),
             ],
           ),

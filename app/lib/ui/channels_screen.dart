@@ -239,57 +239,62 @@ class _ChannelsScreenState extends State<ChannelsScreen> {
             UiPrefs.tap();
             _open(c.channelId);
           },
-          child: IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Container(width: 10, color: t.statusColor(status)),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppTokens.gapL),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (narrow) ...[
-                          thumbBox,
-                          const SizedBox(height: AppTokens.gapM),
-                          head,
-                        ] else
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
+          // 왼쪽 상태 색 띠는 겹쳐 그림 (높이 맞추기 계산 없이)
+          child: Stack(
+            children: [
+              Positioned(left: 0, top: 0, bottom: 0, width: 10, child: ColoredBox(color: t.statusColor(status))),
+              Padding(
+                padding: const EdgeInsets.only(left: 10),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppTokens.gapL),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (narrow) ...[
                               thumbBox,
-                              const SizedBox(width: AppTokens.gapL),
-                              Expanded(child: head),
-                            ],
-                          ),
-                        const SizedBox(height: AppTokens.gapM),
-                        // 숫자 3개: 한 줄 (넘치면 글씨를 줄여 맞춤)
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: Alignment.centerLeft,
-                          child: Row(
-                            children: [
-                              stat(Icons.people_alt, S.num(c.subscriberCount), S.chanStatSubs),
-                              const SizedBox(width: AppTokens.gapL),
-                              stat(Icons.play_circle_fill, S.num(c.videoCount), S.chanStatVideos),
-                              const SizedBox(width: AppTokens.gapL),
-                              stat(Icons.visibility, S.num(c.viewCount), S.chanStatViews),
-                            ],
-                          ),
+                              const SizedBox(height: AppTokens.gapM),
+                              head,
+                            ] else
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  thumbBox,
+                                  const SizedBox(width: AppTokens.gapL),
+                                  Expanded(child: head),
+                                ],
+                              ),
+                            const SizedBox(height: AppTokens.gapM),
+                            // 숫자 3개: 한 줄 (넘치면 글씨를 줄여 맞춤)
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Row(
+                                children: [
+                                  stat(Icons.people_alt, S.num(c.subscriberCount), S.chanStatSubs),
+                                  const SizedBox(width: AppTokens.gapL),
+                                  stat(Icons.play_circle_fill, S.num(c.videoCount), S.chanStatVideos),
+                                  const SizedBox(width: AppTokens.gapL),
+                                  stat(Icons.visibility, S.num(c.viewCount), S.chanStatViews),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
-                  ),
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: AppTokens.gapS),
+                        child: Icon(Icons.chevron_right, color: t.textSoft, size: AppTokens.iconM),
+                      ),
+                    ),
+                  ],
                 ),
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: AppTokens.gapS),
-                    child: Icon(Icons.chevron_right, color: t.textSoft, size: AppTokens.iconM),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
