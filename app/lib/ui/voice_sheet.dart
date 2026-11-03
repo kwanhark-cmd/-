@@ -93,7 +93,20 @@ class _VoiceSheetState extends State<_VoiceSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(S.voiceListen, style: Theme.of(context).textTheme.headlineSmall),
+            Row(
+              children: [
+                Mascot(
+                  listening
+                      ? MascotMood.working
+                      : (answer.isEmpty
+                            ? MascotMood.hello
+                            : (last?.needsConfirmation == true ? MascotMood.warning : MascotMood.done)),
+                  size: 72,
+                ),
+                const SizedBox(width: AppTokens.gapM),
+                Expanded(child: Text(S.voiceListen, style: Theme.of(context).textTheme.headlineSmall)),
+              ],
+            ),
             const SizedBox(height: AppTokens.gapS),
             if (status.isNotEmpty) Text(status),
             if (heard.isNotEmpty) Text(S.voice3(heard), style: TextStyle(color: context.tokens.textSoft)),
@@ -126,7 +139,7 @@ class _VoiceSheetState extends State<_VoiceSheet> {
                 const SizedBox(width: AppTokens.gapS),
                 IconButton.filled(
                   key: const Key('voice-send'),
-                  iconSize: 32,
+                  iconSize: AppTokens.iconM,
                   onPressed: () => busy.run(() => _run(text.text)),
                   icon: const Icon(Icons.send),
                 ),

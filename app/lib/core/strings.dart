@@ -453,6 +453,7 @@ class S {
   static const setSound = '누를 때 소리';
   static const setTipsAgain = '처음 사용 안내 다시 보기';
   static const setTipsAgainDone = '안내를 다시 보여 드릴게요.';
+  static String wizStep(int n) => '$n / 4 단계';
   static const uiDangerSecond = '정말 할까요? 한 번 더 확인할게요.';
   static const thumbTitle = '썸네일 그림';
   static const thumbNone = '아직 썸네일 그림이 없어요. 문구로 만들거나 직접 만든 그림을 넣어 주세요.';

@@ -32,7 +32,36 @@ class _OnboardingWizardState extends State<OnboardingWizard> {
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 640),
-            child: ListView(padding: const EdgeInsets.all(AppTokens.gapXl), children: [_body(context)]),
+            child: ListView(
+              padding: const EdgeInsets.all(AppTokens.gapXl),
+              children: [
+                Row(
+                  children: [
+                    Mascot(step == 3 ? MascotMood.celebrate : MascotMood.hello, size: 72),
+                    const SizedBox(width: AppTokens.gapM),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(S.wizStep(step + 1), style: Theme.of(context).textTheme.titleMedium),
+                          const SizedBox(height: AppTokens.gapS),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+                            child: TweenAnimationBuilder<double>(
+                              tween: Tween(end: (step + 1) / 4),
+                              duration: context.tokens.normal,
+                              builder: (_, v, _) => LinearProgressIndicator(value: v, minHeight: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppTokens.gapXl),
+                Appear(key: ValueKey(step), child: _body(context)),
+              ],
+            ),
           ),
         ),
       ),
@@ -155,28 +184,31 @@ class _OnboardingWizardState extends State<OnboardingWizard> {
   }
 
   Widget _perm(IconData icon, String name, String why, bool? state, Future<void> Function() ask) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppTokens.gapM),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, size: 28),
-                const SizedBox(width: AppTokens.gapS),
-                Expanded(child: Text(name, style: Theme.of(context).textTheme.titleMedium)),
-              ],
-            ),
-            const SizedBox(height: AppTokens.gapXs),
-            Text(why),
-            const SizedBox(height: AppTokens.gapS),
-            if (state == null)
-              BigButton(label: S.permAllow, primary: false, onPressed: ask)
-            else
-              Text(state ? S.permAllowed : S.permDenied, style: const TextStyle(fontWeight: FontWeight.w800)),
-          ],
-        ),
+    final st = state == null ? null : (state ? Status.done : Status.check);
+    return StripeCard(
+      status: st,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon3D(switch (icon) {
+                Icons.mic => 'mic',
+                Icons.notifications => 'bell',
+                _ => 'folder',
+              }, size: AppTokens.icon3dS),
+              const SizedBox(width: AppTokens.gapS),
+              Expanded(child: Text(name, style: Theme.of(context).textTheme.titleMedium)),
+            ],
+          ),
+          const SizedBox(height: AppTokens.gapXs),
+          Text(why),
+          const SizedBox(height: AppTokens.gapS),
+          if (state == null)
+            BigButton(label: S.permAllow, primary: false, onPressed: ask)
+          else
+            StatusBadge(st!, state ? S.permAllowed : S.permDenied),
+        ],
       ),
     );
   }

@@ -30,16 +30,21 @@ class _LoginScreenState extends State<LoginScreen> {
             child: ListView(
               padding: const EdgeInsets.all(AppTokens.gapXl),
               children: [
-                Text(S.loginTitle, style: Theme.of(context).textTheme.headlineSmall),
+                const Center(child: Appear(child: Mascot(MascotMood.hello, size: 140))),
+                const SizedBox(height: AppTokens.gapM),
+                Text(S.loginTitle, textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
                 const SizedBox(height: AppTokens.gapL),
-                for (final u in users)
+                for (var i = 0; i < users.length; i++)
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: BigButton(
-                      key: Key('user-${u.id}'),
-                      label: S.loginAs(u.name),
-                      icon: Icons.person,
-                      onPressed: () => _askPassword(u),
+                    padding: const EdgeInsets.only(bottom: AppTokens.gapM),
+                    child: Appear(
+                      index: i + 1,
+                      child: BigButton(
+                        key: Key('user-${users[i].id}'),
+                        label: S.loginAs(users[i].name),
+                        icon: Icons.person,
+                        onPressed: () => _askPassword(users[i]),
+                      ),
                     ),
                   ),
                 const SizedBox(height: AppTokens.gapM),
