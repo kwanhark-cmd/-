@@ -7,7 +7,9 @@ import 'package:channel_biseo/features/ai/brain.dart';
 import 'package:channel_biseo/features/production/desc_template.dart';
 import 'package:channel_biseo/features/youtube/trending.dart';
 import 'package:channel_biseo/core/db.dart';
+import 'package:channel_biseo/core/failure.dart';
 import 'package:channel_biseo/features/production/calendar.dart';
+import 'package:channel_biseo/features/production/thumbnail.dart';
 import 'package:channel_biseo/stages.dart';
 import 'package:channel_biseo/ui/blog_screen.dart';
 import 'package:channel_biseo/ui/calendar_screen.dart';
@@ -296,6 +298,59 @@ void main() {
       await t.tap(find.byKey(const Key('cal-next')));
       await t.pumpAndSettle();
       expect(find.text('2026년 12월'), findsOneWidget);
+      expect(t.takeException(), isNull);
+      await t.pumpWidget(const SizedBox());
+    });
+  });
+
+  group('썸네일 비교 선택', () {
+    test('문구와 색이 다른 2개를 만들고, 고른 것만 썸네일이 된다', () async {
+      final (_, _, u) = await setup();
+      final ps = productionOf(u);
+      final p = await ps.create(channelId: 'UC_mock_cook', format: ContentFormat.shorts, topic: '부대찌개 끓이기 아주 쉽게');
+      final seen = <(String, int)>[];
+      final paths = await ps.makeThumbnailChoices(p.id, (text, seed) async {
+        seen.add((text, seed));
+        return [seed];
+      });
+      expect(paths.length, 2);
+      expect(seen[0].$1, isNot(seen[1].$1)); // 문구가 다름
+      expect(seen[0].$2, isNot(seen[1].$2)); // 색(seed)이 다름
+      expect(() => ps.chooseThumbnail(p.id, '/다른/파일.png'), throwsA(isA<AppFailure>()));
+      ps.chooseThumbnail(p.id, paths[1]);
+      final after = ps.byId(p.id)!;
+      expect(after.thumbPath, paths[1]);
+      expect(after.extra['thumbChosen'], 'B');
+    });
+
+    testWidgets('제작 상세에서 2개 중 하나를 눌러 고르기', (t) async {
+      final (_, s, u) = await setup();
+      thumbRenderer = (text, seed) async => [1, 2, 3];
+      addTearDown(() => thumbRenderer = (text, seed) => renderThumbnail(text, seed: seed));
+      final p = await productionOf(u).create(channelId: 'UC_mock_cook', format: ContentFormat.long, topic: '고르기 시험');
+      await t.pumpWidget(ChannelBiseoApp(state: s));
+      await t.pumpAndSettle();
+      final nav = t.state<NavigatorState>(find.byType(Navigator).first);
+      // ignore: unawaited_futures
+      nav.push(
+        MaterialPageRoute<void>(
+          builder: (_) => ProductionDetailScreen(user: u, id: p.id),
+        ),
+      );
+      await t.pumpAndSettle();
+      await t.scrollUntilVisible(
+        find.byKey(const Key('thumb-compare')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await t.ensureVisible(find.byKey(const Key('thumb-compare')));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('thumb-compare')));
+      await t.pumpAndSettle();
+      expect(find.text('어느 썸네일이 더 좋아요?'), findsOneWidget);
+      await t.tap(find.byKey(const Key('thumb-choice-0')));
+      await t.pumpAndSettle();
+      expect(productionOf(u).byId(p.id)!.extra['thumbChosen'], 'A');
       expect(t.takeException(), isNull);
       await t.pumpWidget(const SizedBox());
     });

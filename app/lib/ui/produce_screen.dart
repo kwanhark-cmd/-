@@ -119,6 +119,9 @@ Future<Production?> newProductionFlow(
   return null;
 }
 
+/// 썸네일 그리는 함수 (테스트에서 빠른 가짜로 바꿀 수 있게).
+Future<List<int>> Function(String text, int seed) thumbRenderer = (t, seed) => renderThumbnail(t, seed: seed);
+
 /// 제작 상태 → 공통 상태 색.
 Status productionStatusColor(ProductionStatus s) => switch (s) {
   ProductionStatus.draft => Status.progress,
@@ -348,7 +351,12 @@ class _ProductionDetailScreenState extends State<ProductionDetailScreen> {
                   if (p.hasThumb)
                     ConstrainedBox(
                       constraints: const BoxConstraints(maxHeight: 220),
-                      child: Image.file(File(p.thumbPath), key: ValueKey(p.thumbPath), fit: BoxFit.contain),
+                      child: Image.file(
+                        File(p.thumbPath),
+                        key: ValueKey(p.thumbPath),
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, _, _) => const Icon3D('picture', size: AppTokens.icon3dL),
+                      ),
                     )
                   else
                     const Text(S.thumbNone),
@@ -357,12 +365,18 @@ class _ProductionDetailScreenState extends State<ProductionDetailScreen> {
                   ButtonWrap(
                     children: [
                       BigButton(
+                        key: const Key('thumb-compare'),
+                        label: S.thumbCompare,
+                        icon: Icons.compare,
+                        onPressed: () => busy.run(() => _compareThumbs(p)),
+                      ),
+                      BigButton(
                         key: const Key('make-thumb'),
                         label: S.thumbMake,
                         icon: Icons.brush,
                         primary: false,
                         onPressed: () => busy.run(() async {
-                          await ps.makeThumbnail(p.id, (t, seed) => renderThumbnail(t, seed: seed));
+                          await ps.makeThumbnail(p.id, thumbRenderer);
                           if (mounted) setState(() {});
                         }),
                       ),
@@ -566,6 +580,62 @@ class _ProductionDetailScreenState extends State<ProductionDetailScreen> {
       thumbnailText: th.text,
     );
     if (mounted) setState(() {});
+  }
+
+  /// 썸네일 2개를 만들어 나란히 보여 주고 고르게 한다.
+  Future<void> _compareThumbs(Production p) async {
+    final paths = await runWithProgress(
+      context,
+      S.thumbCompare,
+      (c, _) => ps.makeThumbnailChoices(p.id, thumbRenderer),
+    );
+    if (paths == null || !mounted) return;
+    final pick = await showDialog<String>(
+      context: context,
+      builder: (d) => AlertDialog(
+        title: const Text(S.thumbCompareTitle),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(S.thumbCompareHelp),
+              const SizedBox(height: AppTokens.gapM),
+              for (var i = 0; i < paths.length; i++) ...[
+                Press3D(
+                  key: Key('thumb-choice-$i'),
+                  color: d.tokens.card,
+                  onTap: () => Navigator.pop(d, paths[i]),
+                  semanticLabel: S.thumbChoice(i == 0 ? 'A' : 'B'),
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppTokens.gapS),
+                    child: Column(
+                      children: [
+                        AspectRatio(
+                          aspectRatio: 16 / 9,
+                          child: Image.file(
+                            File(paths[i]),
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => const Icon3D('picture', size: AppTokens.icon3dL),
+                          ),
+                        ),
+                        const SizedBox(height: AppTokens.gapS),
+                        Text(S.thumbChoice(i == 0 ? 'A' : 'B'), style: const TextStyle(fontWeight: FontWeight.w800)),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppTokens.gapM),
+              ],
+            ],
+          ),
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(d), child: const Text(S.cancel))],
+      ),
+    );
+    if (pick == null || !mounted) return;
+    ps.chooseThumbnail(p.id, pick);
+    celebrate(context, S.thumbChosen);
+    setState(() {});
   }
 
   Future<void> _attachThumb(Production p) async {

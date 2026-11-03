@@ -312,9 +312,33 @@ class ProductionService {
     final pr = byId(id)!;
     final f = File(p.join(mediaDir, 'thumb_$id.png'));
     f.parent.createSync(recursive: true);
-    await f.writeAsBytes(await render(pr.thumbnailText, id));
+    f.writeAsBytesSync(await render(pr.thumbnailText, id));
     _setExtra(id, {'thumb': f.path});
     return f.path;
+  }
+
+  /// 썸네일 비교: 문구와 색이 다른 썸네일 2개를 만든다 (A: 썸네일 문구, B: 제목 앞부분).
+  /// 사용자가 하나를 고르면 [chooseThumbnail]. 자동 A/B 시험은 다음 단계.
+  Future<List<String>> makeThumbnailChoices(int id, Future<List<int>> Function(String text, int seed) render) async {
+    final pr = byId(id)!;
+    final shortTitle = pr.title.length > 14 ? pr.title.substring(0, 14) : pr.title;
+    final texts = [pr.thumbnailText.isEmpty ? shortTitle : pr.thumbnailText, shortTitle];
+    if (texts[0] == texts[1]) texts[1] = '${texts[1]}!';
+    final paths = <String>[];
+    for (var i = 0; i < 2; i++) {
+      final f = File(p.join(mediaDir, 'thumb_${id}_${i == 0 ? 'a' : 'b'}.png'));
+      f.parent.createSync(recursive: true);
+      f.writeAsBytesSync(await render(texts[i], id * 2 + i + 1));
+      paths.add(f.path);
+    }
+    _setExtra(id, {'thumbChoices': paths});
+    return paths;
+  }
+
+  void chooseThumbnail(int id, String path) {
+    final choices = ((byId(id)!.extra['thumbChoices'] as List<dynamic>?) ?? const []).map((e) => '$e');
+    if (!choices.contains(path)) throw AppFailure(FailureKind.invalidInput, 'not a choice');
+    _setExtra(id, {'thumb': path, 'thumbChosen': path.endsWith('_a.png') ? 'A' : 'B'});
   }
 
   /// 사용자가 만든 썸네일 그림 넣기.

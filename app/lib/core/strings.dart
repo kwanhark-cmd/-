@@ -502,6 +502,12 @@ class S {
   static const calBlogWaiting = '블로그 글 확인 대기';
   static const calBlogDone = '블로그 글 올림';
   static const calCheckLegend = '예정·확인 대기';
+  // 추가 기능: 썸네일 비교 선택
+  static const thumbCompare = '썸네일 2개 만들어 고르기';
+  static const thumbCompareTitle = '어느 썸네일이 더 좋아요?';
+  static const thumbCompareHelp = '문구와 색이 다른 썸네일 2개를 만들었어요. 마음에 드는 것을 눌러 주세요.';
+  static String thumbChoice(String ab) => '$ab안';
+  static const thumbChosen = '고른 썸네일을 저장했어요. 올릴 때 함께 올라가요.';
   static const uiDangerSecond = '정말 할까요? 한 번 더 확인할게요.';
   static const thumbTitle = '썸네일 그림';
   static const thumbNone = '아직 썸네일 그림이 없어요. 문구로 만들거나 직접 만든 그림을 넣어 주세요.';
