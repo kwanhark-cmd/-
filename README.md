@@ -176,6 +176,6 @@
 - 보고서: `docs/보고/` (화면 개선: `docs/보고/화면개선.md`), 화면 사진: `docs/화면/`, 안전 점검: `docs/검증/`, 판매 준비: `docs/배포준비.md`
 - 디자인 값(색·크기·간격·그림자·움직임): `app/lib/ui/theme.dart`, 공통 위젯: `app/lib/ui/widgets.dart`, 그림: `app/assets/icons3d/`
 - 커밋: `app/tool/commit.sh "메시지"` (검사를 모두 통과해야만 커밋)
-- 새 버전 공개: `app/pubspec.yaml` 의 version 과 `app/CHANGELOG.md` 를 올린 뒤 `git tag v1.2.0 && git push origin v1.2.0` → Actions 가 설치 파일을 만들어 Releases 에 올림 (태그와 앱 버전이 다르면 멈춤)
+- 새 버전 공개: `app/pubspec.yaml` 의 version 과 `app/CHANGELOG.md` 를 올린 뒤 GitHub **Actions → 빌드와 테스트 → Run workflow → "새 버전 공개" 체크** (또는 `git tag v1.2.0 && git push origin v1.2.0`) → Actions 가 설치 파일을 만들어 Releases 에 올림
 - 앱 식별자(안드로이드 `com.channelbiseo.channel_biseo`, 맥 `com.channelbiseo.channelBiseo`, 실행 파일 `channel_biseo`, 윈도우 설치 AppId)는 **절대 바꾸지 않기** — 바꾸면 업데이트가 덮어쓰기가 아니라 다른 앱이 되고 자료를 못 찾음
 - 업데이트 시험 자료: `app/test/fixtures/v1.1.0` (1.1.0 코드로 실제로 만든 자료 폴더), 시험: `app/test/update_test.dart`

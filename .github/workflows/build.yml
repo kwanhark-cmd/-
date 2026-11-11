@@ -8,7 +8,14 @@ on:
     branches: ['**']
     tags: ['v*']
   pull_request:
+  # Actions 화면의 "Run workflow" 에서 "새 버전 공개"를 고르면, 앱 버전(pubspec.yaml)으로
+  # 태그(v1.2.0 등)를 만들고 Releases 에 공개한다 (태그를 직접 올리기 어려울 때).
   workflow_dispatch:
+    inputs:
+      release:
+        description: '새 버전 공개 (GitHub Releases)'
+        type: boolean
+        default: false
 
 env:
   FLUTTER_VERSION: '3.47.9'
@@ -144,22 +151,25 @@ jobs:
 
   release:
     name: 새 버전 공개 (GitHub Releases)
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.release)
     needs: [linux, windows, macos, android]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: 태그와 앱 버전이 같은지 확인
+      - name: 버전 정하기 (태그와 앱 버전이 같은지 확인)
         run: |
           app=$(grep -E '^version:' pubspec.yaml | sed -E 's/version:[ ]*([0-9.]+).*/\1/')
-          tag=${GITHUB_REF_NAME#v}
-          echo "앱 $app / 태그 $tag"
-          test "$app" = "$tag"
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            tag=${GITHUB_REF_NAME#v}
+            echo "앱 $app / 태그 $tag"
+            test "$app" = "$tag"
+          fi
+          echo "VER=$app" >> "$GITHUB_ENV"
       - name: 이번 버전 변경 내역 뽑기
         run: |
-          ver=${GITHUB_REF_NAME#v}
+          ver=$VER
           awk -v v="## $ver" '$0==v{f=1;next} /^## /{f=0} f' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
           printf '\n---\n새 버전 설치 = 앱 파일 덮어쓰기, 설정은 유지됨. 앱의 설정 → "업데이트 확인" 으로도 설치할 수 있어요.\n' >> "$RUNNER_TEMP/notes.md"
           cat "$RUNNER_TEMP/notes.md"
@@ -169,7 +179,10 @@ jobs:
       - name: 공개
         uses: softprops/action-gh-release@v2
         with:
-          name: 채널관리비서 ${{ github.ref_name }}
+          name: 채널관리비서 v${{ env.VER }}
+          tag_name: v${{ env.VER }}
+          target_commitish: ${{ github.sha }}
+          make_latest: true
           body_path: ${{ runner.temp }}/notes.md
           files: |
             ${{ runner.temp }}/out/release-windows/channel-biseo-windows-setup.exe
