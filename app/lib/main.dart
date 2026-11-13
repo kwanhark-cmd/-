@@ -66,7 +66,16 @@ Future<void> main() async {
         return f?.path;
       },
       pickDirectory: () => FilePicker.getDirectoryPath(),
-      installUpdate: UpdateInstaller(log).install,
+      // 안드로이드: 앱을 지우면 앱 안의 파일도 지워지므로, 백업은 "다른 이름으로 저장" 창으로 앱 밖에 둔다.
+      saveFile: Platform.isAndroid
+          ? (name, bytes) async => _shownPath(
+              await FilePicker.saveFile(fileName: name, bytes: bytes, mimeType: 'application/octet-stream'),
+            )
+          : null,
+      // 앱 안에서 바로 설치는 윈도우만 (설치 프로그램이 같은 자리에 덮어씀, 자료 유지).
+      // 안드로이드는 백업 → 예전 앱 삭제 → 새 파일 설치 → 복원이라 다운로드 페이지를 연다.
+      // 맥·리눅스도 직접 받아서 바꾸는 방식 (다운로드 페이지).
+      installUpdate: Platform.isWindows ? UpdateInstaller(log).install : null,
       osName: Platform.operatingSystem,
       setLauncherIcon: Platform.isAndroid ? (id) => _look.invokeMethod<void>('setLauncherIcon', {'id': id}) : null,
       pinShortcut: Platform.isAndroid
@@ -79,6 +88,16 @@ Future<void> main() async {
     await state.tryAutoLogin();
     runApp(ChannelBiseoApp(state: state));
   }, (e, st) => logger?.error('앱 오류', e, st));
+}
+
+/// 저장한 곳을 사람이 읽을 수 있게 (취소하면 null)
+String? _shownPath(Uri? saved) {
+  if (saved == null) return null;
+  try {
+    return Uri.decodeFull(saved.path);
+  } catch (_) {
+    return saved.path;
+  }
 }
 
 Future<String> _documentsDir(Directory fallback) async {

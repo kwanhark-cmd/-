@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -7,9 +5,9 @@ import '../app/app.dart';
 import '../app/services.dart';
 import '../core/strings.dart';
 import '../features/ai/ai_service.dart';
-import '../features/settings/maintenance.dart';
 import 'common.dart';
 import 'app_look_section.dart';
+import 'backup_flow.dart';
 import 'connection_status.dart';
 import 'google_setup_screen.dart';
 import 'memos_screen.dart';
@@ -284,13 +282,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon3d: 'folder',
               child: ButtonWrap(
                 children: [
+                  if (u.env.saveFile != null) const Text(S.backupOutsideHint),
                   BigButton(
+                    key: const Key('backup-make'),
                     label: S.settingsBackup,
                     icon: Icons.save_alt,
                     primary: false,
                     onPressed: () => busy.run(_backup),
                   ),
                   BigButton(
+                    key: const Key('backup-restore'),
                     label: S.settingsRestore,
                     icon: Icons.restore,
                     primary: false,
@@ -577,33 +578,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return picked ?? u.env.documentsDir;
   }
 
-  Future<void> _backup() async {
-    try {
-      final path = u.maintenance.backupTo(await _exportDir());
-      if (mounted) await _info(S.settingsBackupDone, path);
-    } catch (e) {
-      if (mounted) await showFailure(context, e, onRetry: _backup);
-    }
-  }
+  Future<void> _backup() => backupFlow(context, u);
 
-  Future<void> _restore() async {
-    final path = await u.env.pickFile?.call(['sqlite']);
-    if (path == null || !mounted) return;
-    if (!Maintenance.isValidBackup(path)) {
-      toast(context, S.settingsRestoreBad);
-      return;
-    }
-    if (!await confirm(context, S.set18, yes: S.settingsRestore)) return;
-    final user = u.user;
-    final accounts = u.env.accounts;
-    widget.state.logout();
-    Maintenance.restoreFile(
-      backupPath: path,
-      targetDbPath: accounts.userDbPath(user.id),
-      safetyDir: '${accounts.userDir(user.id)}${Platform.pathSeparator}backups',
-    );
-    await widget.state.login(user);
-  }
+  Future<void> _restore() => restoreFlow(context, widget.state, u);
 
   Future<void> _report() async {
     try {

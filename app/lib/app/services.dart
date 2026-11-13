@@ -48,6 +48,7 @@ class AppEnv {
     this.aiProviders,
     this.pickFile,
     this.pickDirectory,
+    this.saveFile,
     this.installUpdate,
     this.osName = '',
     this.setLauncherIcon,
@@ -71,6 +72,10 @@ class AppEnv {
 
   /// 폴더 고르기. 고르지 않으면 null.
   final Future<String?> Function()? pickDirectory;
+
+  /// 운영체제의 "다른 이름으로 저장" 창으로 파일을 앱 밖(다운로드 폴더 등)에 저장.
+  /// 저장한 곳을 돌려주고, 취소하면 null. 안드로이드만 (앱을 지우면 앱 안의 파일도 지워지므로).
+  final Future<String?> Function(String fileName, Uint8List bytes)? saveFile;
 
   final String baseDir;
   final String documentsDir;
@@ -132,6 +137,9 @@ class UserContext {
 
   /// 마지막 업데이트 전 백업 폴더 (이번 실행 중)
   String? lastUpdateBackup;
+
+  /// 이번 실행 중 앱 밖에 저장한 마지막 백업 파일 (안드로이드 새 버전 안내에서 확인)
+  String? lastSavedBackup;
 
   /// 이 사용자가 쓴 앱 버전 기록. 업데이트 뒤 처음 열 때 한 줄 추가.
   void _recordVersion() {

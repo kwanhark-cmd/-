@@ -1,15 +1,15 @@
 import 'dart:io';
 
-import 'package:open_filex/open_filex.dart';
 import 'package:path/path.dart' as p;
 
 import '../../core/failure.dart';
 import '../../core/logger.dart';
 
 /// 내려받은 설치 파일로 실제 설치를 시작한다. 사용자가 "설치"를 눌렀을 때만 불린다.
-/// - 안드로이드: 운영체제의 앱 설치 화면을 연다 (사용자가 한 번 더 "설치"를 누름).
-/// - 윈도우: 설치 프로그램을 실행하고 앱을 닫는다. 같은 자리에 덮어써서 설치된다.
-/// - 맥: 앱이 닫힌 뒤 기존 .app 을 새 것으로 바꾸고 다시 연다.
+/// 앱에서는 윈도우만 쓴다 (main.dart): 설치 프로그램을 실행하고 앱을 닫는다. 같은 자리에 덮어써서 설치된다.
+/// 안드로이드는 앱 안에서 설치하지 않는다: 서명 키를 쓰지 않으므로 예전 앱을 지우고 새로 설치해야 하고,
+/// 앱을 지우면 앱 안의 자료가 지워져서 "백업 → 삭제 → 설치 → 복원" 순서 안내와 다운로드 페이지로 대신한다.
+/// 맥 코드는 남겨 두지만 앱에서는 쓰지 않는다 (샌드박스 안에서는 응용 프로그램 폴더의 앱을 바꿀 수 없음).
 /// 어느 경우든 사용자 자료 폴더와 보안 저장소는 건드리지 않는다.
 class UpdateInstaller {
   UpdateInstaller(this.logger);
@@ -17,12 +17,8 @@ class UpdateInstaller {
 
   Future<void> install(File file) async {
     if (Platform.isAndroid) {
-      final r = await OpenFilex.open(file.path, type: 'application/vnd.android.package-archive');
-      if (r.type != ResultType.done) {
-        logger.error('업데이트 설치 화면 열기 실패 [안드로이드] ${r.type.name}');
-        throw AppFailure(FailureKind.unknown, 'open apk ${r.type.name}');
-      }
-      return;
+      // 덮어쓰기 설치는 서명이 달라 거절되고, 예전 앱을 지우면 자료가 지워진다. 절대 여기서 설치하지 않는다.
+      throw AppFailure(FailureKind.notFound, 'no in-app install on android');
     }
     if (Platform.isWindows) {
       logger.info('업데이트 설치 프로그램 실행 [윈도우]');

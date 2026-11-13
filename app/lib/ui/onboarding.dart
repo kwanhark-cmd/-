@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../app/app.dart';
 import '../app/services.dart';
 import '../core/strings.dart';
+import 'backup_flow.dart';
 import 'channels_screen.dart';
 import 'common.dart';
 
@@ -124,6 +125,19 @@ class _OnboardingWizardState extends State<OnboardingWizard> {
             FontScalePicker(state: widget.state),
             const SizedBox(height: AppTokens.gapL),
             const Text(S.wiz1),
+            const SizedBox(height: AppTokens.gapXl),
+            // 새로 설치한 경우 (특히 안드로이드: 예전 앱을 지우고 설치) 백업으로 자료 되살리기
+            Text(S.wizRestoreTitle, style: t.titleMedium),
+            const SizedBox(height: AppTokens.gapS),
+            const Text(S.wizRestoreHint),
+            const SizedBox(height: AppTokens.gapS),
+            BigButton(
+              key: const Key('wizard-restore'),
+              label: S.settingsRestore,
+              icon: Icons.restore,
+              primary: false,
+              onPressed: () => restoreFlow(context, widget.state, u),
+            ),
           ],
         );
       case 1:

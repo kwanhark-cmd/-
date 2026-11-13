@@ -620,11 +620,26 @@ class S {
 
   // 업데이트
   static const updCheck = '업데이트 확인';
-  static const updCheckSub = '새 버전이 있는지 확인해요. 설치는 직접 누를 때만 해요.';
   static const updChecking = '새 버전 확인 중';
   static String updLatest(String v) => '지금 최신 버전이에요 ($v)';
   static String updNew(String v) => '새 버전 $v 이 나왔어요';
+  // 윈도우: 설치 프로그램이 같은 자리에 덮어써서 자료가 그대로 남는다.
   static const updKeepsData = '설치해도 설정·연결 열쇠·채널·영상 자료는 그대로예요. 설치 전에 자동으로 백업해요.';
+  // 안드로이드: 예전 앱을 지우고 새로 설치한다. 앱을 지우면 앱 안의 자료도 지워지므로 백업이 먼저.
+  static const updAndroidWarn = '안드로이드는 예전 앱을 지우고 새로 설치해요. 앱을 지우면 앱 안의 자료도 모두 지워지니, 꼭 백업부터 해 주세요.';
+  static const updAndroidSteps =
+      '1. 아래 "백업 만들기"를 눌러 백업 파일을 휴대폰의 "다운로드" 폴더처럼 앱 밖에 저장해요.\n'
+      '2. "설치 파일 받기"를 눌러 새 설치 파일을 받아요.\n'
+      '3. 예전 앱을 지워요. (꼭 1번 백업을 먼저!)\n'
+      '4. 받은 설치 파일을 열어 설치해요.\n'
+      '5. 새 앱에서 사용자를 만들고, 첫 실행 안내의 "백업에서 복원"(또는 설정 → 자료 관리)으로 1번 백업 파일을 골라요.\n'
+      '6. 구글 연결과 인공지능 연결 열쇠는 다시 넣어 주세요.';
+  static String updAndroidBackupDone(String where) => '백업 파일을 앱 밖에 저장했어요: $where\n이제 2번부터 하면 돼요.';
+  static const updAndroidNoBackup = '이번에 아직 백업 파일을 만들지 않았어요. 예전 앱을 지우면 자료가 모두 지워져요. 먼저 백업을 만들까요?';
+  static const updAndroidBackedUpAlready = '이미 백업했어요';
+  static const updDownloadFile = '설치 파일 받기';
+  static const updMacSteps = '맥: 새 파일을 받아 압축을 풀고, 응용 프로그램 폴더의 예전 앱을 새 앱으로 바꿔 주세요. 자료는 사용자 폴더에 그대로 남아요.';
+  static const updLinuxSteps = '리눅스: 새 파일을 받아 압축을 풀고, 예전 폴더를 새 것으로 바꿔 주세요. 자료는 사용자 폴더에 그대로 남아요.';
   static const updManual = '이 기기에서는 다운로드 페이지에서 받아 설치해 주세요.';
   static const updLater = '나중에';
   static const updInstall = '설치하기';
@@ -632,7 +647,12 @@ class S {
   static const updInstalling = '업데이트 준비 중';
   static const updBackingUp = '자료 백업 중';
   static const updDownloading = '새 버전 받는 중';
-  static const updStarted = '설치 화면을 열었어요. 안내에 따라 "설치"를 눌러 주세요.';
+  static const updStarted = '설치 프로그램을 시작했어요. 앱이 닫히고 새 버전으로 바뀌어요.';
+  // 백업 (앱 밖에 저장)
+  static const backupNotSaved = '백업 파일을 저장하지 않았어요. 저장할 곳을 골라야 백업이 만들어져요.';
+  static const backupOutsideHint = '백업 파일은 휴대폰의 "다운로드" 폴더처럼 앱 밖에 저장돼요. 앱을 지워도 남아 있어요.';
+  static const wizRestoreTitle = '예전에 쓰던 자료가 있나요?';
+  static const wizRestoreHint = '새로 설치했다면, 전에 만든 백업 파일로 자료를 되살릴 수 있어요. 연결 열쇠는 다시 넣어야 해요.';
   static const chanNoChannelAccount = '이 구글 계정에는 아직 유튜브 채널이 없어요. 채널을 가진 다른 구글 계정으로 연결해 주세요. (유튜브에서 채널을 먼저 만들어도 돼요)';
   static const chanOtherAccount = '다른 계정으로 연결';
   static String chanAddedSomeEmpty(int n, int empty) => '채널 $n개를 등록했어요. 그중 $empty개는 아직 영상이 없는 채널이에요.';
