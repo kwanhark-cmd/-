@@ -375,5 +375,24 @@ void main() {
       expect(android.indexOf('백업 만들기'), lessThan(android.indexOf('예전 앱을 지워요')));
       expect(s, isNot(contains('덮어쓰기, 설정은 유지됨')));
     });
+
+    test('안내 문서에 키 넣기 안내가 없고, 안드로이드는 지우기 전에 백업', () {
+      for (final f in ['../README.md', '../BLOCKERS.md', '../PROGRESS.md', 'CHANGELOG.md']) {
+        final s = read(f);
+        expect(s, isNot(contains('ANDROID_KEYSTORE')), reason: f);
+        expect(s, isNot(contains('안드로이드 서명 키" 대로')), reason: f);
+        expect(s, isNot(contains('새 버전 설치 = 덮어쓰기')), reason: f);
+      }
+      final readme = read('../README.md');
+      expect(readme, contains('https://github.com/kwanhark-cmd/-/releases'));
+      final android = readme.substring(readme.indexOf('**안드로이드 (꼭 이 순서대로)**'));
+      expect(android.indexOf('백업 만들기'), lessThan(android.indexOf('예전 앱을 지워요')));
+    });
+
+    test('변경 내역 맨 위 버전 = 앱 버전 (새 버전 공개 때 안내 글로 들어감)', () {
+      final ver = RegExp(r'^version: (\S+)\+', multiLine: true).firstMatch(read('pubspec.yaml'))!.group(1);
+      final first = RegExp(r'^## (\S+)', multiLine: true).firstMatch(read('CHANGELOG.md'))!.group(1);
+      expect(first, ver);
+    });
   });
 }
