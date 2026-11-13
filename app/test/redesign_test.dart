@@ -46,10 +46,10 @@ Future<void> reveal(WidgetTester t, Finder f) async {
 void main() {
   group('색', () {
     for (final e in themes.entries) {
-      test('${e.key}: 영역 색 타일 위 글자 대비 4.5:1 이상, 진한 아이콘 칩 위 흰 아이콘 3:1 이상', () {
+      test('${e.key}: 영역 색 타일 위 글자 대비 7:1 이상, 진한 아이콘 칩 위 흰 아이콘 3:1 이상', () {
         final t = e.value;
         for (final h in Hue.values) {
-          expect(contrastRatio(t.tileBg(h), t.onTile(h)), greaterThanOrEqualTo(4.5), reason: '$h 글자');
+          expect(contrastRatio(t.tileBg(h), t.onTile(h)), greaterThanOrEqualTo(7), reason: '$h 글자');
           expect(contrastRatio(t.hueStrong(h), t.onHueStrong(h)), greaterThanOrEqualTo(3), reason: '$h 아이콘');
         }
       });

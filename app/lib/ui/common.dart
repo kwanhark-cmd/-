@@ -40,6 +40,8 @@ class BigButton extends StatelessWidget {
       constraints: const BoxConstraints(minWidth: 120),
       child: Press3D(
         color: bg,
+        // 보조 동작은 2px 테두리로 바탕과 확실히 구분
+        border: (primary || danger) ? null : BorderSide(color: t.outline, width: AppTokens.outlineWidth),
         onTap: onPressed,
         semanticLabel: label,
         child: ConstrainedBox(
@@ -285,7 +287,7 @@ Future<bool> confirm(
         actions: [
           TextButton(onPressed: () => Navigator.pop(c, false), child: Text(no)),
           FilledButton(
-            style: danger ? FilledButton.styleFrom(backgroundColor: t.danger, foregroundColor: t.onDanger) : null,
+            style: danger ? dangerButtonStyle(t) : null,
             onPressed: () => Navigator.pop(c, true),
             child: Text(yes),
           ),

@@ -135,12 +135,14 @@ void main() {
   group('색 묶음', () {
     for (final p in ColorTheme.values) {
       for (final dark in [false, true]) {
-        test('${p.name} ${dark ? '어두움' : '밝음'}: 버튼·보조 버튼 글자 대비 4.5:1 이상', () {
+        test('${p.name} ${dark ? '어두움' : '밝음'}: 버튼·보조 버튼 글자 대비 7:1 이상 (눌렀을 때도), 테두리 선이 보임', () {
           final t = (dark ? AppTokens.dark() : AppTokens.light()).withPalette(p);
-          expect(contrastRatio(t.primary, t.onPrimary), greaterThanOrEqualTo(4.5));
-          expect(contrastRatio(t.accent, t.onAccent), greaterThanOrEqualTo(4.5));
-          expect(contrastRatio(t.tonal, t.onTonal), greaterThanOrEqualTo(4.5));
+          for (final (bg, fg) in [(t.primary, t.onPrimary), (t.accent, t.onAccent), (t.tonal, t.onTonal)]) {
+            expect(contrastRatio(bg, fg), greaterThanOrEqualTo(7));
+            expect(contrastRatio(AppTokens.pressedBg(bg), fg), greaterThanOrEqualTo(7));
+          }
           expect(contrastRatio(t.primary, t.card), greaterThanOrEqualTo(3));
+          expect(contrastRatio(t.outline, t.background), greaterThanOrEqualTo(3));
         });
       }
     }

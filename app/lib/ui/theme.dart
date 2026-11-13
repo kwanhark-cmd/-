@@ -118,13 +118,19 @@ class AppTokens extends ThemeExtension<AppTokens> {
   static const double micSize = 84;
   static const double contentMaxWidth = 720;
 
-  /// 큰 숫자 (게이지·통계). 글씨 단계: hero 34 > title 26 > section 21 > body 17 > small 15
+  /// 큰 숫자 (게이지·통계). 글씨 단계: hero 34 > title 26 > section 21 > body 17 > small 16
   static const fontHero = 34.0;
   static const fontTitle = 26.0;
   static const fontSection = 21.0;
   static const fontBody = 17.0;
   static const fontButton = 18.0;
-  static const fontSmall = 15.0;
+  static const fontSmall = 16.0;
+
+  /// 버튼 글자 최소 크기·버튼 최소 높이·테두리 두께 (잘 보이게 다시 정한 기준, 테스트로 확인)
+  static const fontButtonMin = 17.0;
+  static const buttonMinHeight = 52.0;
+  static const outlineWidth = 2.0;
+  static const focusWidth = 3.0;
 
   // ---- 움직임 시간 (움직임 줄이기면 0) ----
   Duration get fast => reduceMotion ? Duration.zero : const Duration(milliseconds: 150);
@@ -158,12 +164,12 @@ class AppTokens extends ThemeExtension<AppTokens> {
     if (highContrast) return card;
     final dark = background.computeLuminance() < 0.2;
     return switch (h) {
-      Hue.blue => dark ? const Color(0xFF2F5EAE) : const Color(0xFFDCEAFF),
-      Hue.purple => dark ? const Color(0xFF6A45B8) : const Color(0xFFEDE3FF),
+      Hue.blue => dark ? const Color(0xFF2B559E) : const Color(0xFFDCEAFF),
+      Hue.purple => dark ? const Color(0xFF6441AE) : const Color(0xFFEDE3FF),
       Hue.yellow => dark ? const Color(0xFFD9A514) : const Color(0xFFFFF1BF),
-      Hue.orange => dark ? const Color(0xFFB04E14) : const Color(0xFFFFE4D1),
-      Hue.green => dark ? const Color(0xFF237447) : const Color(0xFFD9F4E3),
-      Hue.red => dark ? const Color(0xFFB3261E) : const Color(0xFFFFE0DE),
+      Hue.orange => dark ? const Color(0xFF8F4010) : const Color(0xFFFFE4D1),
+      Hue.green => dark ? const Color(0xFF1E633D) : const Color(0xFFD9F4E3),
+      Hue.red => dark ? const Color(0xFFA7241C) : const Color(0xFFFFE0DE),
       Hue.slate => dark ? const Color(0xFF4A5280) : const Color(0xFFE6E9F4),
     };
   }
@@ -237,14 +243,14 @@ class AppTokens extends ThemeExtension<AppTokens> {
   static AppTokens light({bool reduceMotion = false}) => AppTokens(
     primary: const Color(0xFF3949AB),
     onPrimary: const Color(0xFFFFFFFF),
-    accent: const Color(0xFFC2410C),
+    accent: const Color(0xFF9A3412),
     onAccent: const Color(0xFFFFFFFF),
     tonal: const Color(0xFFE3E7FA),
     onTonal: const Color(0xFF26338A),
-    success: const Color(0xFF15803D),
-    progress: const Color(0xFF1D4ED8),
+    success: const Color(0xFF166534),
+    progress: const Color(0xFF1E40AF),
     warning: const Color(0xFFFACC15),
-    danger: const Color(0xFFB91C1C),
+    danger: const Color(0xFF991B1B),
     onStatusDark: const Color(0xFF1F2328),
     background: const Color(0xFFF6F7FB),
     card: const Color(0xFFFFFFFF),
@@ -258,15 +264,15 @@ class AppTokens extends ThemeExtension<AppTokens> {
 
   static AppTokens dark({bool reduceMotion = false}) => AppTokens(
     primary: const Color(0xFF8C9EFF),
-    onPrimary: const Color(0xFF10163F),
-    accent: const Color(0xFFC2410C),
+    onPrimary: const Color(0xFF0A0E2E),
+    accent: const Color(0xFF9A3412),
     onAccent: const Color(0xFFFFFFFF),
     tonal: const Color(0xFF2A3157),
     onTonal: const Color(0xFFDDE2FF),
-    success: const Color(0xFF15803D),
-    progress: const Color(0xFF1D4ED8),
+    success: const Color(0xFF166534),
+    progress: const Color(0xFF1E40AF),
     warning: const Color(0xFFFACC15),
-    danger: const Color(0xFFB91C1C),
+    danger: const Color(0xFF991B1B),
     onStatusDark: const Color(0xFF1F2328),
     background: const Color(0xFF12131C),
     card: const Color(0xFF242739),
@@ -329,12 +335,12 @@ class AppTokens extends ThemeExtension<AppTokens> {
     final dark = background.computeLuminance() < 0.2;
     // (주요색, 주요색 위 글자, 강조색, 강조색 위 글자, 보조 바탕, 보조 글자) — 대비는 테스트로 확인
     final c = switch ((p, dark)) {
-      (ColorTheme.ocean, false) => (0xFF0B5C8C, 0xFFFFFFFF, 0xFF0F766E, 0xFFFFFFFF, 0xFFDCEFF7, 0xFF0B4566),
-      (ColorTheme.ocean, true) => (0xFF7CC4F0, 0xFF062033, 0xFF0F766E, 0xFFFFFFFF, 0xFF1E3A4C, 0xFFD6EEFA),
-      (ColorTheme.forest, false) => (0xFF2E6B3A, 0xFFFFFFFF, 0xFFB45309, 0xFFFFFFFF, 0xFFE1F0E3, 0xFF1F4D29),
-      (ColorTheme.forest, true) => (0xFF8FD19E, 0xFF0E2A15, 0xFFB45309, 0xFFFFFFFF, 0xFF22392A, 0xFFDDF2E2),
-      (ColorTheme.sunset, false) => (0xFF7B2D8E, 0xFFFFFFFF, 0xFFBE185D, 0xFFFFFFFF, 0xFFF3E2F7, 0xFF5A1F68),
-      (ColorTheme.sunset, true) => (0xFFD7A6E6, 0xFF2E0F38, 0xFFBE185D, 0xFFFFFFFF, 0xFF3A2445, 0xFFF3DDF8),
+      (ColorTheme.ocean, false) => (0xFF0B5C8C, 0xFFFFFFFF, 0xFF0C615B, 0xFFFFFFFF, 0xFFDCEFF7, 0xFF0B4566),
+      (ColorTheme.ocean, true) => (0xFF7CC4F0, 0xFF062033, 0xFF0C615B, 0xFFFFFFFF, 0xFF1E3A4C, 0xFFD6EEFA),
+      (ColorTheme.forest, false) => (0xFF2A6135, 0xFFFFFFFF, 0xFF8C4107, 0xFFFFFFFF, 0xFFE1F0E3, 0xFF1F4D29),
+      (ColorTheme.forest, true) => (0xFF8FD19E, 0xFF0E2A15, 0xFF8C4107, 0xFFFFFFFF, 0xFF22392A, 0xFFDDF2E2),
+      (ColorTheme.sunset, false) => (0xFF7B2D8E, 0xFFFFFFFF, 0xFFA71552, 0xFFFFFFFF, 0xFFF3E2F7, 0xFF5A1F68),
+      (ColorTheme.sunset, true) => (0xFFD7A6E6, 0xFF2E0F38, 0xFFA71552, 0xFFFFFFFF, 0xFF3A2445, 0xFFF3DDF8),
       _ => (
         primary.toARGB32(),
         onPrimary.toARGB32(),
@@ -366,6 +372,25 @@ class AppTokens extends ThemeExtension<AppTokens> {
       highContrast: highContrast,
     );
   }
+
+  /// 눌렀을 때 바탕 위에 덮는 색: 어두운 바탕(밝은 글자)은 더 어둡게, 밝은 바탕(어두운 글자)은 더 밝게.
+  /// 그래서 눌러도 글자 대비가 줄지 않고 오히려 커진다.
+  /// 이미 검정·흰색에 가까운 바탕은 더 갈 곳이 없어 반대쪽으로 조금 (대비는 12:1 이상 그대로).
+  static Color pressOverlay(Color bg) {
+    final l = bg.computeLuminance();
+    if (l < 0.01) return const Color(0x33FFFFFF);
+    if (l > 0.9) return const Color(0x22000000);
+    return l < 0.2 ? const Color(0x33000000) : const Color(0x66FFFFFF);
+  }
+
+  /// 눌린 상태의 바탕색 (테스트에서 대비를 확인).
+  static Color pressedBg(Color bg) => Color.alphaBlend(pressOverlay(bg), bg);
+
+  /// 키보드로 고른(초점) 버튼 둘레 선: 본문 글자색이라 바탕과 대비가 크다.
+  Color get focusRing => text;
+
+  /// 테두리 버튼의 선 색: 고대비는 글자색, 그 밖에는 주요색 (바탕·카드와 3:1 이상, 테스트로 확인).
+  Color get outline => highContrast ? border : primary;
 
   /// 빨강(위험) 버튼 위 글자색: 보통 흰색, 고대비 어두운 모드(밝은 빨강)에서는 검정.
   Color get onDanger => danger.computeLuminance() > 0.35 ? const Color(0xFF000000) : const Color(0xFFFFFFFF);
@@ -413,6 +438,53 @@ double contrastRatio(Color a, Color b) {
   return (math.max(la, lb) + 0.05) / (math.min(la, lb) + 0.05);
 }
 
+const _buttonText = TextStyle(fontFamily: 'NotoSansKR', fontSize: AppTokens.fontButton, fontWeight: FontWeight.w700);
+const _buttonPad = EdgeInsets.symmetric(horizontal: AppTokens.gapL, vertical: AppTokens.gapM);
+
+/// 색을 채운 버튼 모양 (주요 동작·위험 동작·안내 띠 버튼이 함께 씀).
+/// 눌림은 바탕색을 바꿔 보이고(글자 대비는 오히려 커짐), 초점은 굵은 둘레 선으로 보인다.
+ButtonStyle solidButtonStyle(AppTokens t, Color bg, Color fg) => ButtonStyle(
+  backgroundColor: WidgetStateProperty.resolveWith((s) {
+    if (s.contains(WidgetState.disabled)) return Color.alphaBlend(t.background.withValues(alpha: 0.55), bg);
+    if (s.contains(WidgetState.pressed)) return AppTokens.pressedBg(bg);
+    if (s.contains(WidgetState.hovered) || s.contains(WidgetState.focused)) {
+      return Color.alphaBlend(AppTokens.pressOverlay(bg).withValues(alpha: 0.12), bg);
+    }
+    return bg;
+  }),
+  foregroundColor: WidgetStateProperty.resolveWith(
+    (s) => s.contains(WidgetState.disabled) ? Color.alphaBlend(t.background.withValues(alpha: 0.4), fg) : fg,
+  ),
+  iconColor: WidgetStateProperty.all(fg),
+  overlayColor: const WidgetStatePropertyAll(Colors.transparent),
+  minimumSize: const WidgetStatePropertyAll(Size(AppTokens.touch, AppTokens.buttonHeight)),
+  padding: const WidgetStatePropertyAll(_buttonPad),
+  textStyle: const WidgetStatePropertyAll(_buttonText),
+  elevation: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.pressed) ? 0 : 2),
+  shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTokens.radius))),
+  side: WidgetStateProperty.resolveWith((s) {
+    if (s.contains(WidgetState.focused)) return BorderSide(color: t.focusRing, width: AppTokens.focusWidth);
+    return t.highContrast ? BorderSide(color: t.border, width: AppTokens.outlineWidth) : BorderSide.none;
+  }),
+  tapTargetSize: MaterialTapTargetSize.padded,
+);
+
+/// 테두리 버튼 (보조 동작): 옅은 바탕 + 2px 선. 누르면 선이 더 굵어지고 바탕이 바뀐다.
+ButtonStyle outlineButtonStyle(AppTokens t) => solidButtonStyle(t, t.tonal, t.onTonal).copyWith(
+  elevation: const WidgetStatePropertyAll(0),
+  side: WidgetStateProperty.resolveWith((s) {
+    if (s.contains(WidgetState.disabled)) {
+      return BorderSide(color: Color.alphaBlend(t.background.withValues(alpha: 0.55), t.outline), width: 2);
+    }
+    if (s.contains(WidgetState.focused)) return BorderSide(color: t.focusRing, width: AppTokens.focusWidth);
+    if (s.contains(WidgetState.pressed)) return BorderSide(color: t.outline, width: AppTokens.focusWidth);
+    return BorderSide(color: t.outline, width: AppTokens.outlineWidth);
+  }),
+);
+
+/// 위험 동작(삭제·초기화) 버튼: 빨강 바탕.
+ButtonStyle dangerButtonStyle(AppTokens t) => solidButtonStyle(t, t.danger, t.onDanger);
+
 /// 토큰으로 Flutter 테마를 만든다. 버튼은 모두 색이 있는 버튼(회색 글자 버튼 없음).
 ThemeData buildAppTheme(AppTokens t, Brightness b) {
   final base = ColorScheme.fromSeed(seedColor: t.primary, brightness: b);
@@ -436,13 +508,8 @@ ThemeData buildAppTheme(AppTokens t, Brightness b) {
     errorContainer: t.danger,
     onErrorContainer: t.onDanger,
   );
-  final shape = RoundedRectangleBorder(
-    borderRadius: BorderRadius.circular(AppTokens.radius),
-    side: t.highContrast ? BorderSide(color: t.border, width: 2) : BorderSide.none,
-  );
   const minSize = Size(AppTokens.touch, AppTokens.buttonHeight);
-  const textStyle = TextStyle(fontFamily: 'NotoSansKR', fontSize: AppTokens.fontButton, fontWeight: FontWeight.w700);
-  const pad = EdgeInsets.symmetric(horizontal: AppTokens.gapL, vertical: AppTokens.gapM);
+  const textStyle = _buttonText;
   final transitions = t.reduceMotion
       ? const PageTransitionsTheme(
           builders: {
@@ -495,6 +562,18 @@ ThemeData buildAppTheme(AppTokens t, Brightness b) {
       bodyMedium: TextStyle(fontFamily: 'NotoSansKR', fontSize: AppTokens.fontBody, color: t.text),
       bodySmall: TextStyle(fontFamily: 'NotoSansKR', fontSize: AppTokens.fontSmall, color: t.textSoft),
       labelLarge: textStyle,
+      labelMedium: TextStyle(
+        fontFamily: 'NotoSansKR',
+        fontSize: AppTokens.fontSmall,
+        fontWeight: FontWeight.w700,
+        color: t.text,
+      ),
+      labelSmall: TextStyle(
+        fontFamily: 'NotoSansKR',
+        fontSize: AppTokens.fontSmall,
+        fontWeight: FontWeight.w700,
+        color: t.text,
+      ),
     ),
     appBarTheme: AppBarTheme(
       backgroundColor: t.background,
@@ -521,45 +600,29 @@ ThemeData buildAppTheme(AppTokens t, Brightness b) {
       ),
       margin: const EdgeInsets.symmetric(vertical: AppTokens.cardGap / 2),
     ),
-    filledButtonTheme: FilledButtonThemeData(
-      style: FilledButton.styleFrom(
-        backgroundColor: t.accent,
-        foregroundColor: t.onAccent,
-        minimumSize: minSize,
-        padding: pad,
-        textStyle: textStyle,
-        shape: shape,
-        elevation: 2,
-      ),
-    ),
-    outlinedButtonTheme: OutlinedButtonThemeData(
-      style: OutlinedButton.styleFrom(
-        backgroundColor: t.tonal,
-        foregroundColor: t.onTonal,
-        minimumSize: minSize,
-        padding: pad,
-        textStyle: textStyle,
-        shape: shape,
-        side: BorderSide(color: t.highContrast ? t.border : t.tonal, width: t.highContrast ? 2 : 1),
-      ),
-    ),
-    textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(
-        backgroundColor: t.tonal,
-        foregroundColor: t.onTonal,
-        minimumSize: minSize,
-        padding: pad,
-        textStyle: textStyle,
-        shape: shape,
-      ),
-    ),
+    filledButtonTheme: FilledButtonThemeData(style: solidButtonStyle(t, t.accent, t.onAccent)),
+    elevatedButtonTheme: ElevatedButtonThemeData(style: solidButtonStyle(t, t.accent, t.onAccent)),
+    outlinedButtonTheme: OutlinedButtonThemeData(style: outlineButtonStyle(t)),
+    textButtonTheme: TextButtonThemeData(style: outlineButtonStyle(t)),
     iconButtonTheme: IconButtonThemeData(
-      style: IconButton.styleFrom(
-        backgroundColor: t.tonal,
-        foregroundColor: t.onTonal,
-        minimumSize: const Size(AppTokens.touch, AppTokens.touch),
-        iconSize: AppTokens.iconS + 2,
-      ),
+      style:
+          IconButton.styleFrom(
+            backgroundColor: t.tonal,
+            foregroundColor: t.onTonal,
+            minimumSize: const Size(AppTokens.touch, AppTokens.touch),
+            iconSize: AppTokens.iconS + 2,
+            tapTargetSize: MaterialTapTargetSize.padded,
+          ).copyWith(
+            backgroundColor: WidgetStateProperty.resolveWith(
+              (s) => s.contains(WidgetState.pressed) ? AppTokens.pressedBg(t.tonal) : t.tonal,
+            ),
+            overlayColor: const WidgetStatePropertyAll(Colors.transparent),
+            side: WidgetStateProperty.resolveWith((s) {
+              if (s.contains(WidgetState.focused)) return BorderSide(color: t.focusRing, width: AppTokens.focusWidth);
+              if (s.contains(WidgetState.pressed)) return BorderSide(color: t.outline, width: AppTokens.outlineWidth);
+              return t.highContrast ? BorderSide(color: t.border, width: AppTokens.outlineWidth) : BorderSide.none;
+            }),
+          ),
     ),
     segmentedButtonTheme: SegmentedButtonThemeData(
       style: SegmentedButton.styleFrom(
@@ -569,6 +632,7 @@ ThemeData buildAppTheme(AppTokens t, Brightness b) {
         selectedForegroundColor: t.onPrimary,
         minimumSize: minSize,
         textStyle: textStyle,
+        side: BorderSide(color: t.outline, width: AppTokens.outlineWidth),
       ),
     ),
     chipTheme: ChipThemeData(
@@ -601,12 +665,7 @@ ThemeData buildAppTheme(AppTokens t, Brightness b) {
       indicatorColor: t.tonal,
       height: 76,
       labelTextStyle: WidgetStatePropertyAll(
-        TextStyle(
-          fontFamily: 'NotoSansKR',
-          fontSize: AppTokens.fontSmall - 1,
-          fontWeight: FontWeight.w700,
-          color: t.text,
-        ),
+        TextStyle(fontFamily: 'NotoSansKR', fontSize: AppTokens.fontSmall, fontWeight: FontWeight.w700, color: t.text),
       ),
       iconTheme: WidgetStateProperty.resolveWith(
         (s) => IconThemeData(size: 28, color: s.contains(WidgetState.selected) ? t.onTonal : t.textSoft),

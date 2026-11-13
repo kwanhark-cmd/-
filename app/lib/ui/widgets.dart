@@ -65,11 +65,15 @@ class Press3D extends StatefulWidget {
 
 class _Press3DState extends State<Press3D> {
   bool _down = false;
+  bool _focused = false;
 
   void _set(bool v) {
     if (widget.onTap == null) return;
     setState(() => _down = v);
   }
+
+  BorderSide _thicker(BorderSide side) =>
+      _down && side != BorderSide.none ? side.copyWith(width: AppTokens.focusWidth) : side;
 
   @override
   Widget build(BuildContext context) {
@@ -105,10 +109,28 @@ class _Press3DState extends State<Press3D> {
                 color: base,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(widget.radius),
-                  side: widget.border ?? (t.highContrast ? BorderSide(color: t.border, width: 2) : BorderSide.none),
+                  // 초점(키보드로 고름)은 굵은 둘레 선, 눌림은 테두리 버튼의 선을 굵게
+                  side: _focused
+                      ? BorderSide(color: t.focusRing, width: AppTokens.focusWidth)
+                      : _thicker(
+                          widget.border ??
+                              (t.highContrast
+                                  ? BorderSide(color: t.border, width: AppTokens.outlineWidth)
+                                  : BorderSide.none),
+                        ),
                 ),
                 clipBehavior: Clip.antiAlias,
                 child: InkWell(
+                  // 눌림은 바탕색을 글자에서 더 멀어지는 쪽으로 바꿔 보임 (글자 대비가 줄지 않음)
+                  overlayColor: WidgetStateProperty.resolveWith((s) {
+                    if (s.contains(WidgetState.pressed)) return AppTokens.pressOverlay(base);
+                    if (s.contains(WidgetState.hovered) || s.contains(WidgetState.focused)) {
+                      return AppTokens.pressOverlay(base).withValues(alpha: 0.12);
+                    }
+                    return Colors.transparent;
+                  }),
+                  splashColor: AppTokens.pressOverlay(base),
+                  onFocusChange: (v) => setState(() => _focused = v),
                   onTap: enabled
                       ? () {
                           UiPrefs.tap();
@@ -712,10 +734,7 @@ class _TipBannerState extends State<TipBanner> {
             Align(
               alignment: Alignment.centerRight,
               child: FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: t.onTile(Hue.slate),
-                  foregroundColor: t.tileBg(Hue.slate),
-                ),
+                style: solidButtonStyle(t, t.onTile(Hue.slate), t.tileBg(Hue.slate)),
                 onPressed: () {
                   widget.onSeen();
                   setState(() => hidden = true);
@@ -897,6 +916,7 @@ class ChoiceWrap<T> extends StatelessWidget {
           Press3D(
             key: ValueKey('choice-$v'),
             color: v == value ? t.primary : t.tonal,
+            border: v == value ? null : BorderSide(color: t.outline, width: AppTokens.outlineWidth),
             depth: 3,
             semanticLabel: label,
             onTap: () => onChanged(v),
