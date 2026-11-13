@@ -2,6 +2,7 @@ name: 빌드와 테스트
 
 # push 할 때마다 테스트를 돌리고, 윈도우·맥·안드로이드·리눅스 설치 파일을 만든다.
 # 버전 태그(v1.2.0 처럼)를 올리면 GitHub Releases 에 설치 파일과 변경 내역을 공개한다.
+# 서명 키·비밀 값은 쓰지 않는다. 안드로이드 설치 파일도 언제나 함께 공개한다.
 # 앱 안의 "업데이트 확인" 이 이 공개본을 읽는다.
 on:
   push:
@@ -128,21 +129,10 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
-      - name: 서명 키 준비 (있을 때만)
-        env:
-          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-        run: |
-          if [ -n "$KEYSTORE_B64" ]; then
-            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
-            echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
-          else
-            echo "::warning::안드로이드 서명 키가 없어 테스트용 서명으로 만듭니다. 이 경우 업데이트 설치가 안 될 수 있어요 (README 참고)."
-          fi
-      - run: flutter build apk --release
-        env:
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      # 서명 키는 쓰지 않는다 (주인 결정). 안드로이드 새 버전은 백업 → 예전 앱 삭제 → 설치 → 복원.
+      # 가끔 내려받기 문제로 실패해서 한 번만 다시 시도한다.
+      - name: 안드로이드 설치 파일 만들기
+        run: flutter build apk --release || { echo "한 번 더 시도"; sleep 20; flutter build apk --release; }
       - run: cp build/app/outputs/flutter-apk/app-release.apk build/channel-biseo-android.apk
       - uses: actions/upload-artifact@v4
         with:
@@ -170,8 +160,27 @@ jobs:
       - name: 이번 버전 변경 내역 뽑기
         run: |
           ver=$VER
-          awk -v v="## $ver" '$0==v{f=1;next} /^## /{f=0} f' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
-          printf '\n---\n새 버전 설치 = 앱 파일 덮어쓰기, 설정은 유지됨. 앱의 설정 → "업데이트 확인" 으로도 설치할 수 있어요.\n' >> "$RUNNER_TEMP/notes.md"
+          # 맨 위는 안드로이드 순서 (이미 설치된 앱의 업데이트 창은 이 글의 맨 위부터 보여 준다).
+          cat > "$RUNNER_TEMP/notes.md" <<'NOTES'
+          ## 안드로이드 새 버전으로 바꾸는 순서 (꼭 이 순서대로)
+          안드로이드는 예전 앱을 지우고 새로 설치해요. 앱을 지우면 앱 안의 자료도 모두 지워지니 백업이 먼저예요.
+          1. 지금 쓰는 앱에서 설정 → 자료 관리 → "백업 만들기"를 눌러, 백업 파일을 휴대폰의 "다운로드" 폴더처럼 앱 밖에 저장해요.
+          2. 휴대폰의 "파일"(내 파일) 앱에서 다운로드 폴더에 백업 파일(채널비서-백업-….sqlite)이 있는지 확인해요. 저장된 곳에 "com.channelbiseo" 나 "Android/data" 가 들어 있으면 앱 안이라 지우면 사라져요. 다시 "다운로드" 폴더를 골라 백업해 주세요.
+          3. 아래 Assets 에서 channel-biseo-android.apk 를 받아요. (앱 안의 "설치하기"는 안드로이드에서는 되지 않아요)
+          4. 예전 앱을 지워요. (1·2번을 먼저 했는지 꼭 확인!)
+          5. 받은 apk 를 열어 설치해요.
+          6. 새 앱에서 사용자를 만들고, 첫 실행 안내의 "백업에서 복원"(또는 설정 → 자료 관리)으로 1번 백업 파일을 골라요.
+          7. 구글 연결과 인공지능 연결 열쇠는 다시 넣어 주세요.
+
+          NOTES
+          awk -v v="## $ver" '$0==v{f=1;next} /^## /{f=0} f' CHANGELOG.md >> "$RUNNER_TEMP/notes.md"
+          cat >> "$RUNNER_TEMP/notes.md" <<'NOTES'
+
+          ---
+          윈도우: channel-biseo-windows-setup.exe 를 받아 실행하면 같은 자리에 설치돼요. 자료는 그대로예요. (앱의 설정 → "업데이트 확인" → "설치하기"로도 돼요)
+          맥: channel-biseo-macos.zip 을 받아 풀고, 응용 프로그램 폴더의 예전 앱을 새 앱으로 바꿔요. 자료는 그대로예요.
+          리눅스: channel-biseo-linux.tar.gz 를 받아 풀고, 예전 폴더를 새 것으로 바꿔요. 자료는 그대로예요.
+          NOTES
           cat "$RUNNER_TEMP/notes.md"
       - uses: actions/download-artifact@v4
         with:

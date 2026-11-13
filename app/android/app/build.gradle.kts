@@ -30,24 +30,11 @@ android {
         versionName = flutter.versionName
     }
 
-    // 업데이트(덮어쓰기 설치)가 되려면 모든 버전이 같은 서명 키여야 한다.
-    // 키 파일은 저장소에 넣지 않고, 빌드할 때 환경 변수로 받는다 (README "안드로이드 서명 키").
-    val keystorePath = System.getenv("ANDROID_KEYSTORE_PATH")
-    signingConfigs {
-        if (keystorePath != null && file(keystorePath).exists()) {
-            create("release") {
-                storeFile = file(keystorePath)
-                storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
-                keyAlias = System.getenv("ANDROID_KEY_ALIAS")
-                keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
-            }
-        }
-    }
-
+    // 서명 키는 쓰지 않는다 (주인 결정). 모든 버전이 테스트용(debug) 서명이라 덮어쓰기 설치가 안 되므로,
+    // 안드로이드 새 버전은 "백업 만들기 → 예전 앱 삭제 → 새 파일 설치 → 백업에서 복원" 순서로 바꾼다.
     buildTypes {
         release {
-            // 서명 키가 없으면 테스트용 서명 (이 경우 업데이트 설치가 안 될 수 있음)
-            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 }
