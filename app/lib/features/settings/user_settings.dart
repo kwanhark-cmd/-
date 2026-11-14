@@ -25,6 +25,10 @@ class UserSettings {
   bool get onboardingDone => _get('onboardingDone', false);
   set onboardingDone(bool v) => db.setSetting('onboardingDone', v);
 
+  /// 앱이 꺼져 있어도 자동 작업 (운영체제 예약에 등록했는지)
+  bool get osScheduleEnabled => _get('osScheduleEnabled', false);
+  set osScheduleEnabled(bool v) => db.setSetting('osScheduleEnabled', v);
+
   // 앱 꾸미기
   /// 앱 이름 (빈 값이면 기본 이름)
   String get appDisplayName => _get('appDisplayName', '');

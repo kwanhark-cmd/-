@@ -14,6 +14,7 @@ import '../features/ai/brain.dart';
 import '../features/edits/edit_service.dart';
 import '../features/runner/job_runner.dart';
 import '../features/runner/notifier.dart';
+import '../features/runner/os_schedule.dart';
 import '../features/settings/app_look.dart';
 import '../features/settings/maintenance.dart';
 import '../features/settings/user_settings.dart';
@@ -52,8 +53,12 @@ class AppEnv {
     this.installUpdate,
     this.osName = '',
     this.setLauncherIcon,
+    this.osScheduler,
     this.pinShortcut,
   });
+
+  /// 앱이 꺼져 있어도 자동 작업 (컴퓨터만, 그 밖은 null)
+  final OsScheduler? osScheduler;
 
   /// 안드로이드 홈 화면 아이콘 바꾸기 / 바로가기 만들기 (다른 운영체제는 null)
   final Future<void> Function(String iconId)? setLauncherIcon;

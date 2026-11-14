@@ -6,6 +6,7 @@ import 'package:channel_biseo/core/secret_store.dart';
 import 'package:channel_biseo/features/accounts/local_accounts.dart';
 import 'package:channel_biseo/features/ai/ai_service.dart';
 import 'package:channel_biseo/features/runner/notifier.dart';
+import 'package:channel_biseo/features/runner/os_schedule.dart';
 import 'package:channel_biseo/features/voice/voice_io.dart';
 import 'package:channel_biseo/features/youtube/mock_youtube_api.dart';
 import 'package:http/http.dart' as http;
@@ -33,6 +34,8 @@ class TestKit {
     List<String> speech = const [],
     MockYouTubeApi? yt,
     this.android = false,
+    this.osScheduler,
+    this.inMemoryDb = true,
   }) : clock = TestClock(start),
        secrets = MemorySecretStore(),
        speaker = FakeSpeaker(),
@@ -67,11 +70,12 @@ class TestKit {
     appVersion: '0.0.0+test',
     launchUrl: (u) async => true,
     now: clock.call,
-    inMemoryDb: true,
+    inMemoryDb: inMemoryDb,
     mockYouTube: mockYt,
     aiProviders: aiProviders,
     pickFile: (_) async => pickResult,
     osName: android ? 'android' : 'windows',
+    osScheduler: osScheduler,
     setLauncherIcon: android ? (id) async => launcherIcons.add(id) : null,
     pinShortcut: android
         ? (label, png) async {
@@ -87,6 +91,10 @@ class TestKit {
 
   /// 안드로이드 흉내: 홈 화면 아이콘 바꾸기·바로가기 기록
   final bool android;
+  final OsScheduler? osScheduler;
+
+  /// false 면 실제 앱처럼 파일에 저장 (닫았다 다시 여는 시험)
+  final bool inMemoryDb;
   final List<String> launcherIcons = [];
   final List<(String, int)> shortcuts = [];
 

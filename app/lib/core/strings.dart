@@ -568,6 +568,14 @@ class S {
   static const gsPic1Caption = '왼쪽 아래 "고급"을 눌러요';
   static const gsPic2Caption = '아래에 생긴 "…(으)로 이동"을 눌러요';
 
+  // 운영체제 예약 실행
+  static const osSchedule = '앱이 꺼져 있어도 자동 작업';
+  static const osScheduleSub = '컴퓨터의 예약 기능에 등록해, 정한 시작 시각에 앱이 잠깐 켜져 자동 작업을 하고 닫혀요. 컴퓨터는 켜져 있어야 해요.';
+  static String osScheduleOn(int h) => '매일 $h시 5분에 예약했어요.';
+  static const osScheduleOff = '예약을 지웠어요.';
+  static const osScheduleRunning = '채널관리비서: 자동 작업 중이에요.\n끝나면 저절로 닫혀요.';
+  static const osScheduleNeedsRunner = '"자동 작업 켜기"도 함께 켰어요.';
+
   // 앱 꾸미기
   static const lookTitle = '앱 꾸미기';
   static const lookName = '앱 이름';

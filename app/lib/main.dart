@@ -12,10 +12,12 @@ import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'app/app.dart';
+import 'app/auto_run.dart';
 import 'app/services.dart';
 import 'core/logger.dart';
 import 'core/secret_store.dart';
 import 'features/runner/notifier.dart';
+import 'features/runner/os_schedule.dart';
 import 'features/update/installer.dart';
 import 'features/voice/voice_io.dart';
 import 'stages.dart';
@@ -24,7 +26,7 @@ import 'ui/common.dart';
 /// 안드로이드 앱 꾸미기 (MainActivity.kt)
 const _look = MethodChannel('channel_biseo/look');
 
-Future<void> main() async {
+Future<void> main(List<String> args) async {
   AppLogger? logger;
   // 어떤 오류가 나도 앱이 죽지 않게 모두 붙잡아 기록한다.
   await runZonedGuarded(() async {
@@ -77,6 +79,16 @@ Future<void> main() async {
       // 맥·리눅스도 직접 받아서 바꾸는 방식 (다운로드 페이지).
       installUpdate: Platform.isWindows ? UpdateInstaller(log).install : null,
       osName: Platform.operatingSystem,
+      osScheduler: isDesktop
+          ? OsScheduler(
+              os: Platform.operatingSystem,
+              exePath: Platform.resolvedExecutable,
+              homeDir: Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? support.path,
+              tempDir: Directory.systemTemp.path,
+              run: (exe, a) => Process.run(exe, a),
+              logger: log,
+            )
+          : null,
       setLauncherIcon: Platform.isAndroid ? (id) => _look.invokeMethod<void>('setLauncherIcon', {'id': id}) : null,
       pinShortcut: Platform.isAndroid
           ? (label, png) async => await _look.invokeMethod<bool>('pinShortcut', {'label': label, 'png': png}) ?? false
@@ -84,6 +96,14 @@ Future<void> main() async {
     );
     log.info('앱 시작 ${env.appVersion} ${env.platformName}');
     registerStages();
+    // 운영체제 예약으로 켜졌으면: 자동 작업만 하고 닫힘
+    final autoUser = isDesktop ? OsScheduler.autoRunUser(args, Platform.environment) : null;
+    if (autoUser != null) {
+      log.info('예약 실행 시작 (u$autoUser)');
+      runApp(const AutoRunWindow());
+      await runScheduled(env, autoUser);
+      exit(0);
+    }
     final state = AppState(env);
     await state.tryAutoLogin();
     runApp(ChannelBiseoApp(state: state));

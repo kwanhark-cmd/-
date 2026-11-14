@@ -506,6 +506,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  /// 운영체제 예약 켜기·끄기 (실패하면 설정을 바꾸지 않음)
+  Future<void> _setOsSchedule(bool on, {bool quiet = false}) async {
+    final sch = u.env.osScheduler!;
+    final s = u.settings;
+    try {
+      if (on) {
+        await sch.enable(u.user.id, s.runnerFromHour, 5);
+        final turnedRunner = !s.runnerEnabled;
+        s.runnerEnabled = true;
+        s.osScheduleEnabled = true;
+        if (mounted && !quiet) {
+          toast(context, '${S.osScheduleOn(s.runnerFromHour)}${turnedRunner ? ' ${S.osScheduleNeedsRunner}' : ''}');
+        }
+      } else {
+        await sch.disable(u.user.id);
+        s.osScheduleEnabled = false;
+        if (mounted && !quiet) toast(context, S.osScheduleOff);
+      }
+    } catch (e) {
+      if (mounted) await showFailure(context, e, where: '운영체제 예약', onRetry: () => _setOsSchedule(on));
+    }
+    if (mounted) setState(() {});
+  }
+
   Widget _runnerSection() {
     final s = u.settings;
     return SectionCard(
@@ -522,7 +546,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
             value: s.runnerEnabled,
             onChanged: u.env.isDesktop ? (v) => setState(() => s.runnerEnabled = v) : null,
           ),
-          _hourPicker(S.settingsRunnerFrom, s.runnerFromHour, (v) => s.runnerFromHour = v),
+          if (u.env.osScheduler?.supported ?? false)
+            SwitchListTile(
+              key: const Key('os-schedule'),
+              contentPadding: EdgeInsets.zero,
+              title: const Text(S.osSchedule),
+              subtitle: const Text(S.osScheduleSub),
+              value: s.osScheduleEnabled,
+              onChanged: (v) => busy.run(() => _setOsSchedule(v)),
+            ),
+          _hourPicker(S.settingsRunnerFrom, s.runnerFromHour, (v) {
+            s.runnerFromHour = v;
+            // 예약해 둔 시각도 함께 옮김
+            if (s.osScheduleEnabled) busy.run(() => _setOsSchedule(true, quiet: true));
+          }),
           const SizedBox(height: AppTokens.gapM),
           _hourPicker(S.settingsRunnerTo, s.runnerToHour, (v) => s.runnerToHour = v),
           const SizedBox(height: AppTokens.gapM),
@@ -614,6 +651,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!mounted || !await confirm(context, S.settingsReset2, yes: S.settingsReset, danger: true)) return;
     final user = u.user;
     final accounts = u.env.accounts;
+    // 운영체제 예약도 지움 (초기화한 자료로 몰래 실행되지 않게)
+    if (u.settings.osScheduleEnabled) {
+      try {
+        await u.env.osScheduler?.disable(user.id);
+      } catch (_) {}
+    }
     widget.state.logout();
     await accounts.wipeUserData(user.id, null);
     await widget.state.login(user);
