@@ -118,4 +118,5 @@ class QuotaCost {
   static const update = 50;
   static const upload = 1600;
   static const thumbnail = 50;
+  static const caption = 400;
 }

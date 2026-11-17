@@ -302,6 +302,95 @@ class _ProductionDetailScreenState extends State<ProductionDetailScreen> {
   ProductionService get ps => productionOf(u);
   final busy = Busy();
 
+  /// 자막 고치는 칸
+  late final captions = TextEditingController(text: ps.captionsText(widget.id));
+
+  @override
+  void dispose() {
+    captions.dispose();
+    super.dispose();
+  }
+
+  Widget _captionsCard(Production p) => SectionCard(
+    key: const Key('captions-card'),
+    title: S.captionsTitle,
+    icon: Icons.closed_caption,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text(S.captionsHelp),
+        if (p.extra['captionsUploaded'] == true) ...[
+          const SizedBox(height: AppTokens.gapS),
+          const Align(alignment: Alignment.centerLeft, child: StatusBadge(Status.done, S.captionsUploaded)),
+        ] else if (p.extra['captionsUploaded'] == false) ...[
+          const SizedBox(height: AppTokens.gapS),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: StatusBadge(Status.check, '${S.captionsNotUploaded}: ${p.extra['captionsError'] ?? ''}'),
+          ),
+        ],
+        if (p.hasCaptions) ...[
+          const SizedBox(height: AppTokens.gapM),
+          TextField(
+            key: const Key('captions-text'),
+            controller: captions,
+            minLines: 5,
+            maxLines: 14,
+            style: const TextStyle(fontFamily: 'monospace'),
+          ),
+        ],
+        const SizedBox(height: AppTokens.gapM),
+        ButtonWrap(
+          children: [
+            BigButton(
+              key: const Key('make-captions'),
+              label: p.hasCaptions ? S.captionsRemake : S.captionsMake,
+              icon: Icons.subtitles,
+              primary: !p.hasCaptions,
+              onPressed: () => busy.run(() async {
+                try {
+                  final r = ps.makeCaptions(p.id);
+                  captions.text = r.srt;
+                  if (mounted) toast(context, r.fromVideo ? S.captionsMadeVideo : S.captionsMadeEstimate);
+                } on ProductionBlocked catch (e) {
+                  if (mounted) toast(context, e.message);
+                }
+                if (mounted) setState(() {});
+              }),
+            ),
+            if (p.hasCaptions) ...[
+              BigButton(
+                key: const Key('save-captions'),
+                label: S.captionsSave,
+                icon: Icons.save,
+                onPressed: () {
+                  try {
+                    ps.saveCaptions(p.id, captions.text);
+                    toast(context, S.captionsSaved);
+                  } on ProductionBlocked catch (e) {
+                    toast(context, e.message);
+                  }
+                  setState(() {});
+                },
+              ),
+              BigButton(
+                key: const Key('delete-captions'),
+                label: S.captionsDelete,
+                icon: Icons.remove_circle_outline,
+                primary: false,
+                onPressed: () {
+                  ps.deleteCaptions(p.id);
+                  captions.clear();
+                  setState(() {});
+                },
+              ),
+            ],
+          ],
+        ),
+      ],
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     final p = ps.byId(widget.id);
@@ -393,6 +482,7 @@ class _ProductionDetailScreenState extends State<ProductionDetailScreen> {
                 ],
               ),
             ),
+            if (p.isUploadable) _captionsCard(p),
             if (p.isUploadable) ...[
               SectionCard(
                 title: S.prod7,

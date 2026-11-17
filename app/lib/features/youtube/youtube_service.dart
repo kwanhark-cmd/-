@@ -498,6 +498,17 @@ class YouTubeService {
     await withRetry(() => _apiFor(acct).setThumbnail(token, videoId, png));
   }
 
+  /// 자막 올리기 (한도 400)
+  Future<void> uploadCaption(String channelId, String videoId, File srt) async {
+    final c = channel(channelId);
+    final acct = c == null ? null : account(c.accountId);
+    if (acct == null) throw AppFailure(FailureKind.notConnected, 'account');
+    quota.reserve(QuotaCost.caption);
+    final token = await _token(acct);
+    final bytes = await srt.readAsBytes();
+    await _apiFor(acct).uploadCaption(token, videoId, bytes);
+  }
+
   // ---------------- 통계 ----------------
   int totalViews() => channels().fold<int>(0, (s, c) => s + c.viewCount);
 

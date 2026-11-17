@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import '../../core/failure.dart';
@@ -153,6 +154,24 @@ class MockYouTubeApi implements YouTubeApi {
     _maybeFail();
     if (failThumbnail) throw AppFailure(FailureKind.permissionRevoked, 'thumbnail not allowed');
     thumbnails[videoId] = png.path;
+  }
+
+  /// 올린 자막 (영상 ID → SRT 글)
+  final Map<String, String> captions = {};
+  bool failCaption = false;
+
+  @override
+  Future<String> uploadCaption(
+    String token,
+    String videoId,
+    List<int> srt, {
+    String language = 'ko',
+    String name = '한국어',
+  }) async {
+    _maybeFail();
+    if (failCaption) throw AppFailure(FailureKind.permissionRevoked, 'caption not allowed');
+    captions[videoId] = utf8.decode(srt);
+    return 'cap_$videoId';
   }
 
   /// 테스트용: 사용자가 유튜브에서 직접 내용을 바꾼 상황.

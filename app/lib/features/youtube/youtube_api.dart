@@ -23,6 +23,15 @@ abstract class YouTubeApi {
 
   /// 내 영상의 썸네일 그림 바꾸기 (한도 50). 유튜브 계정 인증이 안 된 채널은 실패할 수 있다.
   Future<void> setThumbnail(String token, String videoId, File png);
+
+  /// 내 영상에 자막(SRT) 올리기 (한도 400). 돌려주는 값은 자막 ID.
+  Future<String> uploadCaption(
+    String token,
+    String videoId,
+    List<int> srt, {
+    String language = 'ko',
+    String name = '한국어',
+  });
 }
 
 /// YouTube Data API v3 실제 연결.
@@ -142,6 +151,35 @@ class RealYouTubeApi implements YouTubeApi {
       headers: {..._h(token), 'content-type': 'image/png'},
       body: await png.readAsBytes(),
     );
+  }
+
+  @override
+  Future<String> uploadCaption(
+    String token,
+    String videoId,
+    List<int> srt, {
+    String language = 'ko',
+    String name = '한국어',
+  }) async {
+    // captions.insert: multipart/related (설명 JSON + 자막 파일)
+    const boundary = 'channel_biseo_caption_boundary';
+    final meta = jsonEncode({
+      'snippet': {'videoId': videoId, 'language': language, 'name': name, 'isDraft': false},
+    });
+    final body = <int>[
+      ...utf8.encode('--$boundary\r\ncontent-type: application/json; charset=UTF-8\r\n\r\n$meta\r\n'),
+      ...utf8.encode('--$boundary\r\ncontent-type: application/octet-stream\r\n\r\n'),
+      ...srt,
+      ...utf8.encode('\r\n--$boundary--\r\n'),
+    ];
+    final j = await http_.send(
+      'POST',
+      Uri.parse('https://www.googleapis.com/upload/youtube/v3/captions?part=snippet&uploadType=multipart'),
+      headers: {..._h(token), 'content-type': 'multipart/related; boundary=$boundary'},
+      body: body,
+      maxAttempts: 1,
+    );
+    return '${j['id'] ?? ''}';
   }
 
   @override

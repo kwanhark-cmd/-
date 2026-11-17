@@ -11,6 +11,7 @@ import '../../core/strings.dart';
 import '../ai/brain.dart';
 import '../settings/user_settings.dart';
 import '../tools/tools_service.dart';
+import 'captions.dart';
 import '../voice/memos.dart';
 import '../youtube/models.dart';
 import '../youtube/quota.dart';
@@ -62,6 +63,10 @@ class Production {
   bool get hasVideo => videoPath.isNotEmpty && File(videoPath).existsSync();
   String get thumbPath => '${extra['thumb'] ?? ''}';
   bool get hasThumb => thumbPath.isNotEmpty && File(thumbPath).existsSync();
+
+  /// 자막(SRT) 파일
+  String get captionsPath => '${extra['captions'] ?? ''}';
+  bool get hasCaptions => captionsPath.isNotEmpty && File(captionsPath).existsSync();
 
   /// 사진·이미지 게시물은 영상 업로드가 아니라 커뮤니티 게시물이라 사용자가 직접 올린다.
   bool get isUploadable => format != ContentFormat.image;
@@ -314,6 +319,48 @@ class ProductionService {
     ]);
   }
 
+  // ---------------- 자막 ----------------
+  /// 대본으로 자막 만들기. 영상이 있으면 영상 길이에 맞추고, 없으면 읽는 속도로 정한다.
+  /// 돌려주는 값: (SRT 글, 영상 길이를 썼는지)
+  ({String srt, bool fromVideo}) makeCaptions(int id) {
+    final pr = byId(id)!;
+    final parts = CaptionMaker.chunks(pr.script);
+    if (parts.isEmpty) throw ProductionBlocked(S.captionsNoScript);
+    final length = pr.hasVideo ? CaptionMaker.mp4Duration(File(pr.videoPath)) : null;
+    final srt = CaptionMaker.toSrt(CaptionMaker.timed(parts, length));
+    _writeCaptions(id, srt);
+    logger?.info('자막 만듦 #$id (${parts.length}줄, ${length == null ? '읽는 속도' : '영상 길이'})');
+    return (srt: srt, fromVideo: length != null);
+  }
+
+  /// 사용자가 고친 자막 저장. 형식이 틀리면 저장하지 않고 [ProductionBlocked].
+  void saveCaptions(int id, String srt) {
+    try {
+      CaptionMaker.parseSrt(srt);
+    } on FormatException {
+      throw ProductionBlocked(S.captionsBadFormat);
+    }
+    _writeCaptions(id, srt);
+  }
+
+  String captionsText(int id) {
+    final pr = byId(id)!;
+    return pr.hasCaptions ? File(pr.captionsPath).readAsStringSync() : '';
+  }
+
+  void deleteCaptions(int id) {
+    final pr = byId(id)!;
+    if (pr.hasCaptions) File(pr.captionsPath).deleteSync();
+    _setExtra(id, {'captions': ''});
+  }
+
+  void _writeCaptions(int id, String srt) {
+    final f = File(p.join(mediaDir, 'captions_$id.srt'));
+    f.parent.createSync(recursive: true);
+    f.writeAsStringSync(srt);
+    _setExtra(id, {'captions': f.path, 'captionsUploaded': null});
+  }
+
   // ---------------- 썸네일 그림 ----------------
   static const imageExtensions = ['png', 'jpg', 'jpeg'];
 
@@ -404,6 +451,20 @@ class ProductionService {
           // 썸네일만 실패한 경우: 영상은 올라갔으니 안내만 (유튜브 스튜디오에서 직접 넣을 수 있음)
           _setExtra(id, {'thumbUploaded': false, 'thumbError': e.userMessage});
           logger?.warn('썸네일 올리기 실패: ${e.kind.name}');
+        }
+      }
+      if (pr.hasCaptions) {
+        // 자막도 함께 (실패해도 영상은 올라갔으니 안내만 — 유튜브 스튜디오에서 직접 넣을 수 있음)
+        if (!quota.canSpend(QuotaCost.caption)) {
+          _setExtra(id, {'captionsUploaded': false, 'captionsError': S.captionsQuota});
+        } else {
+          try {
+            await youtube.uploadCaption(pr.channelId, vid, File(pr.captionsPath));
+            _setExtra(id, {'captionsUploaded': true});
+          } on AppFailure catch (e) {
+            _setExtra(id, {'captionsUploaded': false, 'captionsError': e.userMessage});
+            logger?.warn('자막 올리기 실패: ${e.kind.name}');
+          }
         }
       }
       _setStatus(id, ProductionStatus.uploadedPrivate);

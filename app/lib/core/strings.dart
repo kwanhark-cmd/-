@@ -258,6 +258,21 @@ class S {
   static String produceHiggsfieldConfirm(int est, int? left) => left == null
       ? '힉스필드로 썸네일 그림을 움직이는 영상을 만들어요. 사용권(크레딧)이 대략 $est 들어요 (정확한 값과 남은 양은 힉스필드 웹사이트에서 확인). 만들까요?'
       : '힉스필드로 영상을 만들면 사용권(크레딧)이 약 $est 들어요. 지금 남은 사용권은 $left이에요. 만들까요?';
+  // 자막
+  static const captionsTitle = '자막';
+  static const captionsHelp = '대본으로 한국어 자막을 만들어요. 영상이 있으면 영상 길이에 맞춰요. 고친 뒤 저장하면 비공개로 올릴 때 함께 올라가요 (유튜브 사용량 400).';
+  static const captionsMake = '대본으로 자막 만들기';
+  static const captionsRemake = '대본으로 다시 만들기';
+  static const captionsSave = '고친 자막 저장';
+  static const captionsDelete = '자막 빼기';
+  static const captionsMadeVideo = '자막을 만들었어요. 영상 길이에 맞췄어요. 읽어 보고 고칠 곳이 있으면 고쳐 저장하세요.';
+  static const captionsMadeEstimate = '자막을 만들었어요. 영상이 아직 없어 말하는 속도로 시간을 정했어요. 영상을 넣은 뒤 다시 만들면 길이에 맞춰져요.';
+  static const captionsSaved = '자막을 저장했어요.';
+  static const captionsNoScript = '대본이 비어 있어 자막을 만들 수 없어요. 먼저 대본을 써 주세요.';
+  static const captionsBadFormat = '자막 형식이 맞지 않아요. 번호, "00:00:01,000 --> 00:00:03,000" 같은 시간 줄, 글 순서를 지켜 주세요.';
+  static const captionsQuota = '오늘 유튜브 사용량이 모자라 자막은 올리지 못했어요. 유튜브 스튜디오에서 직접 넣거나 내일 다시 해 주세요.';
+  static const captionsUploaded = '자막도 함께 올렸어요.';
+  static const captionsNotUploaded = '자막은 올리지 못했어요';
   static const produceHiggsfieldNotEnough = '힉스필드 사용권(크레딧)이 부족해요. 힉스필드 웹사이트에서 충전한 뒤 다시 해 주세요.';
   static const produceHiggsfieldNeedsThumb = '힉스필드는 그림 한 장을 움직여 영상을 만들어요. 먼저 "썸네일 그림 만들기"나 "내 그림 넣기"로 그림을 넣어 주세요.';
   static const produceHiggsfieldRejected = '힉스필드의 내용 검사에 걸려 만들지 않았어요. 쓴 사용권(크레딧)은 돌려받아요. 문구나 그림을 바꿔 다시 해 보세요.';
