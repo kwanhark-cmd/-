@@ -25,56 +25,170 @@ class ToolInfo {
 
 /// 영상 생성 도구 틀. 힉스필드(실제) / 연습용(가짜) 이 이 틀을 따른다.
 abstract class VideoGenerator {
-  Future<int> credits();
+  /// 남은 크레딧. 알 수 없으면 null (힉스필드는 잔액을 알려 주는 API 가 없음).
+  Future<int?> credits();
   int estimateCredits(String prompt, {int seconds = 10});
-  Future<String> start(String prompt, {int seconds = 10});
 
-  /// 끝났으면 영상 주소, 아직이면 null.
+  /// 움직일 그림이 꼭 필요한지 (힉스필드 그림→영상)
+  bool get needsImage;
+
+  /// 만들기 시작. 작업 번호를 돌려준다.
+  Future<String> start(String prompt, {int seconds = 10, File? image});
+
+  /// 끝났으면 영상 주소, 아직이면 null. 실패면 예외.
   Future<String?> poll(String jobId);
+
+  /// 아직 기다리는 중인 작업 취소 (이미 만드는 중이면 취소되지 않을 수 있음)
+  Future<void> cancel(String jobId);
   Future<void> download(String url, File target);
 }
 
-/// 힉스필드 API. 공식 문서의 주소·형식이 바뀌면 설정의 "API 주소" 만 바꾸면 되도록 주소를 한곳에 둔다.
+/// 크레딧이 모자라 시작하지 못함. (다시 시도하지 않는 오류)
+class NotEnoughCredits extends AppFailure {
+  NotEnoughCredits() : super(FailureKind.invalidInput, 'not enough credits');
+}
+
+/// 내용 검사(성인·폭력 등)에 걸려 만들지 않음 (크레딧은 돌려받음). (다시 시도하지 않는 오류)
+class GenerationRejected extends AppFailure {
+  GenerationRejected() : super(FailureKind.invalidInput, 'nsfw');
+}
+
+/// 힉스필드 공식 API (2026년 공식 SDK higgsfield-client·higgsfield-js 와 같은 형식).
+/// - 주소: https://api.higgsfield.ai
+/// - 인증: Authorization: Key {키 ID}:{비밀 값}
+/// - 만들기: POST {주소}/{모델 경로} (JSON) → request_id, status_url, cancel_url
+/// - 상태: GET /requests/{id}/status → queued / in_progress / completed / failed / nsfw / canceled, 영상은 video.url
+/// - 그림 올리기: POST /files/generate-upload-url → upload_url 에 PUT → public_url
+/// 그림→영상(DoP) 모델로, 제작 콘텐츠의 썸네일 그림을 움직이는 영상으로 만든다.
 /// 크레딧이 드는 작업은 사용자가 화면에서 직접 승인했을 때만 불린다(ProductionService 참고).
 class HiggsfieldGenerator implements VideoGenerator {
-  HiggsfieldGenerator(this.json, this.raw, this.apiKey, {this.baseUrl = 'https://platform.higgsfield.ai'});
+  HiggsfieldGenerator(
+    this.json,
+    this.raw,
+    this.apiKey, {
+    this.baseUrl = defaultBaseUrl,
+    this.modelPath = defaultModelPath,
+    this.model = defaultModel,
+  });
+  static const defaultBaseUrl = 'https://api.higgsfield.ai';
+  static const defaultModelPath = '/v1/image2video/dop';
+
+  /// dop-lite(기본, 가장 저렴) / dop-turbo(빠름) / dop-standard(가장 좋은 품질)
+  static const defaultModel = 'dop-lite';
+  static const models = ['dop-lite', 'dop-turbo', 'dop-standard'];
+
   final JsonHttp json;
   final http.Client raw;
+
+  /// "키 ID:비밀 값"
   final String apiKey;
   final String baseUrl;
+  final String modelPath;
+  final String model;
 
-  Map<String, String> get _h => {'authorization': 'Key $apiKey', 'accept': 'application/json'};
+  Map<String, String> get _h => {
+    'authorization': 'Key $apiKey',
+    'accept': 'application/json',
+    'user-agent': 'channel-biseo-app',
+  };
 
-  @override
-  Future<int> credits() async {
-    final j = await json.send('GET', Uri.parse('$baseUrl/v1/account/credits'), headers: _h);
-    return (j['credits'] as num?)?.toInt() ?? (j['balance'] as num?)?.toInt() ?? 0;
+  String get _base => baseUrl.endsWith('/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl;
+
+  /// "키 ID:비밀 값" 모양인지
+  static bool validKey(String k) {
+    final i = k.trim().indexOf(':');
+    return i > 0 && i < k.trim().length - 1;
   }
 
   @override
-  int estimateCredits(String prompt, {int seconds = 10}) => (seconds / 5).ceil() * 10;
+  bool get needsImage => true;
+
+  /// 잔액 조회 API 가 없음 → 힉스필드 웹사이트에서 확인
+  @override
+  Future<int?> credits() async => null;
+
+  /// 대략적인 값 (모델별 실제 가격은 힉스필드 웹사이트 기준).
+  @override
+  int estimateCredits(String prompt, {int seconds = 10}) => switch (model) {
+    'dop-standard' => 9,
+    'dop-turbo' => 6,
+    _ => 3,
+  };
+
+  Future<Map<String, dynamic>> _send(String method, String pathOrUrl, {Object? body, int maxAttempts = 3}) async {
+    final url = pathOrUrl.startsWith('http') ? pathOrUrl : '$_base$pathOrUrl';
+    try {
+      return await json.send(method, Uri.parse(url), headers: _h, body: body, maxAttempts: maxAttempts);
+    } on AppFailure catch (e) {
+      // 402 = 크레딧 부족
+      if (e.detail.contains('HTTP 402')) throw NotEnoughCredits();
+      rethrow;
+    }
+  }
+
+  /// 그림을 힉스필드에 올리고 공개 주소를 받는다.
+  Future<String> upload(File image) async {
+    final type = image.path.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
+    final j = await _send('POST', '/files/generate-upload-url', body: {'content_type': type});
+    final uploadUrl = j['upload_url'] as String?;
+    final publicUrl = j['public_url'] as String?;
+    if (uploadUrl == null || publicUrl == null) throw AppFailure(FailureKind.unknown, 'no upload url');
+    final headers = <String, String>{'content-type': type};
+    final extra = j['upload_headers'];
+    if (extra is Map) extra.forEach((k, v) => headers['$k'] = '$v');
+    final res = await raw.put(Uri.parse(uploadUrl), headers: headers, body: await image.readAsBytes());
+    if (res.statusCode >= 300) throw classifyHttpError(res.statusCode, res.body);
+    return publicUrl;
+  }
 
   @override
-  Future<String> start(String prompt, {int seconds = 10}) async {
-    final j = await json.send(
+  Future<String> start(String prompt, {int seconds = 10, File? image}) async {
+    if (image == null || !image.existsSync()) throw AppFailure(FailureKind.invalidInput, 'no image');
+    final imageUrl = await upload(image);
+    final j = await _send(
       'POST',
-      Uri.parse('$baseUrl/v1/generations/video'),
-      headers: _h,
-      body: {'prompt': prompt, 'duration': seconds, 'aspect_ratio': '9:16'},
-      maxAttempts: 1,
+      modelPath.startsWith('/') ? modelPath : '/$modelPath',
+      body: {
+        'model': model,
+        'prompt': prompt.length > 1000 ? prompt.substring(0, 1000) : prompt,
+        'input_images': [
+          {'type': 'image_url', 'image_url': imageUrl},
+        ],
+      },
+      maxAttempts: 1, // 크레딧이 드는 요청은 다시 보내지 않음
     );
-    final id = (j['id'] ?? j['job_id'] ?? j['request_id'])?.toString();
-    if (id == null) throw AppFailure(FailureKind.unknown, 'no job id');
+    final id = (j['request_id'] ?? j['id'])?.toString();
+    if (id == null) throw AppFailure(FailureKind.unknown, 'no request id');
     return id;
   }
 
   @override
   Future<String?> poll(String jobId) async {
-    final j = await json.send('GET', Uri.parse('$baseUrl/v1/generations/$jobId'), headers: _h);
-    final status = '${j['status'] ?? ''}'.toLowerCase();
-    if (status == 'failed' || status == 'error') throw AppFailure(FailureKind.unknown, 'generation failed');
-    final url = j['video_url'] ?? j['url'] ?? ((j['output'] as Map?)?['url']);
-    return (status == 'completed' || status == 'succeeded' || status == 'done') && url != null ? '$url' : null;
+    final j = await _send('GET', '/requests/$jobId/status');
+    switch ('${j['status'] ?? ''}') {
+      case 'completed':
+        final video = j['video'];
+        final url = video is Map ? video['url'] : null;
+        if (url == null) throw AppFailure(FailureKind.unknown, 'no video url');
+        return '$url';
+      case 'nsfw':
+        throw GenerationRejected();
+      case 'failed':
+        throw AppFailure(FailureKind.unknown, 'generation failed');
+      case 'canceled':
+        throw AppFailure(FailureKind.cancelled, 'canceled');
+      default: // queued, in_progress
+        return null;
+    }
+  }
+
+  @override
+  Future<void> cancel(String jobId) async {
+    try {
+      await _send('POST', '/requests/$jobId/cancel', maxAttempts: 1);
+    } catch (_) {
+      // 이미 만드는 중이면 취소되지 않음 (400) — 괜찮음
+    }
   }
 
   @override
@@ -91,11 +205,16 @@ class MockVideoGenerator implements VideoGenerator {
   int left = 500;
   int started = 0;
   @override
-  Future<int> credits() async => left;
+  bool get needsImage => false;
+  int cancelled = 0;
+  @override
+  Future<void> cancel(String jobId) async => cancelled++;
+  @override
+  Future<int?> credits() async => left;
   @override
   int estimateCredits(String prompt, {int seconds = 10}) => (seconds / 5).ceil() * 10;
   @override
-  Future<String> start(String prompt, {int seconds = 10}) async {
+  Future<String> start(String prompt, {int seconds = 10, File? image}) async {
     started++;
     left -= estimateCredits(prompt, seconds: seconds);
     return 'mockjob$started';
@@ -150,8 +269,21 @@ class ToolsService {
   static const figmaTokens = 'tools/figma/tokens';
   static const figmaSecret = 'tools/figma/clientSecret';
 
-  String get higgsBaseUrl => db.getSetting<String>('higgsBaseUrl') ?? 'https://platform.higgsfield.ai';
+  /// 예전 버전이 저장한 옛 주소(platform.higgsfield.ai)는 공식 주소로 바꿔 읽는다.
+  String get higgsBaseUrl {
+    final v = db.getSetting<String>('higgsBaseUrl') ?? '';
+    return v.isEmpty || v.contains('platform.higgsfield.ai') ? HiggsfieldGenerator.defaultBaseUrl : v;
+  }
+
   set higgsBaseUrl(String v) => db.setSetting('higgsBaseUrl', v.trim());
+
+  /// dop-lite / dop-turbo / dop-standard
+  String get higgsModel {
+    final v = db.getSetting<String>('higgsModel') ?? '';
+    return HiggsfieldGenerator.models.contains(v) ? v : HiggsfieldGenerator.defaultModel;
+  }
+
+  set higgsModel(String v) => db.setSetting('higgsModel', v);
   String get figmaClientId => db.getSetting<String>('figmaClientId') ?? '';
   set figmaClientId(String v) => db.setSetting('figmaClientId', v.trim());
 
@@ -202,7 +334,7 @@ class ToolsService {
 
   // ---- 힉스필드 ----
   Future<void> connectHiggsfield(String key) async {
-    if (key.trim().isEmpty) throw AppFailure(FailureKind.invalidInput, 'empty key');
+    if (!HiggsfieldGenerator.validKey(key)) throw AppFailure(FailureKind.invalidInput, 'key format');
     await secrets.write(higgsKey, key.trim());
     _setStatus(ToolId.higgsfield, 'ok');
   }
@@ -213,7 +345,7 @@ class ToolsService {
   Future<VideoGenerator> videoGenerator() async {
     final k = await secrets.read(higgsKey);
     if (k == null) return mockGenerator;
-    return HiggsfieldGenerator(json, raw, k, baseUrl: higgsBaseUrl);
+    return HiggsfieldGenerator(json, raw, k, baseUrl: higgsBaseUrl, model: higgsModel);
   }
 
   // ---- 피그마 ----

@@ -203,14 +203,14 @@ void main() {
       expect(all.firstWhere((t) => t.id == ToolId.higgsfield).state, ToolState.notConnected);
       expect(all.firstWhere((t) => t.id == ToolId.googleVids).state, ToolState.preparing);
       expect(all.firstWhere((t) => t.id == ToolId.vrew).state, ToolState.preparing);
-      await u.tools.connectHiggsfield('hf-secret-key');
+      await u.tools.connectHiggsfield('hf-id:hf-secret-key');
       all = await u.tools.all();
       expect(all.firstWhere((t) => t.id == ToolId.higgsfield).state, ToolState.connected);
-      expect(k.secrets.data.values, contains('hf-secret-key'));
+      expect(k.secrets.data.values, contains('hf-id:hf-secret-key'));
       expect(await u.tools.videoGenerator(), isA<HiggsfieldGenerator>());
       await u.tools.disconnect(ToolId.higgsfield);
       expect((await u.tools.all()).firstWhere((t) => t.id == ToolId.higgsfield).state, ToolState.notConnected);
-      expect(k.secrets.data.values, isNot(contains('hf-secret-key')));
+      expect(k.secrets.data.values, isNot(contains('hf-id:hf-secret-key')));
       expect(u.tools.vault.available, isFalse);
     });
   });

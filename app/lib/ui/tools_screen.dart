@@ -171,24 +171,76 @@ class _ToolsScreenState extends State<ToolsScreen> {
   Future<void> _connect(ToolId id) async {
     try {
       if (id == ToolId.higgsfield) {
-        final c = TextEditingController();
+        final id = TextEditingController();
+        final secret = TextEditingController();
+        var model = u.tools.higgsModel;
         final key = await showDialog<String>(
           context: context,
-          builder: (d) => AlertDialog(
-            title: Text(S.tool9(S.toolApiKey)),
-            content: TextField(
-              key: const Key('higgs-key'),
-              controller: c,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: S.toolApiKey),
+          builder: (d) => StatefulBuilder(
+            builder: (d, set) => AlertDialog(
+              title: const Text(S.higgsTitle),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text(S.higgsHelp),
+                    const SizedBox(height: AppTokens.gapS),
+                    BigButton(
+                      key: const Key('higgs-open-site'),
+                      label: S.higgsOpenSite,
+                      icon: Icons.open_in_new,
+                      primary: false,
+                      onPressed: () => u.env.launchUrl(Uri.parse(S.higgsSiteUrl)),
+                    ),
+                    const SizedBox(height: AppTokens.gapM),
+                    TextField(
+                      key: const Key('higgs-key-id'),
+                      controller: id,
+                      decoration: const InputDecoration(labelText: S.higgsKeyId),
+                    ),
+                    const SizedBox(height: AppTokens.gapM),
+                    TextField(
+                      key: const Key('higgs-key'),
+                      controller: secret,
+                      obscureText: true,
+                      decoration: const InputDecoration(labelText: S.higgsKeySecret, helperText: S.higgsKeyPasteHint),
+                    ),
+                    const SizedBox(height: AppTokens.gapM),
+                    DropdownButtonFormField<String>(
+                      key: const Key('higgs-model'),
+                      initialValue: model,
+                      isExpanded: true,
+                      decoration: const InputDecoration(labelText: S.higgsModel),
+                      items: [
+                        for (final m in HiggsfieldGenerator.models)
+                          DropdownMenuItem(value: m, child: Text(S.higgsModelName(m))),
+                      ],
+                      onChanged: (v) => set(() => model = v ?? model),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(d), child: const Text(S.cancel)),
+                FilledButton(
+                  onPressed: () {
+                    // "키 ID:비밀 값" 을 한 칸에 붙여 넣어도 됨
+                    final s = secret.text.trim();
+                    Navigator.pop(d, id.text.trim().isEmpty ? s : '${id.text.trim()}:$s');
+                  },
+                  child: const Text(S.save),
+                ),
+              ],
             ),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(d), child: const Text(S.cancel)),
-              FilledButton(onPressed: () => Navigator.pop(d, c.text), child: const Text(S.save)),
-            ],
           ),
         );
         if (key == null || key.trim().isEmpty) return;
+        if (!HiggsfieldGenerator.validKey(key)) {
+          if (mounted) toast(context, S.higgsKeyFormat);
+          return;
+        }
+        u.tools.higgsModel = model;
         await u.tools.connectHiggsfield(key);
       } else if (id == ToolId.figma) {
         final cid = TextEditingController(text: u.tools.figmaClientId);

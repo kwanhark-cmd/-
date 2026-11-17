@@ -94,6 +94,8 @@ class ProductionService {
     this.logger,
   });
 
+  /// 힉스필드 진행 확인 간격 (테스트에서는 짧게)
+  Duration pollDelay = const Duration(seconds: 5);
   final AppDatabase db;
   final YouTubeService youtube;
   final Brain brain;
@@ -262,8 +264,8 @@ class ProductionService {
     ]);
   }
 
-  /// 힉스필드 예상 크레딧과 남은 크레딧 (승인 화면에 보여 줄 값).
-  Future<({int estimate, int left})> higgsfieldQuote(int id) async {
+  /// 힉스필드 예상 크레딧과 남은 크레딧 (승인 화면에 보여 줄 값). 남은 양을 알 수 없으면 left 는 null.
+  Future<({int estimate, int? left})> higgsfieldQuote(int id) async {
     final g = await tools.videoGenerator();
     final pr = byId(id)!;
     final secs = pr.format == ContentFormat.shorts ? 10 : 20;
@@ -277,13 +279,29 @@ class ProductionService {
     final pr = byId(id)!;
     final secs = pr.format == ContentFormat.shorts ? 10 : 20;
     final est = g.estimateCredits(pr.script, seconds: secs);
-    if (await g.credits() < est) throw ProductionBlocked(S.produceHiggsfieldNotEnough);
-    final job = await g.start('${pr.title}\n${pr.script}', seconds: secs);
+    final left = await g.credits();
+    if (left != null && left < est) throw ProductionBlocked(S.produceHiggsfieldNotEnough);
+    // 힉스필드는 그림을 움직여 영상을 만든다 → 썸네일 그림이 먼저 있어야 함
+    if (g.needsImage && !pr.hasThumb) throw ProductionBlocked(S.produceHiggsfieldNeedsThumb);
+    final String job;
+    try {
+      job = await g.start('${pr.title}\n${pr.script}', seconds: secs, image: pr.hasThumb ? File(pr.thumbPath) : null);
+    } on NotEnoughCredits {
+      throw ProductionBlocked(S.produceHiggsfieldNotEnough);
+    }
+    logger?.info('힉스필드 작업 시작');
     String? url;
-    for (var i = 0; i < 120 && url == null; i++) {
-      cancel?.throwIfCancelled();
-      url = await withRetry(() => g.poll(job));
-      if (url == null) await Future<void>.delayed(const Duration(seconds: 5));
+    try {
+      for (var i = 0; i < 120 && url == null; i++) {
+        if (cancel?.isCancelled ?? false) {
+          await g.cancel(job);
+          cancel!.throwIfCancelled();
+        }
+        url = await withRetry(() => g.poll(job));
+        if (url == null) await Future<void>.delayed(pollDelay);
+      }
+    } on GenerationRejected {
+      throw ProductionBlocked(S.produceHiggsfieldRejected);
     }
     if (url == null) throw AppFailure(FailureKind.timeout, 'generation');
     final file = File(p.join(mediaDir, 'production_$id.mp4'));

@@ -255,9 +255,12 @@ class S {
   static const produceNeedVideo = '올릴 영상 파일이 없어요. "내가 만든 영상 넣기" 또는 "힉스필드로 영상 만들기"를 먼저 해 주세요.';
   static const produceAddOwnVideo = '내가 만든 영상 넣기';
   static const produceHiggsfield = '힉스필드로 영상 만들기';
-  static String produceHiggsfieldConfirm(int est, int left) =>
-      '힉스필드로 영상을 만들면 사용권(크레딧)이 약 $est 들어요. 지금 남은 사용권은 $left이에요. 만들까요?';
-  static const produceHiggsfieldNotEnough = '힉스필드 사용권(크레딧)이 부족해요.';
+  static String produceHiggsfieldConfirm(int est, int? left) => left == null
+      ? '힉스필드로 썸네일 그림을 움직이는 영상을 만들어요. 사용권(크레딧)이 대략 $est 들어요 (정확한 값과 남은 양은 힉스필드 웹사이트에서 확인). 만들까요?'
+      : '힉스필드로 영상을 만들면 사용권(크레딧)이 약 $est 들어요. 지금 남은 사용권은 $left이에요. 만들까요?';
+  static const produceHiggsfieldNotEnough = '힉스필드 사용권(크레딧)이 부족해요. 힉스필드 웹사이트에서 충전한 뒤 다시 해 주세요.';
+  static const produceHiggsfieldNeedsThumb = '힉스필드는 그림 한 장을 움직여 영상을 만들어요. 먼저 "썸네일 그림 만들기"나 "내 그림 넣기"로 그림을 넣어 주세요.';
+  static const produceHiggsfieldRejected = '힉스필드의 내용 검사에 걸려 만들지 않았어요. 쓴 사용권(크레딧)은 돌려받아요. 문구나 그림을 바꿔 다시 해 보세요.';
   static const produceOpenYoutube = '유튜브에서 확인하기';
   static const produceMarkPublished = '확인하고 공개했어요';
   static const produceUploaded = '비공개로 올렸어요. 확인 대기 목록에서 확인해 주세요.';
@@ -792,6 +795,21 @@ class S {
   static const tool4 = '도구 비밀번호는 이 앱에 저장하지 않아요.';
   static const tool5 = '구글 비즈';
   static const tool6 = '힉스필드';
+  static const higgsTitle = '힉스필드 연결';
+  static const higgsHelp =
+      '힉스필드 웹사이트(cloud.higgsfield.ai)에 로그인해 API 키를 만들면 "키 ID"와 "비밀 값" 두 가지가 나와요. 아래에 넣어 주세요. 영상은 썸네일 그림을 움직여 만들고, 만들 때마다 사용권(크레딧)이 들어서 매번 먼저 물어봐요.';
+  static const higgsSiteUrl = 'https://cloud.higgsfield.ai';
+  static const higgsOpenSite = '힉스필드 웹사이트 열기';
+  static const higgsKeyId = '키 ID';
+  static const higgsKeySecret = '비밀 값';
+  static const higgsKeyPasteHint = '"키ID:비밀값"을 통째로 붙여 넣어도 돼요 (그때는 키 ID 칸은 비워 두세요)';
+  static const higgsKeyFormat = '키 ID와 비밀 값을 둘 다 넣어 주세요.';
+  static const higgsModel = '영상 품질';
+  static String higgsModelName(String m) => switch (m) {
+    'dop-turbo' => '빠르게 (dop-turbo)',
+    'dop-standard' => '가장 좋게 (dop-standard, 크레딧 많이 듦)',
+    _ => '기본 (dop-lite, 크레딧 가장 적게)',
+  };
   static const tool7 = '내가 만든 영상';
   static const tool8 = '브루';
   static String tool9(Object? p0) => '힉스필드 $p0';
