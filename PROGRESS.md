@@ -59,6 +59,7 @@
 - 제작 상세 → 자막: 대본으로 만들기(영상 길이에 맞춤, MP4 길이 직접 읽음) → 고치기·저장(형식 확인) → 비공개 업로드 때 함께(사용량 400, 실패해도 영상은 그대로)
 - 코드: app/lib/features/production/captions.dart, 유튜브 captions.insert
 - 테스트: app/test/captions_test.dart 10개
+- 버전 1.4.0+11 — Releases 에 공개함 (v1.4.0)
 
 ## 지금 하던 것
 - 없음
